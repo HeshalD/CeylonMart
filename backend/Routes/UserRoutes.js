@@ -1,14 +1,17 @@
 const express = require("express");
-const ctrl = require("../Controllers/UserController");
-const { protect, authorize } = require("../middleware/auth");
-
 const router = express.Router();
 
-// Protect and allow only shop_owner or admin to manage users
-router.post("/", protect, authorize("shop_owner", "admin"), ctrl.createUser);
-router.get("/", protect, authorize("shop_owner", "admin"), ctrl.getAllUsers);
-router.get("/:id", protect, authorize("shop_owner", "admin"), ctrl.getUserById);
-router.put("/:id", protect, authorize("shop_owner", "admin"), ctrl.updateUser);
-router.delete("/:id", protect, authorize("shop_owner", "admin"), ctrl.deleteUser);
+const userController = require("../Controllers/UserController");
+const { verifyToken, isAdmin, isSelfOrAdmin } = require("../Middleware/authMiddleware");
+
+// Public
+router.post("/register", userController.registerUser);
+router.post("/login", userController.loginUser);
+
+// Protected
+router.get("/", verifyToken, isAdmin, userController.getAllUsers);
+router.get("/:id", verifyToken, userController.getUserById);
+router.put("/:id", verifyToken, isSelfOrAdmin, userController.updateUser);
+router.delete("/:id", verifyToken, isAdmin, userController.deleteUser);
 
 module.exports = router;
