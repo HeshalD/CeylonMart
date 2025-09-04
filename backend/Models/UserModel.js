@@ -25,11 +25,20 @@ const userSchema = new Schema(
     phone: String,
     address: String,
 
-    // Optional, used depending on role
+    // Optional fields based on roles
     shop_name: String,       // shop_owner
     company_name: String,    // supplier_admin
     managedItems: [String],  // inventory_manager
     deliveryAreas: [String], // delivery_admin
+
+    // New features
+    isVerified: {
+      type: Boolean,
+      default: true, // Set to false if you want email/OTP verification in future
+    },
+
+    resetToken: String,         // For password reset (stores unique token)
+    resetTokenExpire: Date,     // Expiry time for reset token
   },
   { timestamps: true }
 );
