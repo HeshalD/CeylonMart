@@ -9,7 +9,7 @@ const DriverSchema = new mongoose.Schema({
   vehicleType: { type: String, enum: ["car", "van"], required: true },
   vehicleNumber: { type: String, required: true },
   status: { type: String, enum: ["active", "inactive", "on_leave"], default: "active" },
-  isDeleted: { type: Boolean, default: false } // ✅ soft delete
+  isDeleted: { type: Boolean, default: false } 
 }, { timestamps: true });
 
 module.exports = mongoose.model("Driver", DriverSchema);
