@@ -6,8 +6,8 @@ const { verifyToken, isAdmin, isSelfOrAdmin } = require("../Middleware/authMiddl
 
 router.post("/register", userController.registerUser);
 router.post("/login", userController.loginUser);
-router.post("/forgot-password", userController.forgotPassword);
-router.post("/reset-password", userController.resetPassword);
+
+// Removed forgot-password and reset-password for now
 
 router.get("/", verifyToken, isAdmin, userController.getAllUsers);
 router.get("/:id", verifyToken, userController.getUserById);

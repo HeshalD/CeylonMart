@@ -37,8 +37,8 @@ const userSchema = new Schema(
       default: true, // Set to false if you want email/OTP verification in future
     },
 
-    resetToken: String,         // For password reset (stores unique token)
-    resetTokenExpire: Date,     // Expiry time for reset token
+    resetPasswordToken: String,         // For password reset (stores unique token)
+    resetPasswordExpiry: Date,     // Expiry time for reset token
   },
   { timestamps: true }
 );

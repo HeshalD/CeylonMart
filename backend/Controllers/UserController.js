@@ -1,12 +1,11 @@
 const User = require("../Models/UserModel");
-const bcrypt = require("bcryptjs");
+const bcrypt = require("bcryptjs"); 
 const jwt = require("jsonwebtoken");
-const crypto = require("crypto");
 
 const signToken = (payload) =>
   jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: "7d" });
 
-// POST /api/users/register
+// POST /api/users/register  (public: customer self-register, or any role if you send it)
 exports.registerUser = async (req, res) => {
   try {
     const { name, email, password, role, phone, address } = req.body;
@@ -23,9 +22,9 @@ exports.registerUser = async (req, res) => {
       role: role || "customer",
       phone,
       address,
-      isVerified: true, // default for now
     });
 
+    // don’t return password
     const { password: _, ...safe } = user.toObject();
     res.status(201).json({ message: "Registered successfully", user: safe });
   } catch (err) {
@@ -33,16 +32,13 @@ exports.registerUser = async (req, res) => {
   }
 };
 
-// POST /api/users/login
+// POST /api/users/login (public)
 exports.loginUser = async (req, res) => {
   try {
     const { email, password } = req.body;
 
     const user = await User.findOne({ email });
     if (!user) return res.status(404).json({ message: "User not found" });
-
-    if (!user.isVerified)
-      return res.status(403).json({ message: "Please verify your account first" });
 
     const match = await bcrypt.compare(password, user.password);
     if (!match) return res.status(400).json({ message: "Invalid credentials" });
@@ -56,46 +52,7 @@ exports.loginUser = async (req, res) => {
   }
 };
 
-// POST /api/users/forgot-password
-exports.forgotPassword = async (req, res) => {
-  try {
-    const { email } = req.body;
-    const user = await User.findOne({ email });
-    if (!user) return res.status(404).json({ message: "User not found" });
-
-    const resetToken = crypto.randomBytes(32).toString("hex");
-    user.resetToken = resetToken;
-    user.resetTokenExpire = Date.now() + 10 * 60 * 1000; // 10 mins
-    await user.save();
-
-    res.json({ message: "Password reset token generated", resetToken });
-  } catch (err) {
-    res.status(500).json({ message: err.message });
-  }
-};
-
-// POST /api/users/reset-password
-exports.resetPassword = async (req, res) => {
-  try {
-    const { token, newPassword } = req.body;
-    const user = await User.findOne({
-      resetToken: token,
-      resetTokenExpire: { $gt: Date.now() },
-    });
-    if (!user) return res.status(400).json({ message: "Invalid or expired token" });
-
-    user.password = await bcrypt.hash(newPassword, 10);
-    user.resetToken = undefined;
-    user.resetTokenExpire = undefined;
-    await user.save();
-
-    res.json({ message: "Password reset successful" });
-  } catch (err) {
-    res.status(500).json({ message: err.message });
-  }
-};
-
-// GET /api/users
+// GET /api/users  (protected: admin only)
 exports.getAllUsers = async (_req, res) => {
   try {
     const users = await User.find().select("-password");
@@ -105,7 +62,7 @@ exports.getAllUsers = async (_req, res) => {
   }
 };
 
-// GET /api/users/:id
+// GET /api/users/:id  (protected)
 exports.getUserById = async (req, res) => {
   try {
     const u = await User.findById(req.params.id).select("-password");
@@ -116,11 +73,12 @@ exports.getUserById = async (req, res) => {
   }
 };
 
-// PUT /api/users/:id
+// PUT /api/users/:id  (protected: owner or admin)
 exports.updateUser = async (req, res) => {
   try {
     const updates = { ...req.body };
 
+    // prevent email duplicate issues without checks; allow changing password safely
     if (updates.password) {
       updates.password = await bcrypt.hash(updates.password, 10);
     }
@@ -134,6 +92,7 @@ exports.updateUser = async (req, res) => {
     if (!updated) return res.status(404).json({ message: "User not found" });
     res.json({ message: "User updated", user: updated });
   } catch (err) {
+    // duplicate email error handling
     if (err.code === 11000 && err.keyPattern?.email) {
       return res.status(400).json({ message: "Email already in use" });
     }
@@ -141,12 +100,52 @@ exports.updateUser = async (req, res) => {
   }
 };
 
-// DELETE /api/users/:id
+// PUT /api/users/:id/password  (protected: owner only)
+exports.changePassword = async (req, res) => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+    const userId = req.params.id;
+
+    // Verify the user is changing their own password
+    if (req.user.id !== userId && req.user.role !== 'admin') {
+      return res.status(403).json({ message: "You can only change your own password" });
+    }
+
+    const user = await User.findById(userId);
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    // Verify current password
+    const isCurrentPasswordValid = await bcrypt.compare(currentPassword, user.password);
+    if (!isCurrentPasswordValid) {
+      return res.status(400).json({ message: "Current password is incorrect" });
+    }
+
+    // Hash new password
+    const hashedNewPassword = await bcrypt.hash(newPassword, 10);
+
+    // Update password
+    await User.findByIdAndUpdate(userId, { password: hashedNewPassword });
+
+    res.json({ message: "Password changed successfully" });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+// DELETE /api/users/:id  (protected: owner or admin)
 exports.deleteUser = async (req, res) => {
   try {
-    const del = await User.findByIdAndDelete(req.params.id);
+    const userId = req.params.id;
+
+    // Verify the user is deleting their own account or is admin
+    if (req.user.id !== userId && req.user.role !== 'admin') {
+      return res.status(403).json({ message: "You can only delete your own account" });
+    }
+
+    const del = await User.findByIdAndDelete(userId);
     if (!del) return res.status(404).json({ message: "User not found" });
-    res.json({ message: "User deleted" });
+    
+    res.json({ message: "User deleted successfully" });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }

@@ -15,7 +15,9 @@ app.use(helmet());
 
 // Routes
 const userRoutes = require('./Routes/UserRoutes');
+const authRoutes = require('./Routes/authRoutes');
 app.use('/api/users', userRoutes);
+app.use('/api/auth', authRoutes);
 
 // Health check (optional)
 app.get('/', (req, res) => {
