@@ -43,7 +43,7 @@ const RegisterForm = () => {
           <option value="shop_owner">Shop Owner</option>
           <option value="supplier_admin">Supplier Admin</option>
           <option value="inventory_manager">Inventory Manager</option>
-          <option value="delivery_admin">Delivery Admin</option>
+          <option value="delivery_admin">Delivery Manager</option>
           <option value="admin">Admin</option>
         </select>
 
