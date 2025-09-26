@@ -1,16 +1,37 @@
-const express = require('express');
-const mongoose = require('mongoose');
+require("dotenv").config();
+const express = require("express");
+const mongoose = require("mongoose");
+const cors = require("cors");
+const TestRoutes = require("./Routes/OrderRoutes"); //Import Order Management routes
+const PaymentRoutes = require("./Routes/PaymentRoutes"); //Import Payment Management routes
 
 const app = express();
 
-app.use(express.json()); 
+// Middleware
+app.use(cors());
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
-//Database Connection
-mongoose.connect("mongodb+srv://kawya:12345@ceylonmart.evnlriy.mongodb.net/")
+// Routes for order management
+app.use("/orders", TestRoutes);
 
-.then(() =>console.log("Connected to MongoDB"))
+// Routes for payment management
+app.use("/payments", PaymentRoutes);
+
+// Basic route for testing
+app.get("/", (req, res) => {
+  res.json({ message: "CeylonMart Customer Order Cart API is running" });
+});
+
+// Database connection
+mongoose.connect(
+  "mongodb+srv://kawya:12345@ceylonmart.evnlriy.mongodb.net/ceylonmart?retryWrites=true&w=majority"
+)
 .then(() => {
-    app.listen(5000);
+    console.log("Connected to MongoDB");
+    app.listen(5000, () => console.log("Server running on port 5000"));
 })
-
-.catch((err) => console.log((err)))
+.catch((err) => {
+    console.error("DB connection error:", err);
+    process.exit(1);
+});
