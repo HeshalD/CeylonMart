@@ -1,0 +1,358 @@
+/* Scoped styles for Login page, adapted from provided layout */
+
+.login-page {
+  background-color: #f8f9fa;
+  color: #333;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.login-page .container {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+/* Header */
+.login-page .header {
+  background-color: #2c5530; /* green */
+  color: #fff;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+}
+
+.login-page .header-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 0;
+}
+
+.login-page .logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.login-page .logo-main {
+  font-size: 22px;
+  font-weight: 700;
+  color: #2c5530;
+  letter-spacing: 0.5px;
+}
+/* Make the brand text white specifically in header */
+.login-page .header .logo-main {
+  color: #ffffff;
+}
+
+.login-page .nav-menu {
+  display: flex;
+  gap: 24px;
+}
+
+.login-page .nav-item {
+  font-weight: 500;
+  font-size: 15px;
+  color: #495057;
+  padding: 5px 0;
+  position: relative;
+  text-decoration: none;
+}
+/* Header nav items should be white */
+.login-page .header .nav-item {
+  color: #ffffff;
+}
+.login-page .header .nav-item:hover {
+  color: #c8ffd7;
+}
+
+.login-page .nav-item:hover {
+  color: #2c5530;
+}
+
+.login-page .nav-item::after {
+  content: '';
+  position: absolute;
+  width: 0;
+  height: 2px;
+  bottom: 0;
+  left: 0;
+  background-color: #2c5530;
+  transition: width 0.3s ease;
+}
+
+.login-page .nav-item:hover::after {
+  width: 100%;
+}
+
+.login-page .menu-toggle {
+  display: none;
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  color: #495057;
+}
+
+/* Main content */
+.login-page .main-content {
+  flex: 1;
+  padding: 40px 0;
+}
+
+.login-page .auth-card {
+  background: #ffffff;
+  border: 1px solid #e9ecef;
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+  max-width: 420px;
+  margin: 0 auto;
+  padding: 28px;
+}
+
+.login-page .auth-title {
+  font-size: 26px;
+  font-weight: 700;
+  color: #2c5530;
+  text-align: center;
+  margin-bottom: 6px;
+}
+
+.login-page .auth-subtitle {
+  text-align: center;
+  color: #6c757d;
+  font-size: 14px;
+  margin-bottom: 18px;
+}
+
+.login-page .form-group {
+  margin-bottom: 16px;
+}
+
+.login-page .form-label {
+  display: block;
+  font-size: 14px;
+  color: #495057;
+  margin-bottom: 6px;
+}
+
+.login-page .form-input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #dee2e6;
+  border-radius: 6px;
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.login-page .form-input:focus {
+  border-color: #2c5530;
+  box-shadow: 0 0 0 3px rgba(44, 85, 48, 0.12);
+}
+
+.login-page .password-field {
+  position: relative;
+}
+
+.login-page .toggle-password {
+  position: absolute;
+  top: 0;
+  right: 0;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  padding: 0 10px;
+  color: #6c757d;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+}
+
+.login-page .btn-primary {
+  width: 100%;
+  background-color: #2c5530;
+  color: #ffffff;
+  border: none;
+  padding: 10px 14px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s ease, transform 0.05s ease;
+}
+
+.login-page .btn-primary:hover {
+  background-color: #3a6b41;
+}
+
+.login-page .btn-primary:active {
+  transform: translateY(1px);
+}
+
+.login-page .helper-text {
+  text-align: center;
+  font-size: 13px;
+  color: #6c757d;
+}
+
+.login-page .link-btn {
+  background: none;
+  border: none;
+  color: #2c5530;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.login-page .alert {
+  padding: 10px 12px;
+  border-radius: 6px;
+  margin-bottom: 12px;
+  font-size: 14px;
+}
+
+.login-page .alert-success {
+  background: #e6f4ea;
+  border: 1px solid #b7e1c3;
+  color: #1e7b34;
+}
+
+.login-page .alert-error {
+  background: #fde8e8;
+  border: 1px solid #f8c7c7;
+  color: #a61b1b;
+}
+
+/* Footer */
+.login-page .footer {
+  background-color: #2c5530;
+  color: #fff;
+  padding: 40px 0 20px;
+  margin-top: 40px;
+}
+
+.login-page .footer-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 24px;
+}
+
+.login-page .footer-title {
+  margin-bottom: 10px;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.login-page .footer a {
+  color: #ffffff;
+  text-decoration: none;
+  display: block;
+  margin: 5px 0;
+  font-size: 14px;
+}
+
+.login-page .footer a:hover {
+  color: #c8ffd7;
+}
+
+.login-page .footer-logo-img {
+  height: 80px;
+  width: auto;
+  display: block;
+}
+
+.login-page .footer-bottom {
+  grid-column: 1 / -1;
+  text-align: center;
+  font-size: 13px;
+  margin-top: 10px;
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
+  padding-top: 10px;
+}
+
+/* Social links */
+.login-page .social-links {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  margin-top: 8px;
+}
+
+.login-page .social-link {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.12);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 0;
+  font-size: 0;
+  color: #ffffff;
+  transition: background 0.2s ease, transform 0.05s ease;
+  font-weight: 600; /* Added for better visibility */
+}
+
+.login-page .social-link:hover {
+  background: rgba(255, 255, 255, 0.22);
+  transform: translateY(-1px);
+}
+
+.login-page .social-link svg {
+  width: 18px;
+  height: 18px;
+  display: inline-block;
+  vertical-align: middle;
+}
+
+/* Responsive */
+@media (max-width: 992px) {
+  .login-page .footer-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .login-page .menu-toggle {
+    display: block;
+  }
+
+  .login-page .nav-menu {
+    position: fixed;
+    top: 70px;
+    left: -100%;
+    width: 100%;
+    height: calc(100vh - 70px);
+    background-color: #fff;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    padding-top: 50px;
+    gap: 30px;
+    transition: left 0.3s ease;
+  }
+
+  .login-page .nav-menu.active {
+    left: 0;
+  }
+}
+
+@media (max-width: 576px) {
+  .login-page .header-container {
+    padding: 10px 0;
+  }
+
+  .login-page .logo-main {
+    font-size: 20px;
+  }
+
+  .login-page .footer-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+
