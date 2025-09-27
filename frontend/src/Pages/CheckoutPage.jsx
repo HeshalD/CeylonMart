@@ -4,7 +4,7 @@ import { PaymentsAPI, OrdersAPI } from "../api/client";
 import { useNavigate } from "react-router-dom";
 
 export default function CheckoutPage({ customerId }) {
-  const { cart, total } = useCart(customerId);
+  const { cart, total, clearCart } = useCart(customerId);
   const navigate = useNavigate();
   const [paymentMethod, setPaymentMethod] = useState("credit_card");
   const [email, setEmail] = useState("");
@@ -65,8 +65,15 @@ export default function CheckoutPage({ customerId }) {
         email,
         status: paymentMethod === "cash_on_delivery" ? "pending" : "successful"
       });
-      // Ensure a fresh cart exists and local state is up-to-date
-      try { await OrdersAPI.getCart(cart.customerId); } catch (_) {}
+      
+      // Clear the cart after successful payment
+      try {
+        await clearCart();
+      } catch (clearError) {
+        console.error('Error clearing cart:', clearError);
+        // Continue with payment success even if cart clearing fails
+      }
+      
       setStatus("success");
       
       // Pass order and payment data to success page
@@ -96,6 +103,19 @@ export default function CheckoutPage({ customerId }) {
       <div className="max-w-4xl mx-auto px-4">
         {/* Header */}
         <div className="text-center mb-8">
+          {/* Back Button */}
+          <div className="flex justify-start mb-4">
+            <button
+              onClick={() => navigate('/cart')}
+              className="flex items-center px-4 py-2 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 rounded-lg transition-colors duration-200"
+            >
+              <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              </svg>
+              Back to Cart
+            </button>
+          </div>
+          
           <h1 className="text-4xl font-bold text-emerald-700 mb-2"> CHECKOUT </h1>
           <p className="text-gray-600">Complete your purchase</p>
           <div className="mt-4 p-4 bg-yellow-100 border border-yellow-400 rounded-lg">
