@@ -21,6 +21,7 @@ const Profile = () => {
   const [passwordErrors, setPasswordErrors] = useState({});
   const [loading, setLoading] = useState(false);
   const [showPasswordForm, setShowPasswordForm] = useState(false);
+  const [loginTime, setLoginTime] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -41,6 +42,7 @@ const Profile = () => {
       address: parsedUser.address || '',
       role: parsedUser.role || ''
     });
+    setLoginTime(new Date());
   }, [navigate]);
 
   const validate = () => {
@@ -583,6 +585,80 @@ const Profile = () => {
               </form>
             </div>
           )}
+
+          {/* Recent Activity Section */}
+          <div className="mt-6 bg-white shadow overflow-hidden sm:rounded-lg">
+            <div className="px-4 py-5 sm:px-6">
+              <h3 className="text-lg leading-6 font-medium text-gray-900">
+                Recent Activity
+              </h3>
+              <p className="mt-1 max-w-2xl text-sm text-gray-500">
+                Your recent account activity and login information
+              </p>
+            </div>
+
+            <div className="border-t border-gray-200">
+              <div className="px-4 py-5 sm:px-6">
+                <div className="space-y-4">
+                  {/* Login Activity */}
+                  <div className="flex items-center space-x-3">
+                    <div className="w-8 h-8 bg-gradient-to-r from-emerald-100 to-teal-200 rounded-full flex items-center justify-center">
+                      <svg className="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
+                      </svg>
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-gray-600">Logged in successfully</p>
+                      <p className="text-xs text-gray-500">
+                        {loginTime ? `at ${loginTime.toLocaleTimeString()} on ${loginTime.toLocaleDateString()}` : 'Just now'}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Profile View Activity */}
+                  <div className="flex items-center space-x-3">
+                    <div className="w-8 h-8 bg-gradient-to-r from-blue-100 to-cyan-200 rounded-full flex items-center justify-center">
+                      <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                      </svg>
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-gray-600">Viewing profile settings</p>
+                      <p className="text-xs text-gray-500">Managing account information and preferences</p>
+                    </div>
+                  </div>
+
+                  {/* Account Creation Activity */}
+                  <div className="flex items-center space-x-3">
+                    <div className="w-8 h-8 bg-gradient-to-r from-purple-100 to-pink-200 rounded-full flex items-center justify-center">
+                      <svg className="w-4 h-4 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+                      </svg>
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-gray-600">Account created</p>
+                      <p className="text-xs text-gray-500">
+                        Member since {new Date(user?.createdAt).toLocaleDateString()}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Role Activity */}
+                  <div className="flex items-center space-x-3">
+                    <div className="w-8 h-8 bg-gradient-to-r from-amber-100 to-orange-200 rounded-full flex items-center justify-center">
+                      <svg className="w-4 h-4 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-gray-600">Account type: {getRoleDisplayName(user?.role)}</p>
+                      <p className="text-xs text-gray-500">Your current role and permissions</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </main>
     </div>
