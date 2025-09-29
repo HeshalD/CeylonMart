@@ -1,9 +1,7 @@
 import React from 'react';
-import CeylonMartLogo from '../ceylonlogo2.jpeg';
-import { useNavigate } from 'react-router-dom';
+import CeylonMartLogo from '../../ceylonlogo2.jpeg';
 
 const Footer = () => {
-  const navigate = useNavigate();
 
   const currentYear = new Date().getFullYear();
 

@@ -17,3 +17,4 @@ const dashboardFiles = [
 // 6. Add <Footer /> before the closing div
 
 console.log('Dashboard update template created');
+

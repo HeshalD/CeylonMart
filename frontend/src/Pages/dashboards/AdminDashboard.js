@@ -3,8 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import Header from '../../components/Header';
-import Footer from '../../components/Footer';
+import Header from '../../components/ui/Header';
+import Footer from '../../components/ui/Footer';
 
 const AdminDashboard = () => {
   const [user, setUser] = useState(null);
@@ -178,9 +178,8 @@ const AdminDashboard = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 flex flex-col">
       <Header />
-
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+      <main className="flex-grow max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
         <div className="px-4 py-6 sm:px-0">
           {/* Stats Cards */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6 mb-8">
@@ -494,7 +493,6 @@ const AdminDashboard = () => {
           </div>
         </div>
       </main>
-      
       <Footer />
     </div>
   );

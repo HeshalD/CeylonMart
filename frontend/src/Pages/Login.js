@@ -1,8 +1,8 @@
 import { useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
-import Header from "../components/Header";
-import Footer from "../components/Footer";
+import Header from "../components/ui/Header";
+import Footer from "../components/ui/Footer";
 
 export default function Login() {
   const [form, setForm] = useState({ email: "", password: "" });
@@ -198,7 +198,7 @@ export default function Login() {
             </form>
           </div>
         </div>
-      </div>
+        </div>
       </div>
       <Footer />
     </div>

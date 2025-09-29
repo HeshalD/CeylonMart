@@ -1,8 +1,8 @@
 import { useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
-import Header from "../components/Header";
-import Footer from "../components/Footer";
+import Header from "../components/ui/Header";
+import Footer from "../components/ui/Footer";
 
 export default function Register() {
   const [form, setForm] = useState({
@@ -347,7 +347,7 @@ export default function Register() {
             </form>
           </div>
         </div>
-      </div>
+        </div>
       </div>
       <Footer />
     </div>

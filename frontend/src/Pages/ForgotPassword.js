@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import Header from '../components/Header';
-import Footer from '../components/Footer';
+import Header from '../components/ui/Header';
+import Footer from '../components/ui/Footer';
 
 const ForgotPassword = () => {
   const [form, setForm] = useState({
@@ -163,7 +163,7 @@ const ForgotPassword = () => {
             </form>
           </div>
         </div>
-      </div>
+        </div>
       </div>
       <Footer />
     </div>
