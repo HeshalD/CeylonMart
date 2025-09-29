@@ -128,7 +128,7 @@ const Header = () => {
   };
 
   return (
-    <header className="bg-gradient-to-r from-emerald-600 to-teal-700 shadow-xl">
+    <header className="sticky top-0 z-50 bg-gradient-to-r from-emerald-600 to-teal-700 shadow-xl">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center py-6">
           {/* Logo and Brand */}
@@ -155,21 +155,36 @@ const Header = () => {
           <div className="hidden md:flex items-center space-x-8">
             <button
               onClick={() => navigate('/')}
-              className="text-white hover:text-emerald-100 font-medium text-lg transition-colors duration-200"
+              className={`relative text-white hover:text-emerald-100 font-medium text-lg transition-colors duration-200 group ${
+                location.pathname === '/' ? 'text-emerald-100' : ''
+              }`}
             >
               Home
+              <span className={`absolute bottom-0 left-0 h-0.5 bg-emerald-100 transition-all duration-300 ${
+                location.pathname === '/' ? 'w-full' : 'w-0 group-hover:w-full'
+              }`}></span>
             </button>
             <button
-              onClick={() => navigate('/')}
-              className="text-white hover:text-emerald-100 font-medium text-lg transition-colors duration-200"
+              onClick={() => navigate('/products')}
+              className={`relative text-white hover:text-emerald-100 font-medium text-lg transition-colors duration-200 group ${
+                location.pathname === '/products' ? 'text-emerald-100' : ''
+              }`}
             >
               Products
+              <span className={`absolute bottom-0 left-0 h-0.5 bg-emerald-100 transition-all duration-300 ${
+                location.pathname === '/products' ? 'w-full' : 'w-0 group-hover:w-full'
+              }`}></span>
             </button>
             <button
               onClick={() => navigate('/about')}
-              className="text-white hover:text-emerald-100 font-medium text-lg transition-colors duration-200"
+              className={`relative text-white hover:text-emerald-100 font-medium text-lg transition-colors duration-200 group ${
+                location.pathname === '/about' ? 'text-emerald-100' : ''
+              }`}
             >
               About Us
+              <span className={`absolute bottom-0 left-0 h-0.5 bg-emerald-100 transition-all duration-300 ${
+                location.pathname === '/about' ? 'w-full' : 'w-0 group-hover:w-full'
+              }`}></span>
             </button>
           </div>
 
@@ -261,27 +276,42 @@ const Header = () => {
                     navigate('/');
                     setIsMenuOpen(false);
                   }}
-                  className="w-full text-left text-white hover:text-emerald-100 font-medium text-lg py-2 transition-colors duration-200"
+                  className={`relative w-full text-left text-white hover:text-emerald-100 font-medium text-lg py-2 transition-colors duration-200 group ${
+                    location.pathname === '/' ? 'text-emerald-100' : ''
+                  }`}
                 >
                   Home
+                  <span className={`absolute bottom-0 left-0 h-0.5 bg-emerald-100 transition-all duration-300 ${
+                    location.pathname === '/' ? 'w-full' : 'w-0 group-hover:w-full'
+                  }`}></span>
                 </button>
                 <button
                   onClick={() => {
-                    navigate('/');
+                    navigate('/products');
                     setIsMenuOpen(false);
                   }}
-                  className="w-full text-left text-white hover:text-emerald-100 font-medium text-lg py-2 transition-colors duration-200"
+                  className={`relative w-full text-left text-white hover:text-emerald-100 font-medium text-lg py-2 transition-colors duration-200 group ${
+                    location.pathname === '/products' ? 'text-emerald-100' : ''
+                  }`}
                 >
                   Products
+                  <span className={`absolute bottom-0 left-0 h-0.5 bg-emerald-100 transition-all duration-300 ${
+                    location.pathname === '/products' ? 'w-full' : 'w-0 group-hover:w-full'
+                  }`}></span>
                 </button>
                 <button
                   onClick={() => {
                     navigate('/about');
                     setIsMenuOpen(false);
                   }}
-                  className="w-full text-left text-white hover:text-emerald-100 font-medium text-lg py-2 transition-colors duration-200"
+                  className={`relative w-full text-left text-white hover:text-emerald-100 font-medium text-lg py-2 transition-colors duration-200 group ${
+                    location.pathname === '/about' ? 'text-emerald-100' : ''
+                  }`}
                 >
                   About Us
+                  <span className={`absolute bottom-0 left-0 h-0.5 bg-emerald-100 transition-all duration-300 ${
+                    location.pathname === '/about' ? 'w-full' : 'w-0 group-hover:w-full'
+                  }`}></span>
                 </button>
               </div>
               
