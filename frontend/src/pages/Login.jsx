@@ -88,6 +88,13 @@ const Login = () => {
       const profile = profileRes.data;
       localStorage.setItem('supplierId', profile._id);
       localStorage.setItem('supplierStatus', profile.status || 'pending');
+      // Persist user for Header greeting
+      try {
+        const displayName = profile.contactName || profile.companyName || 'Supplier';
+        localStorage.setItem('user', JSON.stringify({ name: displayName, role: 'supplier' }));
+      } catch (_) {
+        // ignore JSON/storage errors
+      }
 
       if ((profile.status || '').toLowerCase() !== 'approved') {
         // Not approved: clean up and show message
@@ -95,6 +102,7 @@ const Login = () => {
         localStorage.removeItem('supplierId');
         localStorage.removeItem('supplierStatus');
         localStorage.removeItem('userRole');
+        localStorage.removeItem('user');
         setError('Your account is pending admin approval. Please wait for approval before logging in.');
         return;
       }

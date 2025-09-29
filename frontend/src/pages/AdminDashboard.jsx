@@ -70,15 +70,6 @@ const AdminDashboard = () => {
       alert('Failed to send message');
     }
   };
-
-  const handleLogout = () => {
-    localStorage.removeItem('authToken');
-    localStorage.removeItem('supplierId');
-    localStorage.removeItem('supplierStatus');
-    localStorage.removeItem('userRole');
-    navigate('/login');
-  };
-
   const getStatusBadge = (status) => {
     const statusConfig = {
       pending: { color: 'bg-yellow-100 text-yellow-800', text: 'Pending' },
@@ -154,12 +145,6 @@ const AdminDashboard = () => {
           <div className="flex items-center gap-3">
             {/* Admin inbox bell (supplier -> admin messages) */}
             <NotificationBell adminMode />
-            <button
-              onClick={handleLogout}
-              className="bg-red-500 hover:bg-red-600 text-white font-semibold py-2 px-4 rounded-lg transition duration-200"
-            >
-              Logout
-            </button>
           </div>
         </div>
 

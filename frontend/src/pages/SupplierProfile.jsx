@@ -20,6 +20,14 @@ const SupplierProfile = () => {
       setLoading(true);
       const response = await authAPI.getProfile();
       setSupplier(response.data);
+      // Ensure Header greeting persists on direct visits/refresh
+      try {
+        const profile = response.data;
+        const displayName = profile?.contactName || profile?.companyName || 'Supplier';
+        localStorage.setItem('user', JSON.stringify({ name: displayName, role: 'supplier' }));
+      } catch (_) {
+        // ignore
+      }
       setError(null);
     } catch (err) {
       console.error('Error fetching supplier profile:', err);
