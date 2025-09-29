@@ -68,47 +68,49 @@ const Header = () => {
             </div>
           </div>
 
-          {/* Navigation Bar - Middle */}
-          <div className="hidden md:flex items-center space-x-8">
-            <button
-              onClick={() => navigate('/')}
-              className={`relative text-white hover:text-emerald-100 font-medium text-lg transition-colors duration-200 group ${
-                location.pathname === '/' ? 'text-emerald-100' : ''
-              }`}
-            >
-              Home
-              <span className={`absolute bottom-0 left-0 h-0.5 bg-emerald-100 transition-all duration-300 ${
-                location.pathname === '/' ? 'w-full' : 'w-0 group-hover:w-full'
-              }`}></span>
-            </button>
-            <button
-              onClick={() => navigate('/products')}
-              className={`relative text-white hover:text-emerald-100 font-medium text-lg transition-colors duration-200 group ${
-                location.pathname === '/products' ? 'text-emerald-100' : ''
-              }`}
-            >
-              Products
-              <span className={`absolute bottom-0 left-0 h-0.5 bg-emerald-100 transition-all duration-300 ${
-                location.pathname === '/products' ? 'w-full' : 'w-0 group-hover:w-full'
-              }`}></span>
-            </button>
-            <button
-              onClick={() => navigate('/about')}
-              className={`relative text-white hover:text-emerald-100 font-medium text-lg transition-colors duration-200 group ${
-                location.pathname === '/about' ? 'text-emerald-100' : ''
-              }`}
-            >
-              About Us
-              <span className={`absolute bottom-0 left-0 h-0.5 bg-emerald-100 transition-all duration-300 ${
-                location.pathname === '/about' ? 'w-full' : 'w-0 group-hover:w-full'
-              }`}></span>
-            </button>
-          </div>
+          {/* Navigation Bar - Middle - Hidden for Admin, Delivery, and Supplier Dashboards */}
+          {!location.pathname.includes('/dashboard/admin') && !location.pathname.includes('/dashboard/delivery') && !location.pathname.includes('/dashboard/supplier') && (
+            <div className="hidden md:flex items-center space-x-8">
+              <button
+                onClick={() => navigate('/')}
+                className={`relative text-white hover:text-emerald-100 font-medium text-lg transition-colors duration-200 group ${
+                  location.pathname === '/' ? 'text-emerald-100' : ''
+                }`}
+              >
+                Home
+                <span className={`absolute bottom-0 left-0 h-0.5 bg-emerald-100 transition-all duration-300 ${
+                  location.pathname === '/' ? 'w-full' : 'w-0 group-hover:w-full'
+                }`}></span>
+              </button>
+              <button
+                onClick={() => navigate('/products')}
+                className={`relative text-white hover:text-emerald-100 font-medium text-lg transition-colors duration-200 group ${
+                  location.pathname === '/products' ? 'text-emerald-100' : ''
+                }`}
+              >
+                Products
+                <span className={`absolute bottom-0 left-0 h-0.5 bg-emerald-100 transition-all duration-300 ${
+                  location.pathname === '/products' ? 'w-full' : 'w-0 group-hover:w-full'
+                }`}></span>
+              </button>
+              <button
+                onClick={() => navigate('/about')}
+                className={`relative text-white hover:text-emerald-100 font-medium text-lg transition-colors duration-200 group ${
+                  location.pathname === '/about' ? 'text-emerald-100' : ''
+                }`}
+              >
+                About Us
+                <span className={`absolute bottom-0 left-0 h-0.5 bg-emerald-100 transition-all duration-300 ${
+                  location.pathname === '/about' ? 'w-full' : 'w-0 group-hover:w-full'
+                }`}></span>
+              </button>
+            </div>
+          )}
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-3">
-            {/* Cart Button - Hidden on Payment Success and Orders Pages */}
-            {location.pathname !== '/payment-success' && location.pathname !== '/orders' && (
+            {/* Cart Button - Hidden on Payment Success, Orders Pages, and Management Dashboards */}
+            {location.pathname !== '/payment-success' && location.pathname !== '/orders' && !location.pathname.includes('/dashboard/admin') && !location.pathname.includes('/dashboard/delivery') && !location.pathname.includes('/dashboard/supplier') && (
               <button
                 onClick={() => navigate('/cart')}
                 className="relative bg-gradient-to-r from-white/20 to-white/30 text-white p-1.5 rounded-lg hover:from-white/30 hover:to-white/40 transform hover:scale-105 transition-all duration-300 shadow-lg hover:shadow-xl flex items-center justify-center border border-white/30 hover:border-white/50"
@@ -186,54 +188,56 @@ const Header = () => {
         {isMenuOpen && (
           <div className="md:hidden py-4 border-t border-white/20">
             <div className="space-y-4">
-              {/* Navigation Links for Mobile */}
-              <div className="space-y-2">
-                <button
-                  onClick={() => {
-                    navigate('/');
-                    setIsMenuOpen(false);
-                  }}
-                  className={`relative w-full text-left text-white hover:text-emerald-100 font-medium text-lg py-2 transition-colors duration-200 group ${
-                    location.pathname === '/' ? 'text-emerald-100' : ''
-                  }`}
-                >
-                  Home
-                  <span className={`absolute bottom-0 left-0 h-0.5 bg-emerald-100 transition-all duration-300 ${
-                    location.pathname === '/' ? 'w-full' : 'w-0 group-hover:w-full'
-                  }`}></span>
-                </button>
-                <button
-                  onClick={() => {
-                    navigate('/products');
-                    setIsMenuOpen(false);
-                  }}
-                  className={`relative w-full text-left text-white hover:text-emerald-100 font-medium text-lg py-2 transition-colors duration-200 group ${
-                    location.pathname === '/products' ? 'text-emerald-100' : ''
-                  }`}
-                >
-                  Products
-                  <span className={`absolute bottom-0 left-0 h-0.5 bg-emerald-100 transition-all duration-300 ${
-                    location.pathname === '/products' ? 'w-full' : 'w-0 group-hover:w-full'
-                  }`}></span>
-                </button>
-                <button
-                  onClick={() => {
-                    navigate('/about');
-                    setIsMenuOpen(false);
-                  }}
-                  className={`relative w-full text-left text-white hover:text-emerald-100 font-medium text-lg py-2 transition-colors duration-200 group ${
-                    location.pathname === '/about' ? 'text-emerald-100' : ''
-                  }`}
-                >
-                  About Us
-                  <span className={`absolute bottom-0 left-0 h-0.5 bg-emerald-100 transition-all duration-300 ${
-                    location.pathname === '/about' ? 'w-full' : 'w-0 group-hover:w-full'
-                  }`}></span>
-                </button>
-              </div>
+              {/* Navigation Links for Mobile - Hidden for Admin, Delivery, and Supplier Dashboards */}
+              {!location.pathname.includes('/dashboard/admin') && !location.pathname.includes('/dashboard/delivery') && !location.pathname.includes('/dashboard/supplier') && (
+                <div className="space-y-2">
+                  <button
+                    onClick={() => {
+                      navigate('/');
+                      setIsMenuOpen(false);
+                    }}
+                    className={`relative w-full text-left text-white hover:text-emerald-100 font-medium text-lg py-2 transition-colors duration-200 group ${
+                      location.pathname === '/' ? 'text-emerald-100' : ''
+                    }`}
+                  >
+                    Home
+                    <span className={`absolute bottom-0 left-0 h-0.5 bg-emerald-100 transition-all duration-300 ${
+                      location.pathname === '/' ? 'w-full' : 'w-0 group-hover:w-full'
+                    }`}></span>
+                  </button>
+                  <button
+                    onClick={() => {
+                      navigate('/products');
+                      setIsMenuOpen(false);
+                    }}
+                    className={`relative w-full text-left text-white hover:text-emerald-100 font-medium text-lg py-2 transition-colors duration-200 group ${
+                      location.pathname === '/products' ? 'text-emerald-100' : ''
+                    }`}
+                  >
+                    Products
+                    <span className={`absolute bottom-0 left-0 h-0.5 bg-emerald-100 transition-all duration-300 ${
+                      location.pathname === '/products' ? 'w-full' : 'w-0 group-hover:w-full'
+                    }`}></span>
+                  </button>
+                  <button
+                    onClick={() => {
+                      navigate('/about');
+                      setIsMenuOpen(false);
+                    }}
+                    className={`relative w-full text-left text-white hover:text-emerald-100 font-medium text-lg py-2 transition-colors duration-200 group ${
+                      location.pathname === '/about' ? 'text-emerald-100' : ''
+                    }`}
+                  >
+                    About Us
+                    <span className={`absolute bottom-0 left-0 h-0.5 bg-emerald-100 transition-all duration-300 ${
+                      location.pathname === '/about' ? 'w-full' : 'w-0 group-hover:w-full'
+                    }`}></span>
+                  </button>
+                </div>
+              )}
               
-              {/* Cart Button for Mobile - Hidden on Payment Success and Orders Pages */}
-              {location.pathname !== '/payment-success' && location.pathname !== '/orders' && (
+              {/* Cart Button for Mobile - Hidden on Payment Success, Orders Pages, and Management Dashboards */}
+              {location.pathname !== '/payment-success' && location.pathname !== '/orders' && !location.pathname.includes('/dashboard/admin') && !location.pathname.includes('/dashboard/delivery') && !location.pathname.includes('/dashboard/supplier') && (
                 <button
                   onClick={() => {
                     navigate('/cart');
