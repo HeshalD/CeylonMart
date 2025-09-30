@@ -14,7 +14,17 @@ import SupplierDashboard from "./Pages/dashboards/SupplierDashboard";
 import InventoryDashboard from "./Pages/dashboards/InventoryDashboard";
 import DeliveryDashboard from "./Pages/dashboards/DeliveryDashboard";
 
+//Chanula's pages
+import HomePage from './Pages/HomePage';
+import ProductsPage from './Pages/ProductsPage';
+import AboutUsPage from './Pages/AboutUsPage';
+import CartPage from './Pages/CartPage';
+import CheckoutPage from './Pages/CheckoutPage';
+import OrdersPage from './Pages/OrdersPage';
+import PaymentSuccessPage from './Pages/PaymentSuccessPage';
+
 function App() {
+  const customerId = "0000000000000000000000aa";
   return (
     <Routes>
         <Route path="/" element={<Login />} />
@@ -71,6 +81,14 @@ function App() {
             <DeliveryDashboard />
           </ProtectedRoute>
         } />
+
+<Route path="/" element={<HomePage />} />
+<Route path="/products" element={<ProductsPage customerId={customerId} />} />
+<Route path="/about" element={<AboutUsPage />} />
+<Route path="/cart" element={<CartPage customerId={customerId} />} />
+<Route path="/checkout" element={<CheckoutPage customerId={customerId} />} />
+<Route path="/orders" element={<OrdersPage />} />
+<Route path="/payment-success" element={<PaymentSuccessPage />} />
       </Routes>
   );
 }

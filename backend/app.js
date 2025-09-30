@@ -10,14 +10,19 @@ const app = express();
 
 // Core middleware
 app.use(express.json());
+//app.use(express.urlencoded({ extended: true }));
 app.use(cors());
 app.use(helmet());
 
 // Routes
 const userRoutes = require('./Routes/UserRoutes');
 const authRoutes = require('./Routes/authRoutes');
+const TestRoutes = require("./Routes/OrderRoutes"); 
+const PaymentRoutes = require("./Routes/PaymentRoutes"); 
 app.use('/api/users', userRoutes);
 app.use('/api/auth', authRoutes);
+app.use("/payments", PaymentRoutes);
+app.use("/orders", TestRoutes);
 
 // Health check (optional)
 app.get('/', (req, res) => {
@@ -39,3 +44,11 @@ mongoose.connect(process.env.MONGO_URI, { autoIndex: true })
     console.error('MongoDB connection error:', err.message);
     process.exit(1);
   });
+
+
+
+
+
+
+
+
