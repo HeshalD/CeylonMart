@@ -30,6 +30,7 @@ const { verifyEmailTransport } = require('./utils/sendEmail');
 const otpRoutes = require('./Routes/OtpRoutes');
 const adminRoutes = require('./Routes/admin');
 const supplierMsgRoutes = require('./Routes/supplier');
+const driverRoutes = require("./Routes/DriverRoutes");
 
 app.use('/api/users', userRoutes);
 app.use('/api/auth', authRoutes);
@@ -41,6 +42,7 @@ app.use('/api/supplierAuth', AuthRoutes);
 app.use('/api', otpRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/supplier', supplierMsgRoutes);
+app.use("/drivers", driverRoutes);
 
 // Health check (optional)
 app.get('/', (req, res) => {
@@ -62,6 +64,11 @@ mongoose.connect(process.env.MONGO_URI, { autoIndex: true })
     console.error('MongoDB connection error:', err.message);
     process.exit(1);
   });
+
+
+
+
+
 
 
 
