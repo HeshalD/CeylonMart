@@ -2,6 +2,7 @@ const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
 const driverRoutes = require("./Routes/DriverRoutes");
+const customerRoutes = require("./Routes/CustomerRoutes");
 
 const app = express();
 
@@ -12,6 +13,7 @@ app.use(express.urlencoded({ extended: true }));
 
 // Routes
 app.use("/drivers", driverRoutes);
+app.use("/customers", customerRoutes);
 
 // Basic route for testing
 app.get("/", (req, res) => {
@@ -30,6 +32,3 @@ mongoose.connect(
     console.error("DB connection error:", err);
     process.exit(1);
 });
-
-
-
