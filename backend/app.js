@@ -1,3 +1,4 @@
+require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
 const dotenv = require('dotenv');
@@ -23,11 +24,23 @@ const authRoutes = require('./Routes/authRoutes');
 const TestRoutes = require("./Routes/OrderRoutes"); 
 const PaymentRoutes = require("./Routes/PaymentRoutes"); 
 const ProductRouter = require("./Routes/ProductRoutes");
+const supplierRoutes = require('./Routes/SupplierRoutes');
+const AuthRoutes = require('./Routes/AuthRoutes');
+const { verifyEmailTransport } = require('./utils/sendEmail');
+const otpRoutes = require('./Routes/OtpRoutes');
+const adminRoutes = require('./Routes/admin');
+const supplierMsgRoutes = require('./Routes/supplier');
+
 app.use('/api/users', userRoutes);
 app.use('/api/auth', authRoutes);
 app.use("/payments", PaymentRoutes);
 app.use("/orders", TestRoutes);
 app.use("/products", ProductRouter);
+app.use('/api/suppliers', supplierRoutes);
+app.use('/api/supplierAuth', AuthRoutes);
+app.use('/api', otpRoutes);
+app.use('/api/admin', adminRoutes);
+app.use('/api/supplier', supplierMsgRoutes);
 
 // Health check (optional)
 app.get('/', (req, res) => {
@@ -49,6 +62,21 @@ mongoose.connect(process.env.MONGO_URI, { autoIndex: true })
     console.error('MongoDB connection error:', err.message);
     process.exit(1);
   });
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

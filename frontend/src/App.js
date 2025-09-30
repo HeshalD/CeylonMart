@@ -1,4 +1,4 @@
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
 import Login from "./Pages/Login";
 import Register from "./Pages/Register";
 import ForgotPassword from "./Pages/ForgotPassword";
@@ -23,9 +23,28 @@ import CheckoutPage from "./Pages/CheckoutPage";
 import OrdersPage from "./Pages/OrdersPage";
 import PaymentSuccessPage from "./Pages/PaymentSuccessPage";
 
+//Kawya's pages
+import SupplierProfile from './Pages/SupplierProfile';
+import OtpVerification from './Pages/OtpVerification';
+import SupplierAdminDashboard from './Pages/AdminDashboard';
+import SupplierProtectedRoute from './components/ProtectedRoute';
+import SupplierList from './Pages/SupplierList';
+import SupplierForm from './Pages/SupplierForm';
+import RegisterSupplier from './Pages/RegisterSupplier';
+import SupplierLogin from './Pages/Login';
+import EditProfile from './Pages/EditProfile';
+import AdminSupplierProfile from './Pages/AdminSupplierProfile';
+import RegisterOTP from './Pages/Register';
+import SupplierMessages from './Pages/SupplierMessages';
+import AdminMessages from './Pages/AdminMessages';
+import SupplierForgotPassword from './Pages/ForgotPassword';
+
 function App() {
   const customerId = "0000000000000000000000aa";
+  const location = window.location.pathname;
+  const showNavigation = !['/signup', '/login'].includes(location);
   return (
+    <>
     <Routes>
       <Route path="/" element={<Login />} />
       <Route path="/login" element={<Login />} />
@@ -120,6 +139,107 @@ function App() {
       <Route path="/orders" element={<OrdersPage />} />
       <Route path="/payment-success" element={<PaymentSuccessPage />} />
     </Routes>
+    <div>
+    {showNavigation && (
+      <nav className="bg-white shadow-lg border-b border-gray-200">
+        <div className="container mx-auto px-4">
+          <div className="flex justify-between items-center py-4">
+            <div className="flex items-center space-x-8">
+              <h1 className="text-xl font-bold text-gray-800">CeylonMart</h1>
+              <div className="flex space-x-6">
+                <button
+                  onClick={() => window.location.href = '/profile'}
+                  className="text-gray-600 hover:text-gray-900"
+                >
+                  Profile
+                </button>
+                <button
+                  onClick={() => window.location.href = '/admin'}
+                  className="text-gray-600 hover:text-gray-900"
+                >
+                  Admin
+                </button>
+              </div>
+            </div>
+            <button
+              onClick={() => {
+                localStorage.clear();
+                window.location.href = '/signup';
+              }}
+              className="bg-red-500 hover:bg-red-600 text-white font-semibold py-2 px-4 rounded-lg transition duration-200"
+            >
+              Logout
+            </button>
+          </div>
+        </div>
+      </nav>
+    )}
+    
+    <div className={showNavigation ? "container py-4" : ""}>
+      <Routes>
+        {/* Public Routes */}
+        <Route path="/supplierRegister" element={<RegisterSupplier />} />
+        <Route path="/register-otp" element={<RegisterOTP />} />
+        <Route path="/verify-otp" element={<OtpVerification />} />
+        <Route path="/supplierLogin" element={<SupplierLogin />} />
+        <Route path="/forgot-password" element={<SupplierForgotPassword />} />
+        <Route path="/suppliers" element={<SupplierList />} />
+        <Route path="/suppliers/new" element={<SupplierForm />} />
+        <Route path="/suppliers/:id/edit" element={<SupplierForm />} />
+        <Route path="/suppliers/:id" element={<SupplierProfile />} />
+        <Route path="/messages" element={<ProtectedRoute requireApproved={true}><SupplierMessages /></ProtectedRoute>} />
+        
+        {/* Protected Routes - Approved Suppliers Only */}
+        <Route
+          path="/profile"
+          element={
+            <ProtectedRoute requireApproved={true}>
+              <SupplierProfile />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/profile/edit"
+          element={
+            <SupplierProtectedRoute requireApproved={true}>
+              <EditProfile />
+            </SupplierProtectedRoute>
+          }
+        />
+        
+        {/* Admin Routes */}
+        <Route
+          path="/admin"
+          element={
+            <SupplierProtectedRoute requireAdmin={true}>
+              <SupplierAdminDashboard />
+            </SupplierProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/messages/:supplierId"
+          element={
+            <SupplierProtectedRoute requireAdmin={true}>
+              <AdminMessages />
+            </SupplierProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/suppliers/:id"
+          element={
+            <SupplierProtectedRoute requireAdmin={true}>
+              <AdminSupplierProfile />
+            </SupplierProtectedRoute>
+          }
+        />
+        
+        {/* Default Route */}
+        <Route path="/" element={<Navigate to="/login" replace />} />
+        <Route path="*" element={<Navigate to="/login" replace />} />
+      </Routes>
+    </div>
+    </div>
+    </>
   );
 }
 
