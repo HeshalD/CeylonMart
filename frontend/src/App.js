@@ -39,6 +39,15 @@ import SupplierMessages from './Pages/SupplierMessages';
 import AdminMessages from './Pages/AdminMessages';
 import SupplierForgotPassword from './Pages/ForgotPassword';
 
+//Kaveesha's page
+import InventoryManagement from "./Pages/InventoryManagement";
+import AddCategory from "./Pages/AddCategory";
+import EditCategory from "./Pages/EditCategory";
+import ProductTable from "./Pages/ProductTable";
+import AddProductForm from "./Pages/AddProductForm";
+import UpdateProductForm from "./Pages/UpdateProductForm";
+import Shop from "./Pages/Shop/Shop";
+
 function App() {
   const customerId = "0000000000000000000000aa";
   const location = window.location.pathname;
@@ -51,6 +60,17 @@ function App() {
       <Route path="/register" element={<Register />} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/reset-password" element={<ResetPassword />} />
+
+      {/*Kaveesha's rotes */}
+      <Route path="/" element={<Navigate to="/dashboard" />} />
+        
+        <Route path="/dashboard" element={<InventoryManagement />} />
+        <Route path="/add-category" element={<AddCategory />} />
+        <Route path="/edit-category/:id" element={<EditCategory />} />
+        <Route path="/products" element={<ProductTable />} />
+        <Route path="/add-product" element={<AddProductForm />} />
+        <Route path="/update-product" element={<UpdateProductForm />} />
+        <Route path="/shop" element={<Shop />} />
 
       {/* Protected Routes */}
       <Route
