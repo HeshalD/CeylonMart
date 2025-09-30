@@ -3,6 +3,7 @@ const mongoose = require('mongoose');
 const dotenv = require('dotenv');
 const cors = require('cors');
 const helmet = require('helmet');
+const path = require("path");
 
 dotenv.config();
 
@@ -14,15 +15,19 @@ app.use(express.json());
 app.use(cors());
 app.use(helmet());
 
+app.use("/uploads", express.static(path.join(__dirname, "backend/uploads"))); 
+
 // Routes
 const userRoutes = require('./Routes/UserRoutes');
 const authRoutes = require('./Routes/authRoutes');
 const TestRoutes = require("./Routes/OrderRoutes"); 
 const PaymentRoutes = require("./Routes/PaymentRoutes"); 
+const ProductRouter = require("./Routes/ProductRoutes");
 app.use('/api/users', userRoutes);
 app.use('/api/auth', authRoutes);
 app.use("/payments", PaymentRoutes);
 app.use("/orders", TestRoutes);
+app.use("/products", ProductRouter);
 
 // Health check (optional)
 app.get('/', (req, res) => {
@@ -44,6 +49,12 @@ mongoose.connect(process.env.MONGO_URI, { autoIndex: true })
     console.error('MongoDB connection error:', err.message);
     process.exit(1);
   });
+
+
+
+
+
+
 
 
 
