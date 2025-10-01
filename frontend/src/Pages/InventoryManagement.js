@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
-import MainHeader from '../components/MainHeader';
+import { useNavigate } from 'react-router-dom';
+import Header from '../components/Header';
+import Footer from '../components/Footer';
 import DashboardStats from '../components/DashboardStats';
 import InventoryNav from '../components/InventoryNav';
 import ProductInventory from './ProductsInventory/ProductInventory';
@@ -12,6 +14,7 @@ import Reorder from './Reorder/Reorder';
 
 const InventoryManagement = () => {
   const [activeTab, setActiveTab] = useState('products');
+  const navigate = useNavigate();
 
   const renderContent = () => {
     switch (activeTab) {
@@ -36,17 +39,21 @@ const InventoryManagement = () => {
 
   return (
     <div className="min-h-screen bg-white">
-      <MainHeader />
+      <Header />
 
       <div className="px-4 py-10 mx-auto max-w-7xl sm:px-6 lg:px-8">
         {/* Page Title */}
         <div className="mb-10 text-left">
-          <h1 className="mb-2 text-4xl font-extrabold tracking-tight text-emerald-800">
-            Storekeeper Dashboard
-          </h1>
-          <p className="text-lg text-teal-700">
-            Manage your inventory efficiently and effectively
-          </p>
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="mb-2 text-4xl font-extrabold tracking-tight text-emerald-800">
+                Storekeeper Dashboard
+              </h1>
+              <p className="text-lg text-teal-700">
+                Manage your inventory efficiently and effectively
+              </p>
+            </div>
+          </div>
         </div>
 
         {/* Dashboard Stats */}
@@ -66,6 +73,8 @@ const InventoryManagement = () => {
           </div>
         </div>
       </div>
+      
+      <Footer />
     </div>
   );
 };
