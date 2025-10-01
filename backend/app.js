@@ -14,9 +14,14 @@ const app = express();
 app.use(express.json());
 //app.use(express.urlencoded({ extended: true }));
 app.use(cors());
-app.use(helmet());
+app.use(
+  helmet({
+    crossOriginResourcePolicy: false,
+  })
+);
 
-app.use("/uploads", express.static(path.join(__dirname, "backend/uploads"))); 
+// Serve static files from uploads directory
+app.use("/uploads", express.static(path.join(__dirname, "uploads"))); 
 
 // Routes
 const userRoutes = require('./Routes/UserRoutes');
@@ -28,7 +33,6 @@ const categoryRouter = require("./Routes/CategoryRoutes");
 const reportRoutes = require("./Routes/reportRoutes");
 const supplierRoutes = require('./Routes/SupplierRoutes');
 const { verifyEmailTransport } = require('./utils/sendEmail');
-const AuthRoutes = require('./Routes/AuthRoutes');
 const otpRoutes = require('./Routes/OtpRoutes');
 const adminRoutes = require('./Routes/admin');
 const supplierMsgRoutes = require('./Routes/supplier');
@@ -39,11 +43,8 @@ app.use('/api/auth', authRoutes);
 app.use("/payments", PaymentRoutes);
 app.use("/orders", TestRoutes);
 app.use("/products", ProductRouter);
-app.use("/uploads", express.static(path.join(__dirname, "uploads"))); // serve images
 app.use('/api/suppliers', supplierRoutes);
-app.use('/api/supplierAuth', AuthRoutes);
-app.use(express.json());
-app.use(cors());
+app.use('/api/supplierAuth', authRoutes);
 app.use("/categories", categoryRouter);
 app.use("/api/reports", reportRoutes);
 app.use('/api', otpRoutes);

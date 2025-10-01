@@ -16,7 +16,9 @@ const ProductInventory = () => {
         // ✅ Fetch only active categories
         const catRes = await getCategories();
         const allCats = catRes.data?.categories || [];
+        console.log('Fetched categories:', allCats); // Debug log
         const activeCats = allCats.filter(cat => cat.isActive !== false);
+        console.log('Active categories:', activeCats); // Debug log
         setCategories(activeCats);
       } catch (error) {
         console.error('Error fetching categories:', error);
@@ -59,9 +61,10 @@ const ProductInventory = () => {
     navigate(`/edit-category/${category._id}`, { state: category });
   };
 
-  const handleView = (category) => {
-    navigate('/products', { state: { categoryName: category.categoryName } });
-  };
+ const handleView = (category) => {
+  navigate('/inventory/products', { state: { categoryName: category.categoryName } });
+};
+
 
   if (loading) {
     return (
@@ -114,9 +117,17 @@ const ProductInventory = () => {
                   <div className="flex items-center justify-center w-24 h-24 overflow-hidden border rounded-full bg-emerald-50 border-emerald-100">
                     {cat.categoryImage ? (
                       <img
-                        src={`http://localhost:5000/uploads/${cat.categoryImage}`}
+                        src={`http://localhost:5000/uploads/${encodeURIComponent(cat.categoryImage)}`}
                         alt={cat.categoryName}
                         className="object-cover w-full h-full"
+                        onError={(e) => {
+                          console.error('Image failed to load:', `http://localhost:5000/uploads/${cat.categoryImage}`);
+                          console.error('Encoded URL:', `http://localhost:5000/uploads/${encodeURIComponent(cat.categoryImage)}`);
+                          console.error('Error details:', e);
+                        }}
+                        onLoad={() => {
+                          console.log('Image loaded successfully:', `http://localhost:5000/uploads/${cat.categoryImage}`);
+                        }}
                       />
                     ) : (
                       <span className="text-2xl font-bold text-emerald-700">

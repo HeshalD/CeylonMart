@@ -7,6 +7,7 @@ import CartIcon from '../cart4.png';
 const Header = () => {
   const { user, isAuthenticated, logout } = useUser();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isSignInDropdownOpen, setIsSignInDropdownOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -16,6 +17,37 @@ const Header = () => {
     localStorage.removeItem('user');
     navigate('/login');
   };
+
+  const handleSignInOption = (option) => {
+    setIsSignInDropdownOpen(false);
+    switch (option) {
+      case 'customer_admin':
+        navigate('/login');
+        break;
+      case 'driver':
+        navigate('/driver/dashboard');
+        break;
+      case 'supplier':
+        navigate('/supplierLogin');
+        break;
+      default:
+        navigate('/login');
+    }
+  };
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (isSignInDropdownOpen && !event.target.closest('.signin-dropdown-container')) {
+        setIsSignInDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isSignInDropdownOpen]);
 
   const getDashboardPath = (role) => {
     switch (role) {
@@ -260,15 +292,53 @@ const Header = () => {
               </>
             ) : (
               <>
-                <button
-                  onClick={() => navigate('/login')}
-                  className="bg-gradient-to-r from-emerald-600 to-teal-700 text-white px-6 py-2.5 rounded-xl hover:from-emerald-700 hover:to-teal-800 transform hover:scale-105 transition-all duration-200 shadow-lg hover:shadow-xl flex items-center space-x-2"
-                >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
-                  </svg>
-                  <span>Sign In</span>
-                </button>
+                <div className="relative signin-dropdown-container">
+                  <button
+                    onClick={() => setIsSignInDropdownOpen(!isSignInDropdownOpen)}
+                    className="bg-gradient-to-r from-emerald-600 to-teal-700 text-white px-6 py-2.5 rounded-xl hover:from-emerald-700 hover:to-teal-800 transform hover:scale-105 transition-all duration-200 shadow-lg hover:shadow-xl flex items-center space-x-2"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
+                    </svg>
+                    <span>Sign In</span>
+                    <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
+                  
+                  {isSignInDropdownOpen && (
+                    <div className="absolute top-full right-0 mt-2 w-48 bg-white rounded-xl shadow-xl border border-gray-200 py-2 z-50">
+                      <button
+                        onClick={() => handleSignInOption('customer_admin')}
+                        className="w-full px-4 py-3 text-left text-gray-700 hover:bg-emerald-50 hover:text-emerald-700 transition-colors duration-200 flex items-center space-x-3"
+                      >
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                        </svg>
+                        <span className="font-medium">Customer/Admin</span>
+                      </button>
+                      <button
+                        onClick={() => handleSignInOption('driver')}
+                        className="w-full px-4 py-3 text-left text-gray-700 hover:bg-emerald-50 hover:text-emerald-700 transition-colors duration-200 flex items-center space-x-3"
+                      >
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l2.414 2.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0M15 17a2 2 0 104 0" />
+                        </svg>
+                        <span className="font-medium">Driver</span>
+                      </button>
+                      <button
+                        onClick={() => handleSignInOption('supplier')}
+                        className="w-full px-4 py-3 text-left text-gray-700 hover:bg-emerald-50 hover:text-emerald-700 transition-colors duration-200 flex items-center space-x-3"
+                      >
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                        </svg>
+                        <span className="font-medium">Supplier</span>
+                      </button>
+                    </div>
+                  )}
+                </div>
                 <button
                   onClick={() => navigate('/register')}
                   className="bg-gradient-to-r from-emerald-600 to-teal-700 text-white px-6 py-2.5 rounded-xl hover:from-emerald-700 hover:to-teal-800 transform hover:scale-105 transition-all duration-200 shadow-lg hover:shadow-xl flex items-center space-x-2"
@@ -394,18 +464,46 @@ const Header = () => {
                 </>
               ) : (
                 <>
-                  <button
-                    onClick={() => {
-                      navigate('/login');
-                      setIsMenuOpen(false);
-                    }}
-                    className="w-full bg-gradient-to-r from-emerald-600 to-teal-700 text-white px-6 py-2.5 rounded-xl hover:from-emerald-700 hover:to-teal-800 transform hover:scale-105 transition-all duration-200 shadow-lg hover:shadow-xl flex items-center justify-center space-x-2"
-                  >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
-                    </svg>
-                    <span>Sign In</span>
-                  </button>
+                  <div className="w-full space-y-2">
+                    <div className="text-center text-sm font-medium text-gray-600 mb-2">Sign In As:</div>
+                    <button
+                      onClick={() => {
+                        handleSignInOption('customer_admin');
+                        setIsMenuOpen(false);
+                      }}
+                      className="w-full bg-gradient-to-r from-emerald-600 to-teal-700 text-white px-6 py-2.5 rounded-xl hover:from-emerald-700 hover:to-teal-800 transform hover:scale-105 transition-all duration-200 shadow-lg hover:shadow-xl flex items-center justify-center space-x-2"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                      </svg>
+                      <span>Customer/Admin</span>
+                    </button>
+                    <button
+                      onClick={() => {
+                        handleSignInOption('driver');
+                        setIsMenuOpen(false);
+                      }}
+                      className="w-full bg-gradient-to-r from-blue-600 to-indigo-700 text-white px-6 py-2.5 rounded-xl hover:from-blue-700 hover:to-indigo-800 transform hover:scale-105 transition-all duration-200 shadow-lg hover:shadow-xl flex items-center justify-center space-x-2"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l2.414 2.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0M15 17a2 2 0 104 0" />
+                      </svg>
+                      <span>Driver</span>
+                    </button>
+                    <button
+                      onClick={() => {
+                        handleSignInOption('supplier');
+                        setIsMenuOpen(false);
+                      }}
+                      className="w-full bg-gradient-to-r from-purple-600 to-violet-700 text-white px-6 py-2.5 rounded-xl hover:from-purple-700 hover:to-violet-800 transform hover:scale-105 transition-all duration-200 shadow-lg hover:shadow-xl flex items-center justify-center space-x-2"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                      </svg>
+                      <span>Supplier</span>
+                    </button>
+                  </div>
                   <button
                     onClick={() => {
                       navigate('/register');

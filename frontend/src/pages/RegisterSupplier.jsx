@@ -379,7 +379,7 @@ const RegisterSupplier = () => {
               Already have an account?{' '}
               <button
                 type="button"
-                onClick={() => navigate('/login')}
+                onClick={() => navigate('/supplierLogin')}
                 className="font-medium text-blue-600 hover:text-blue-500"
               >
                 Sign in

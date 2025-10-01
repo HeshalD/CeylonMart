@@ -29,7 +29,7 @@ import SupplierAdminDashboard from "./Pages/AdminDashboard";
 import SupplierList from "./Pages/SupplierList";
 import SupplierForm from "./Pages/SupplierForm";
 import RegisterSupplier from "./Pages/RegisterSupplier";
-import SupplierLogin from "./Pages/Login";
+import SupplierLogin from "./Pages/Login.jsx";
 import EditProfile from "./Pages/EditProfile";
 import AdminSupplierProfile from "./Pages/AdminSupplierProfile";
 import RegisterOTP from "./Pages/Register";

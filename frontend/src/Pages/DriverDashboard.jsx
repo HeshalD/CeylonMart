@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import client from '../api/client';
 import { useUser } from '../contexts/UserContext';
+import './DriverDashboard.css';
 
 function DriverDashboard() {
   const { user, userRole, isAuthenticated, login, logout } = useUser();
@@ -34,10 +35,8 @@ function DriverDashboard() {
     setError('');
 
     try {
-      // Search for driver by email and license number
-      const res = await client.get('/drivers/search/filter', {
-        params: { email: loginData.email }
-      });
+      // Get all drivers and search for matching email and license number
+      const res = await client.get('/drivers');
       
       const foundDriver = res.data.find(d => 
         d.email === loginData.email && 
@@ -214,179 +213,184 @@ function DriverDashboard() {
   }
 
   return (
-    <div>
-      {/* Driver Profile Header */}
-      <div className="driver-profile-header">
-        <div className="driver-info-section">
-          <div className="driver-avatar-large">
-            {driver?.firstName?.charAt(0)}{driver?.lastName?.charAt(0)}
-          </div>
-          <div className="driver-details">
-            <h2 className="driver-name-large">{driver?.firstName} {driver?.lastName}</h2>
-            <p className="driver-email-large">{driver?.email}</p>
-            <div className="driver-stats">
-              <span className="stat-item">
-                <strong>{driver?.completedDeliveries || 0}</strong> Completed
-              </span>
-              <span className="stat-item">
-                <strong>{driver?.rating || 0}</strong> ⭐ Rating
-              </span>
-              <span className="stat-item">
-                <strong>{driver?.district}</strong> District
-              </span>
+    <div className="driver-dashboard-page">
+      <div className="container">
+        {/* Driver Profile Header */}
+        <div className="driver-profile-header">
+          <div className="driver-info-section">
+            <div className="driver-avatar-large">
+              {driver?.firstName?.charAt(0)}{driver?.lastName?.charAt(0)}
             </div>
-          </div>
-        </div>
-        
-        <div className="driver-actions-section">
-          <div className="availability-controls">
-            <h3>Update Your Profile</h3>
-            <p className="text-sm text-gray-600 mb-4">
-              Update your operating district and availability status. This information helps managers assign deliveries to you.
-            </p>
-            <div className="driver-update-form">
-              <div className="field">
-                <label className="label">Operating District</label>
-                <select
-                  value={driver?.district || ''}
-                  onChange={(e) => updateDriverInfo('district', e.target.value)}
-                  className="input"
-                  disabled={loading}
-                >
-                  <option value="">Select district</option>
-                  <option value="Colombo">Colombo</option>
-                  <option value="Gampaha">Gampaha</option>
-                  <option value="Kalutara">Kalutara</option>
-                </select>
+            <div className="driver-details">
+              <h2 className="driver-name-large">{driver?.firstName} {driver?.lastName}</h2>
+              <p className="driver-email-large">{driver?.email}</p>
+              <div className="driver-stats">
+                <span className="stat-item">
+                  <strong>{driver?.completedDeliveries || 0}</strong> Completed
+                </span>
+                <span className="stat-item">
+                  <strong>{driver?.rating || 0}</strong> ⭐ Rating
+                </span>
+                <span className="stat-item">
+                  <strong>{driver?.district}</strong> District
+                </span>
               </div>
-              
-              <div className="availability-buttons">
-                <button 
-                  onClick={() => updateAvailability('available')}
-                  className={`btn-availability ${driver?.availability === 'available' ? 'active' : ''}`}
-                  disabled={loading}
-                >
-                  ✅ Available
-                </button>
-                <button 
-                  onClick={() => updateAvailability('busy')}
-                  className={`btn-availability ${driver?.availability === 'busy' ? 'active' : ''}`}
-                  disabled={loading}
-                >
-                  🚛 Busy
-                </button>
-                <button 
-                  onClick={() => updateAvailability('unavailable')}
-                  className={`btn-availability ${driver?.availability === 'unavailable' ? 'active' : ''}`}
-                  disabled={loading}
-                >
-                  ❌ Unavailable
-                </button>
-              </div>
-              <span className={`current-status ${getAvailabilityColor(driver?.availability)}`}>
-                Current: {driver?.availability}
-              </span>
             </div>
           </div>
           
-          <button onClick={handleLogout} className="btn-logout">
-            Logout
-          </button>
-        </div>
-      </div>
-
-      {error && <div className="alert-error mb-4">{error}</div>}
-      {success && <div className="alert-success mb-4">{success}</div>}
-
-      {/* Orders Section */}
-      <div className="orders-section">
-        <div className="section-header">
-          <h3>My Assigned Orders</h3>
-          <p>Manage your delivery orders and update their status</p>
-        </div>
-
-        {loading ? (
-          <div className="loading">Loading orders...</div>
-        ) : orders.length === 0 ? (
-          <div className="empty-state">
-            <div className="empty-icon">📦</div>
-            <h3>No orders assigned</h3>
-            <p>You don't have any pending orders at the moment.</p>
-          </div>
-        ) : (
-          <div className="orders-grid">
-            {orders.map((order) => (
-              <div key={order._id} className="order-card">
-                <div className="order-header">
-                  <div className="order-info">
-                    <h4 className="order-id">Order #{order.orderId}</h4>
-                    <span className={`order-status ${getStatusColor(order.status)}`}>
-                      {order.status}
-                    </span>
-                  </div>
-                  <div className="order-date">
-                    {new Date(order.createdAt).toLocaleDateString()}
-                  </div>
+          <div className="driver-actions-section">
+            <div className="availability-controls">
+              <h3>Update Your Profile</h3>
+              <p className="text-sm text-gray-600 mb-4">
+                Update your operating district and availability status. This information helps managers assign deliveries to you.
+              </p>
+              <div className="driver-update-form">
+                <div className="field">
+                  <label className="label">Operating District</label>
+                  <select
+                    value={driver?.district || ''}
+                    onChange={(e) => updateDriverInfo('district', e.target.value)}
+                    className="input"
+                    disabled={loading}
+                  >
+                    <option value="">Select district</option>
+                    <option value="Colombo">Colombo</option>
+                    <option value="Gampaha">Gampaha</option>
+                    <option value="Kalutara">Kalutara</option>
+                  </select>
                 </div>
-
-                <div className="order-details">
-                  <div className="detail-row">
-                    <span className="detail-label">Customer:</span>
-                    <span className="detail-value">
-                      {order.customerId?.firstName} {order.customerId?.lastName}
-                    </span>
-                  </div>
-                  <div className="detail-row">
-                    <span className="detail-label">Phone:</span>
-                    <span className="detail-value">{order.customerId?.phone}</span>
-                  </div>
-                  <div className="detail-row">
-                    <span className="detail-label">Delivery Address:</span>
-                    <span className="detail-value">
-                      {order.deliveryAddress?.street}, {order.deliveryAddress?.city}
-                    </span>
-                  </div>
-                  <div className="detail-row">
-                    <span className="detail-label">Items:</span>
-                    <span className="detail-value">
-                      {order.items?.length || 0} items ({order.totalWeight}kg)
-                    </span>
-                  </div>
+                
+                <div className="availability-buttons">
+                  <button 
+                    onClick={() => updateAvailability('available')}
+                    className={`btn-availability ${driver?.availability === 'available' ? 'active' : ''}`}
+                    disabled={loading}
+                  >
+                    ✅ Available
+                  </button>
+                  <button 
+                    onClick={() => updateAvailability('busy')}
+                    className={`btn-availability ${driver?.availability === 'busy' ? 'active' : ''}`}
+                    disabled={loading}
+                  >
+                    🚛 Busy
+                  </button>
+                  <button 
+                    onClick={() => updateAvailability('unavailable')}
+                    className={`btn-availability ${driver?.availability === 'unavailable' ? 'active' : ''}`}
+                    disabled={loading}
+                  >
+                    ❌ Unavailable
+                  </button>
                 </div>
-
-                <div className="order-actions">
-                  {order.status === 'pending' && (
-                    <button 
-                      onClick={() => updateDeliveryStatus(order._id, 'picked')}
-                      className="btn-status-update"
-                      disabled={loading}
-                    >
-                      📦 Mark as Picked
-                    </button>
-                  )}
-                  {order.status === 'picked' && (
-                    <button 
-                      onClick={() => updateDeliveryStatus(order._id, 'in_transit')}
-                      className="btn-status-update"
-                      disabled={loading}
-                    >
-                      🚛 Start Delivery
-                    </button>
-                  )}
-                  {order.status === 'in_transit' && (
-                    <button 
-                      onClick={() => updateDeliveryStatus(order._id, 'delivered')}
-                      className="btn-status-update delivered"
-                      disabled={loading}
-                    >
-                      ✅ Mark Delivered
-                    </button>
-                  )}
-                </div>
+                <span className={`current-status ${getAvailabilityColor(driver?.availability)}`}>
+                  Current: {driver?.availability}
+                </span>
               </div>
-            ))}
+            </div>
+            
+            <button onClick={handleLogout} className="btn-logout">
+              Logout
+            </button>
           </div>
-        )}
+        </div>
+
+        {/* Alert Messages */}
+        <div className="alerts-container">
+          {error && <div className="alert-error">{error}</div>}
+          {success && <div className="alert-success">{success}</div>}
+        </div>
+
+        {/* Orders Section */}
+        <div className="orders-section">
+          <div className="section-header">
+            <h3>My Assigned Orders</h3>
+            <p>Manage your delivery orders and update their status</p>
+          </div>
+
+          {loading ? (
+            <div className="loading">Loading orders...</div>
+          ) : orders.length === 0 ? (
+            <div className="empty-state">
+              <div className="empty-icon">📦</div>
+              <h3>No orders assigned</h3>
+              <p>You don't have any pending orders at the moment.</p>
+            </div>
+          ) : (
+            <div className="orders-grid">
+              {orders.map((order) => (
+                <div key={order._id} className="order-card">
+                  <div className="order-header">
+                    <div className="order-info">
+                      <h4 className="order-id">Order #{order.orderId}</h4>
+                      <span className={`order-status ${getStatusColor(order.status)}`}>
+                        {order.status}
+                      </span>
+                    </div>
+                    <div className="order-date">
+                      {new Date(order.createdAt).toLocaleDateString()}
+                    </div>
+                  </div>
+
+                  <div className="order-details">
+                    <div className="detail-row">
+                      <span className="detail-label">Customer:</span>
+                      <span className="detail-value">
+                        {order.customerId?.firstName} {order.customerId?.lastName}
+                      </span>
+                    </div>
+                    <div className="detail-row">
+                      <span className="detail-label">Phone:</span>
+                      <span className="detail-value">{order.customerId?.phone}</span>
+                    </div>
+                    <div className="detail-row">
+                      <span className="detail-label">Delivery Address:</span>
+                      <span className="detail-value">
+                        {order.deliveryAddress?.street}, {order.deliveryAddress?.city}
+                      </span>
+                    </div>
+                    <div className="detail-row">
+                      <span className="detail-label">Items:</span>
+                      <span className="detail-value">
+                        {order.items?.length || 0} items ({order.totalWeight}kg)
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="order-actions">
+                    {order.status === 'pending' && (
+                      <button 
+                        onClick={() => updateDeliveryStatus(order._id, 'picked')}
+                        className="btn-status-update"
+                        disabled={loading}
+                      >
+                        📦 Mark as Picked
+                      </button>
+                    )}
+                    {order.status === 'picked' && (
+                      <button 
+                        onClick={() => updateDeliveryStatus(order._id, 'in_transit')}
+                        className="btn-status-update"
+                        disabled={loading}
+                      >
+                        🚛 Start Delivery
+                      </button>
+                    )}
+                    {order.status === 'in_transit' && (
+                      <button 
+                        onClick={() => updateDeliveryStatus(order._id, 'delivered')}
+                        className="btn-status-update delivered"
+                        disabled={loading}
+                      >
+                        ✅ Mark Delivered
+                      </button>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
