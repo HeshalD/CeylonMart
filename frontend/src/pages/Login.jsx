@@ -220,7 +220,7 @@ const Login = () => {
 
               <div style={{ marginTop: 12 }} className="helper-text">
                 Don't have an account?{' '}
-                <button type="button" onClick={() => navigate('/register')} className="link-btn">Register as Supplier</button>
+                <button type="button" onClick={() => navigate('/supplierRegister')} className="link-btn">Register as Supplier</button>
               </div>
 
               {/* Forgot Password Link */}
