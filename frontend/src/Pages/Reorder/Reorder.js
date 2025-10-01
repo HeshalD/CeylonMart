@@ -134,8 +134,8 @@ const Reorder = () => {
   if (loading) {
     return (
       <div className="p-6">
-        <div className="animate-pulse space-y-4">
-          <div className="h-8 bg-gray-200 rounded w-1/3"></div>
+        <div className="space-y-4 animate-pulse">
+          <div className="w-1/3 h-8 bg-gray-200 rounded"></div>
           <div className="h-10 bg-gray-200 rounded"></div>
           <div className="space-y-3">
             {[...Array(3)].map((_, i) => (
@@ -150,19 +150,19 @@ const Reorder = () => {
   return (
     <div className="p-6">
       {/* Header */}
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex items-center justify-between mb-6">
         <h2 className="text-2xl font-bold text-gray-900">Reorder Management</h2>
         <div className="flex gap-4">
           <button
             onClick={handleSelectAll}
-            className="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors"
+            className="px-4 py-2 text-white transition-colors bg-gray-600 rounded-lg hover:bg-gray-700"
           >
             {selectedItems.size === reorderSuggestions.length ? 'Deselect All' : 'Select All'}
           </button>
           <button
             onClick={handlePlaceOrder}
             disabled={selectedItems.size === 0}
-            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-4 py-2 text-white transition-colors bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Place Order ({selectedItems.size})
           </button>
@@ -171,8 +171,8 @@ const Reorder = () => {
 
       {/* Order Summary */}
       {selectedItems.size > 0 && (
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-          <div className="flex justify-between items-center">
+        <div className="p-4 mb-6 border border-blue-200 rounded-lg bg-blue-50">
+          <div className="flex items-center justify-between">
             <div>
               <h3 className="text-lg font-semibold text-blue-900">
                 Order Summary
@@ -190,11 +190,11 @@ const Reorder = () => {
 
       {/* Order Details Form */}
       {selectedItems.size > 0 && (
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Order Details</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="p-6 mb-6 bg-white border border-gray-200 rounded-lg shadow-sm">
+          <h3 className="mb-4 text-lg font-semibold text-gray-900">Order Details</h3>
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block mb-2 text-sm font-medium text-gray-700">
                 Supplier
               </label>
               <input
@@ -206,7 +206,7 @@ const Reorder = () => {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block mb-2 text-sm font-medium text-gray-700">
                 Notes
               </label>
               <input
@@ -236,7 +236,7 @@ const Reorder = () => {
                   type="checkbox"
                   checked={selectedItems.has(item._id)}
                   onChange={() => handleSelectItem(item._id)}
-                  className="mt-1 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                  className="w-4 h-4 mt-1 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
                 />
                 <div className="flex-1">
                   <div className="flex items-center justify-between mb-2">
@@ -246,7 +246,7 @@ const Reorder = () => {
                     </span>
                   </div>
                   
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                  <div className="grid grid-cols-2 gap-4 text-sm md:grid-cols-4">
                     <div>
                       <span className="text-gray-600">Category:</span>
                       <p className="font-medium">{item.category}</p>
@@ -288,10 +288,10 @@ const Reorder = () => {
       </div>
 
       {reorderSuggestions.length === 0 && (
-        <div className="text-center py-12">
-          <div className="text-green-500 text-6xl mb-4">✓</div>
-          <div className="text-gray-500 text-lg">All products are well stocked!</div>
-          <div className="text-gray-400 text-sm mt-2">
+        <div className="py-12 text-center">
+          <div className="mb-4 text-6xl text-green-500">✓</div>
+          <div className="text-lg text-gray-500">All products are well stocked!</div>
+          <div className="mt-2 text-sm text-gray-400">
             No reorder suggestions at this time
           </div>
         </div>

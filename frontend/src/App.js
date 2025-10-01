@@ -72,15 +72,9 @@ function App() {
         <Route path="/about" element={<AboutUsPage />} />
         
         {/* Customer Routes */}
-        <Route
-          path="/products"
-          element={<Shop />}
-        />
+        <Route path="/products" element={<Shop />} />   {/* 👈 Customer-facing products */}
         <Route path="/cart" element={<CartPage customerId={customerId} />} />
-        <Route
-          path="/checkout"
-          element={<CheckoutPage customerId={customerId} />}
-        />
+        <Route path="/checkout" element={<CheckoutPage customerId={customerId} />} />
         <Route path="/orders" element={<OrdersPage />} />
         <Route path="/payment-success" element={<PaymentSuccessPage />} />
 
@@ -105,10 +99,10 @@ function App() {
         <Route path="/delivery/success" element={<DeliverySuccess />} />
 
         {/* Inventory Management Routes */}
-        <Route path="/inventory" element={<InventoryManagement />} />
+        <Route path="/dashboard" element={<InventoryManagement />} />
         <Route path="/add-category" element={<AddCategory />} />
         <Route path="/edit-category/:id" element={<EditCategory />} />
-        <Route path="/inventory/products" element={<ProductTable />} />
+        <Route path="/inventory/products" element={<ProductTable />} /> {/* 👈 Changed path */}
         <Route path="/add-product" element={<AddProductForm />} />
         <Route path="/update-product" element={<UpdateProductForm />} />
         <Route path="/shop" element={<Shop />} />
