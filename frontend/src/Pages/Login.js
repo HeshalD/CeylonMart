@@ -1,6 +1,7 @@
 import { useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import { useUser } from "../contexts/UserContext";
 import Header from "../components/ui/Header";
 import Footer from "../components/ui/Footer";
 
@@ -8,6 +9,7 @@ export default function Login() {
   const [form, setForm] = useState({ email: "", password: "" });
   const [errors, setErrors] = useState({});
   const navigate = useNavigate();
+  const { login } = useUser();
 
   const validate = () => {
     const errs = {};
@@ -46,13 +48,16 @@ export default function Login() {
       localStorage.setItem("user", JSON.stringify(res.data.user));
       localStorage.setItem("loginTime", new Date().toISOString());
 
+      // Update UserContext
+      login(res.data.user, res.data.user.role);
+
       // Clear any previous errors
       setErrors({});
 
       // Redirect based on role with proper validation
       const role = res.data.user.role;
       const dashboardRoutes = {
-        "customer": "/dashboard/customer",
+        "customer": "/", // Redirect customers to home page
         "shop_owner": "/dashboard/shop", 
         "supplier_admin": "/dashboard/supplier",
         "inventory_manager": "/dashboard/inventory",
