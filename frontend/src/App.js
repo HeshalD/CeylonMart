@@ -1,4 +1,4 @@
-import { Routes, Route, Navigate, useLocation } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
 import Login from "./Pages/Login";
 import Register from "./Pages/Register";
 import ForgotPassword from "./Pages/ForgotPassword";
@@ -27,7 +27,6 @@ import PaymentSuccessPage from "./Pages/PaymentSuccessPage";
 import SupplierProfile from "./Pages/SupplierProfile";
 import OtpVerification from "./Pages/OtpVerification";
 import SupplierAdminDashboard from "./Pages/AdminDashboard";
-import SupplierProtectedRoute from "./components/ProtectedRoute";
 import SupplierList from "./Pages/SupplierList";
 import SupplierForm from "./Pages/SupplierForm";
 import RegisterSupplier from "./Pages/RegisterSupplier";
@@ -49,7 +48,6 @@ import UpdateProductForm from "./Pages/UpdateProductForm";
 import Shop from "./Pages/Shop/Shop";
 
 //Vihanthi's pages
-import DriverHomePage from "./Pages/DriverHomePage";
 import DriversSearch from "./Pages/DriversSearch";
 import DriverAvailability from "./Pages/DriverAvailability";
 import DeliveryStatus from "./Pages/DeliveryStatus";
@@ -59,86 +57,64 @@ import DriverManagement from "./Pages/DriverManagement";
 import DriverDashboard from "./Pages/DriverDashboard";
 import ManagerLogin from "./Pages/ManagerLogin";
 import { UserProvider } from "./contexts/UserContext";
-import Navigation from "./components/Navigation";
-import DriverHeader from "./components/DriverHeader";
-import DriverFooter from "./components/DriverFooter";
-
-function AppContent() {
-  const location = useLocation();
-
-  // Define which routes should use the new Header/Footer vs current Navigation
-  const isPublicRoute = location.pathname === "/";
-  const isDriverRoute =
-    location.pathname.startsWith("/driver/") ||
-    location.pathname.startsWith("/drivers/") ||
-    location.pathname.startsWith("/deliveries/") ||
-    location.pathname.startsWith("/delivery/") ||
-    location.pathname === "/manager/login";
-
-  return (
-    <div>
-      {isPublicRoute ? (
-        <>
-          <DriverHeader />
-          <main>
-            <Routes>
-              <Route path="/" element={<DriverHomePage />} />
-            </Routes>
-          </main>
-          <DriverFooter />
-        </>
-      ) : (
-        <>
-          <Navigation />
-          <main className="max-w-6xl mx-auto px-4 py-8">
-            <Routes>
-              <Route path="/manager/login" element={<ManagerLogin />} />
-              <Route path="/driver/dashboard" element={<DriverDashboard />} />
-              <Route
-                path="/drivers/management"
-                element={<DriverManagement />}
-              />
-              <Route path="/drivers/search" element={<DriversSearch />} />
-              <Route
-                path="/drivers/availability"
-                element={<DriverAvailability />}
-              />
-              <Route path="/deliveries/status" element={<DeliveryStatus />} />
-              <Route path="/deliveries/confirm" element={<DeliveryConfirm />} />
-              <Route path="/delivery/success" element={<DeliverySuccess />} />
-            </Routes>
-          </main>
-        </>
-      )}
-    </div>
-  );
-}
 
 function App() {
   const customerId = "0000000000000000000000aa";
-  const location = window.location.pathname;
-  const showNavigation = !["/signup", "/login"].includes(location);
+  
   return (
-    <>
+    <UserProvider>
       <Routes>
-        <Route path="/" element={<Login />} />
+        {/* Public Routes - No Authentication Required */}
+        <Route path="/" element={<HomePage />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password" element={<ResetPassword />} />
+        <Route path="/about" element={<AboutUsPage />} />
+        
+        {/* Customer Routes */}
+        <Route
+          path="/products"
+          element={<Shop />}
+        />
+        <Route path="/cart" element={<CartPage customerId={customerId} />} />
+        <Route
+          path="/checkout"
+          element={<CheckoutPage customerId={customerId} />}
+        />
+        <Route path="/orders" element={<OrdersPage />} />
+        <Route path="/payment-success" element={<PaymentSuccessPage />} />
 
-        {/*Kaveesha's rotes */}
-        <Route path="/" element={<Navigate to="/dashboard" />} />
+        {/* Supplier Routes */}
+        <Route path="/supplierRegister" element={<RegisterSupplier />} />
+        <Route path="/register-otp" element={<RegisterOTP />} />
+        <Route path="/verify-otp" element={<OtpVerification />} />
+        <Route path="/supplierLogin" element={<SupplierLogin />} />
+        <Route path="/suppliers" element={<SupplierList />} />
+        <Route path="/suppliers/new" element={<SupplierForm />} />
+        <Route path="/suppliers/:id/edit" element={<SupplierForm />} />
+        <Route path="/suppliers/:id" element={<SupplierProfile />} />
 
-        <Route path="/dashboard" element={<InventoryManagement />} />
+        {/* Driver Routes */}
+        <Route path="/manager/login" element={<ManagerLogin />} />
+        <Route path="/driver/dashboard" element={<DriverDashboard />} />
+        <Route path="/drivers/management" element={<DriverManagement />} />
+        <Route path="/drivers/search" element={<DriversSearch />} />
+        <Route path="/drivers/availability" element={<DriverAvailability />} />
+        <Route path="/deliveries/status" element={<DeliveryStatus />} />
+        <Route path="/deliveries/confirm" element={<DeliveryConfirm />} />
+        <Route path="/delivery/success" element={<DeliverySuccess />} />
+
+        {/* Inventory Management Routes */}
+        <Route path="/inventory" element={<InventoryManagement />} />
         <Route path="/add-category" element={<AddCategory />} />
         <Route path="/edit-category/:id" element={<EditCategory />} />
-        <Route path="/products" element={<ProductTable />} />
+        <Route path="/inventory/products" element={<ProductTable />} />
         <Route path="/add-product" element={<AddProductForm />} />
         <Route path="/update-product" element={<UpdateProductForm />} />
         <Route path="/shop" element={<Shop />} />
 
-        {/* Protected Routes */}
+        {/* Protected Routes - Require Authentication */}
         <Route
           path="/profile"
           element={
@@ -147,7 +123,6 @@ function App() {
             </ProtectedRoute>
           }
         />
-
         <Route
           path="/account-settings"
           element={
@@ -156,7 +131,24 @@ function App() {
             </ProtectedRoute>
           }
         />
+        <Route
+          path="/messages"
+          element={
+            <ProtectedRoute requireApproved={true}>
+              <SupplierMessages />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/profile/edit"
+          element={
+            <ProtectedRoute requireApproved={true}>
+              <EditProfile />
+            </ProtectedRoute>
+          }
+        />
 
+        {/* Dashboard Routes - Role-based Access */}
         <Route
           path="/dashboard/customer"
           element={
@@ -165,7 +157,6 @@ function App() {
             </ProtectedRoute>
           }
         />
-
         <Route
           path="/dashboard/admin"
           element={
@@ -174,7 +165,6 @@ function App() {
             </ProtectedRoute>
           }
         />
-
         <Route
           path="/dashboard/shop"
           element={
@@ -183,7 +173,6 @@ function App() {
             </ProtectedRoute>
           }
         />
-
         <Route
           path="/dashboard/supplier"
           element={
@@ -192,7 +181,6 @@ function App() {
             </ProtectedRoute>
           }
         />
-
         <Route
           path="/dashboard/inventory"
           element={
@@ -201,7 +189,6 @@ function App() {
             </ProtectedRoute>
           }
         />
-
         <Route
           path="/dashboard/delivery"
           element={
@@ -211,137 +198,36 @@ function App() {
           }
         />
 
-        <Route path="/" element={<HomePage />} />
+        {/* Admin Routes */}
         <Route
-          path="/products"
-          element={<ProductsPage customerId={customerId} />}
+          path="/admin"
+          element={
+            <ProtectedRoute requireAdmin={true}>
+              <SupplierAdminDashboard />
+            </ProtectedRoute>
+          }
         />
-        <Route path="/about" element={<AboutUsPage />} />
-        <Route path="/cart" element={<CartPage customerId={customerId} />} />
         <Route
-          path="/checkout"
-          element={<CheckoutPage customerId={customerId} />}
+          path="/admin/messages/:supplierId"
+          element={
+            <ProtectedRoute requireAdmin={true}>
+              <AdminMessages />
+            </ProtectedRoute>
+          }
         />
-        <Route path="/orders" element={<OrdersPage />} />
-        <Route path="/payment-success" element={<PaymentSuccessPage />} />
+        <Route
+          path="/admin/suppliers/:id"
+          element={
+            <ProtectedRoute requireAdmin={true}>
+              <AdminSupplierProfile />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Fallback Routes */}
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
-      <div>
-        {showNavigation && (
-          <nav className="bg-white shadow-lg border-b border-gray-200">
-            <div className="container mx-auto px-4">
-              <div className="flex justify-between items-center py-4">
-                <div className="flex items-center space-x-8">
-                  <h1 className="text-xl font-bold text-gray-800">
-                    CeylonMart
-                  </h1>
-                  <div className="flex space-x-6">
-                    <button
-                      onClick={() => (window.location.href = "/profile")}
-                      className="text-gray-600 hover:text-gray-900"
-                    >
-                      Profile
-                    </button>
-                    <button
-                      onClick={() => (window.location.href = "/admin")}
-                      className="text-gray-600 hover:text-gray-900"
-                    >
-                      Admin
-                    </button>
-                  </div>
-                </div>
-                <button
-                  onClick={() => {
-                    localStorage.clear();
-                    window.location.href = "/signup";
-                  }}
-                  className="bg-red-500 hover:bg-red-600 text-white font-semibold py-2 px-4 rounded-lg transition duration-200"
-                >
-                  Logout
-                </button>
-              </div>
-            </div>
-          </nav>
-        )}
-
-        <div className={showNavigation ? "container py-4" : ""}>
-          <Routes>
-            {/* Public Routes */}
-            <Route path="/supplierRegister" element={<RegisterSupplier />} />
-            <Route path="/register-otp" element={<RegisterOTP />} />
-            <Route path="/verify-otp" element={<OtpVerification />} />
-            <Route path="/supplierLogin" element={<SupplierLogin />} />
-            <Route
-              path="/forgot-password"
-              element={<SupplierForgotPassword />}
-            />
-            <Route path="/suppliers" element={<SupplierList />} />
-            <Route path="/suppliers/new" element={<SupplierForm />} />
-            <Route path="/suppliers/:id/edit" element={<SupplierForm />} />
-            <Route path="/suppliers/:id" element={<SupplierProfile />} />
-            <Route
-              path="/messages"
-              element={
-                <ProtectedRoute requireApproved={true}>
-                  <SupplierMessages />
-                </ProtectedRoute>
-              }
-            />
-
-            {/* Protected Routes - Approved Suppliers Only */}
-            <Route
-              path="/profile"
-              element={
-                <ProtectedRoute requireApproved={true}>
-                  <SupplierProfile />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/profile/edit"
-              element={
-                <SupplierProtectedRoute requireApproved={true}>
-                  <EditProfile />
-                </SupplierProtectedRoute>
-              }
-            />
-
-            {/* Admin Routes */}
-            <Route
-              path="/admin"
-              element={
-                <SupplierProtectedRoute requireAdmin={true}>
-                  <SupplierAdminDashboard />
-                </SupplierProtectedRoute>
-              }
-            />
-            <Route
-              path="/admin/messages/:supplierId"
-              element={
-                <SupplierProtectedRoute requireAdmin={true}>
-                  <AdminMessages />
-                </SupplierProtectedRoute>
-              }
-            />
-            <Route
-              path="/admin/suppliers/:id"
-              element={
-                <SupplierProtectedRoute requireAdmin={true}>
-                  <AdminSupplierProfile />
-                </SupplierProtectedRoute>
-              }
-            />
-
-            {/* Default Route */}
-            <Route path="/" element={<Navigate to="/login" replace />} />
-            <Route path="*" element={<Navigate to="/login" replace />} />
-          </Routes>
-        </div>
-      </div>
-
-      <UserProvider>
-        <AppContent />
-      </UserProvider>
-    </>
+    </UserProvider>
   );
 }
 
