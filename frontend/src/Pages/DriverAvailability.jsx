@@ -63,13 +63,13 @@ function DriverAvailability() {
           <div className="bg-white/70 backdrop-blur-sm overflow-hidden shadow-xl rounded-2xl border border-white/20 p-8 mb-6">
             <div className="flex justify-between items-center mb-6">
               <div>
-                <h2 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+                <h2 className="text-3xl font-bold bg-gradient-to-r from-emerald-600 to-green-600 bg-clip-text text-transparent">
                   Available Drivers Search
                 </h2>
                 <p className="text-gray-600 mt-2">Search and manage available drivers by district</p>
               </div>
               <div className="text-right">
-                <div className="text-2xl font-bold text-blue-600">{filteredAvailableDrivers.length}</div>
+                <div className="text-2xl font-bold text-emerald-600">{filteredAvailableDrivers.length}</div>
                 <div className="text-sm text-gray-600">Available Drivers</div>
               </div>
             </div>
@@ -83,7 +83,7 @@ function DriverAvailability() {
                   placeholder="Search by name, email, or district..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
                 />
               </div>
               <div>
@@ -91,7 +91,7 @@ function DriverAvailability() {
                 <select
                   value={selectedDistrict}
                   onChange={(e) => setSelectedDistrict(e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
                 >
                   <option value="">All Districts</option>
                   {districts.map(district => (
