@@ -6,7 +6,7 @@ const { auth } = require('../middleware/auth');
 const router = express.Router();
 
 // GET /api/supplier/notifications/:id
-router.get('/notifications/:id', auth, async (req, res) => {
+router.get('/notifications/:id', async (req, res) => {
   try {
     const { id } = req.params;
     if (req.user?.supplierId && req.user.supplierId !== id) {
@@ -20,7 +20,7 @@ router.get('/notifications/:id', auth, async (req, res) => {
 });
 
 // PATCH /api/supplier/notifications/:id/mark-read
-router.patch('/notifications/:id/mark-read', auth, async (req, res) => {
+router.patch('/notifications/:id/mark-read', async (req, res) => {
   try {
     const { id } = req.params;
     const doc = await Notification.findByIdAndUpdate(id, { isRead: true }, { new: true });
@@ -32,7 +32,7 @@ router.patch('/notifications/:id/mark-read', auth, async (req, res) => {
 });
 
 // DELETE /api/supplier/notifications/:id
-router.delete('/notifications/:id', auth, async (req, res) => {
+router.delete('/notifications/:id', async (req, res) => {
   try {
     const { id } = req.params;
     const deleted = await Notification.findByIdAndDelete(id);
@@ -44,7 +44,7 @@ router.delete('/notifications/:id', auth, async (req, res) => {
 });
 
 // POST /api/supplier/reply/:id  (id: supplierId)
-router.post('/reply/:id', auth, async (req, res) => {
+router.post('/reply/:id', async (req, res) => {
   try {
     const { id } = req.params;
     const { title, content } = req.body;
@@ -57,7 +57,7 @@ router.post('/reply/:id', auth, async (req, res) => {
 });
 
 // GET /api/supplier/messages/:id (supplier thread)
-router.get('/messages/:id', auth, async (req, res) => {
+router.get('/messages/:id', async (req, res) => {
   try {
     const { id } = req.params;
     const docs = await Message.find({ supplierId: id }).sort({ createdAt: 1 });
@@ -68,7 +68,7 @@ router.get('/messages/:id', auth, async (req, res) => {
 });
 
 // PATCH /api/messages/:id/mark-read
-router.patch('/messages/:id/mark-read', auth, async (req, res) => {
+router.patch('/messages/:id/mark-read', async (req, res) => {
   try {
     const { id } = req.params;
     const doc = await Message.findByIdAndUpdate(id, { isRead: true }, { new: true });

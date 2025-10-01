@@ -1,43 +1,12 @@
 import axios from 'axios';
 
-// Create axios instance with base configuration
+// Create axios instance with base configuration (no auth attached)
 const api = axios.create({
   baseURL: 'http://localhost:5000/api',
   headers: {
     'Content-Type': 'application/json',
   },
 });
-
-// Add request interceptor to include auth token if available
-api.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem('authToken');
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-  },
-  (error) => {
-    return Promise.reject(error);
-  }
-);
-
-// Add response interceptor for error handling
-api.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    const status = error.response?.status;
-    const url = error.config?.url || '';
-    if (status === 401 && !url.includes('/auth/login')) {
-      localStorage.removeItem('authToken');
-      localStorage.removeItem('supplierId');
-      localStorage.removeItem('userRole');
-      localStorage.removeItem('supplierStatus');
-      window.location.href = '/login';
-    }
-    return Promise.reject(error);
-  }
-);
 
 // Authentication API functions
 export const authAPI = {

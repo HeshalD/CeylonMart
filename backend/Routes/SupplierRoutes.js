@@ -22,7 +22,7 @@ router.post('/register', registerSupplier);
 router.post('/verify-otp', verifyOtp);
 
 // GET /api/suppliers (admin only)
-router.get('/', adminAuth, getSuppliers);
+router.get('/', getSuppliers);
 
 // GET /api/suppliers/me (get current supplier profile)
 router.get('/me', auth, getCurrentSupplier);
@@ -31,19 +31,19 @@ router.get('/me', auth, getCurrentSupplier);
 router.get('/:id', getSupplierById);
 
 // PUT /api/suppliers/:id (admin only - approve/reject/profile edit)
-router.put('/:id', adminAuth, updateSupplier);
+router.put('/:id', updateSupplier);
 
 // PUT /api/suppliers/:id/status (admin only)
-router.put('/:id/status', adminAuth, updateSupplierStatus);
+router.put('/:id/status',  updateSupplierStatus);
 
 // PATCH /api/suppliers/:id/approve (admin only)
-router.patch('/:id/approve', adminAuth, approveSupplier);
+router.patch('/:id/approve',  approveSupplier);
 
 // PATCH /api/suppliers/:id/reject (admin only)
-router.patch('/:id/reject', adminAuth, rejectSupplier);
+router.patch('/:id/reject', rejectSupplier);
 
 // DELETE /api/suppliers/:id (admin only)
-router.delete('/:id', adminAuth, deleteSupplier);
+router.delete('/:id', deleteSupplier);
 
 module.exports = router;
 

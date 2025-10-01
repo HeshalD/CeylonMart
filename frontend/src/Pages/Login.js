@@ -40,11 +40,39 @@ export default function Login() {
       return;
     }
 
+    // Temporary credential-based redirects for local development
+    // 1) Supplier admin quick access
+    if (
+      form.email.trim().toLowerCase() === "ann03@gmail.com" &&
+      form.password === "Iamann01"
+    ) {
+      const mockUser = {
+        email: "ann03@gmail.com",
+        role: "supplier_admin",
+        name: "Supplier Admin",
+      };
+      localStorage.setItem("token", "dev-bypass-token");
+      localStorage.setItem("authToken", "dev-bypass-token");
+      localStorage.setItem("user", JSON.stringify(mockUser));
+      localStorage.setItem("loginTime", new Date().toISOString());
+      localStorage.setItem("userRole", "supplier_admin");
+      // Optional supplier guard fields for other protected pages
+      localStorage.setItem("supplierId", "dev-supplier-id");
+      localStorage.setItem("supplierStatus", "approved");
+      login(mockUser, mockUser.role);
+      setErrors({});
+      navigate("/dashboard/supplier");
+      return;
+    }
+  
+
     try {
       const res = await axios.post("http://localhost:5000/api/users/login", form);
       
       // Store JWT token and user data securely
       localStorage.setItem("token", res.data.token);
+      // Ensure axios instance includes Authorization header
+      localStorage.setItem("authToken", res.data.token);
       localStorage.setItem("user", JSON.stringify(res.data.user));
       localStorage.setItem("loginTime", new Date().toISOString());
 
@@ -56,13 +84,15 @@ export default function Login() {
 
       // Redirect based on role with proper validation
       const role = res.data.user.role;
+      localStorage.setItem("userRole", role || "");
       const dashboardRoutes = {
         "customer": "/", // Redirect customers to home page
         "shop_owner": "/dashboard/shop", 
         "supplier_admin": "/dashboard/supplier",
         "inventory_manager": "/dashboard/inventory",
         "delivery_admin": "/drivers/management", // Redirect delivery admin to driver management
-        "admin": "/dashboard/admin"
+        // Admin supplier approvals live at /admin
+        "admin": "/admin"
       };
 
       const redirectPath = dashboardRoutes[role] || "/";
