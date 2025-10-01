@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react"; 
 import { useLocation, useNavigate } from "react-router-dom";
 import axios from "axios";
-import MainHeader from "../components/MainHeader";
+import Header from '../components/Header';
+import Footer from '../components/Footer';
 import { emitDashboardUpdate } from "../utils/dashboardEmitter";
 
 const ProductTable = () => {
@@ -63,7 +64,7 @@ const ProductTable = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <MainHeader />
+      <Header />
       <div className="px-4 py-8 mx-auto max-w-7xl sm:px-6 lg:px-8">
         <div className="flex items-center justify-between mb-8">
           <div>

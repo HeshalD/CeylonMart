@@ -37,70 +37,6 @@ const Shop = () => {
   const [loadingCategories, setLoadingCategories] = useState(true);
   const [loadingProducts, setLoadingProducts] = useState(true);
 
-  // Sample categories with available images
-  const sampleCategories = [
-    { _id: '1', categoryName: 'Fruits', categoryImage: 'fruits.jpg' },
-    { _id: '2', categoryName: 'Vegetables', categoryImage: 'vegetable.jpg' },
-    { _id: '3', categoryName: 'Dairy', categoryImage: 'dairy.jpg' },
-    { _id: '4', categoryName: 'Beverages', categoryImage: 'beverage.jpg' },
-    { _id: '5', categoryName: 'Grains', categoryImage: 'rice.jpg' }
-  ];
-
-  // Sample products with available images
-  const sampleProducts = [
-    { _id: '1', productName: 'Fresh Apples', price: 250, category: 'Fruits', productImage: 'apple1.png', currentStock: 50, brandName: 'Fresh Farm' },
-    { _id: '2', productName: 'Green Apples', price: 280, category: 'Fruits', productImage: 'apple-green.jpg', currentStock: 30, brandName: 'Organic' },
-    { _id: '3', productName: 'Fresh Bananas', price: 120, category: 'Fruits', productImage: 'batana.jpg', currentStock: 100, brandName: 'Local Farm' },
-    { _id: '4', productName: 'Fresh Carrots', price: 180, category: 'Vegetables', productImage: 'carrot.jpg', currentStock: 75, brandName: 'Farm Fresh' },
-    { _id: '5', productName: 'Red Tomatoes', price: 200, category: 'Vegetables', productImage: 'tomatoes2.jpg', currentStock: 60, brandName: 'Garden Fresh' },
-    { _id: '6', productName: 'Fresh Milk', price: 150, category: 'Dairy', productImage: 'freshmilk.jpg', currentStock: 40, brandName: 'Kotmale' },
-    { _id: '7', productName: 'Coca Cola', price: 80, category: 'Beverages', productImage: 'cocacola.jpg', currentStock: 200, brandName: 'Coca Cola' },
-    { _id: '8', productName: 'Sprite', price: 80, category: 'Beverages', productImage: 'sprite.jpg', currentStock: 150, brandName: 'Sprite' },
-    { _id: '9', productName: 'Fresh Rice', price: 120, category: 'Grains', productImage: 'rice.jpg', currentStock: 80, brandName: 'Premium' },
-    { _id: '10', productName: 'Fresh Potatoes', price: 160, category: 'Vegetables', productImage: 'potatoes.jpg', currentStock: 90, brandName: 'Farm Fresh' },
-    { _id: '11', productName: 'Fresh Mango', price: 300, category: 'Fruits', productImage: 'mango.jpg', currentStock: 25, brandName: 'Tropical' },
-    { _id: '12', productName: 'Fresh Orange', price: 220, category: 'Fruits', productImage: 'orange.jpg', currentStock: 45, brandName: 'Citrus Farm' }
-  ];
-
-  // Function to get image URL with fallback
-  const getImageUrl = (imageName) => {
-    if (!imageName) return null;
-    
-    // Try backend first
-    const backendUrl = `http://localhost:5000/uploads/${imageName}`;
-    
-    // Fallback to local images
-    const localUrl = `/images/${imageName}`;
-    
-    return { backendUrl, localUrl };
-  };
-
-  // Placeholder images for products
-  const getPlaceholderImage = (category) => {
-    const placeholders = {
-      'Fruits': '🍎',
-      'Vegetables': '🥕', 
-      'Dairy': '🥛',
-      'Beverages': '🥤',
-      'Grains': '🌾',
-      'default': '🛒'
-    };
-    return placeholders[category] || placeholders.default;
-  };
-
-  // Placeholder images for categories
-  const getCategoryPlaceholder = (categoryName) => {
-    const categoryPlaceholders = {
-      'Fruits': '🍎',
-      'Vegetables': '🥕', 
-      'Dairy': '🥛',
-      'Beverages': '🥤',
-      'Grains': '🌾',
-      'default': '📦'
-    };
-    return categoryPlaceholders[categoryName] || categoryPlaceholders.default;
-  };
-
   const [categoryFilter, setCategoryFilter] = useState("");
   const [searchText, setSearchText] = useState("");
   const [sortBy, setSortBy] = useState("name-asc");
@@ -118,8 +54,8 @@ const Shop = () => {
         const cats = res.data?.categories ?? res.data ?? [];
         if (mounted) setCategories(cats);
       } catch (err) {
-        console.error("Failed to fetch categories, using sample data", err);
-        if (mounted) setCategories(sampleCategories);
+        console.error("Failed to fetch categories", err);
+        if (mounted) setCategories([]);
       } finally {
         if (mounted) setLoadingCategories(false);
       }
@@ -139,8 +75,8 @@ const Shop = () => {
         const prods = res.data?.products ?? res.data ?? [];
         if (mounted) setProducts(prods);
       } catch (err) {
-        console.error("Failed to fetch products, using sample data", err);
-        if (mounted) setProducts(sampleProducts);
+        console.error("Failed to fetch products", err);
+        if (mounted) setProducts([]);
       } finally {
         if (mounted) setLoadingProducts(false);
       }
@@ -211,6 +147,9 @@ const Shop = () => {
     setTimeout(() => setToast(null), 2200);
   };
 
+  const handleHeaderHome = () => {
+    navigate("/shop");
+  };
 
   const getStatusLabel = (p) => {
     const current = Number(p.currentStock ?? 0);
@@ -234,7 +173,7 @@ const Shop = () => {
     if (v == null || v === "") return "-";
     return `Rs. ${Number(v).toLocaleString()}`;
   };
-
+  
   return (
     <div className="min-h-screen bg-gray-50">
       <Header />
@@ -251,7 +190,7 @@ const Shop = () => {
         </div>
       </div>
 
-      {/* BODY */}
+       {/* BODY */}
       <div className="flex gap-6 px-4 py-8 mx-auto max-w-7xl sm:px-6 lg:px-8">
         {/* Sidebar */}
         <aside className="w-64 p-4 bg-white border-2 rounded-lg shadow-lg h-fit">
@@ -295,11 +234,17 @@ const Shop = () => {
                     }`}
                   >
                     <div className="flex items-center justify-center overflow-hidden bg-gray-100 rounded-full w-14 h-14">
-                      <div className="flex items-center justify-center w-full h-full bg-gradient-to-br from-emerald-100 to-teal-200">
-                        <span className="text-2xl">
-                          {getCategoryPlaceholder(label)}
+                      {c.categoryImage ? (
+                        <img
+                          src={`http://localhost:5000/uploads/${c.categoryImage}`}
+                          alt={label}
+                          className="object-cover w-full h-full"
+                        />
+                      ) : (
+                        <span className="text-lg font-bold text-gray-500">
+                          {label.charAt(0)}
                         </span>
-                      </div>
+                      )}
                     </div>
                     <span className="text-base font-medium text-gray-800">
                       {label}
@@ -396,30 +341,13 @@ const Shop = () => {
                     <div className="flex items-center justify-center overflow-hidden h-44 bg-gray-50">
                       {p.productImage ? (
                         <img
-                          src={getImageUrl(p.productImage).backendUrl}
+                          src={`http://localhost:5000/uploads/${p.productImage}`}
                           alt={p.productName ?? p.name}
-                          className="object-cover w-full h-full hover:scale-105 transition-transform duration-300"
-                          onError={(e) => {
-                            // Try fallback image
-                            const fallbackUrl = getImageUrl(p.productImage).localUrl;
-                            if (e.target.src !== fallbackUrl) {
-                              e.target.src = fallbackUrl;
-                            } else {
-                              // If both fail, show placeholder
-                              e.target.style.display = 'none';
-                              e.target.nextSibling.style.display = 'flex';
-                            }
-                          }}
+                          className="object-contain w-full h-full"
                         />
-                      ) : null}
-                      <div className="flex items-center justify-center w-full h-full text-gray-400 bg-gradient-to-br from-gray-100 to-gray-200" style={{ display: p.productImage ? 'none' : 'flex' }}>
-                        <div className="text-center">
-                          <div className="text-6xl mb-2">
-                            {getPlaceholderImage(p.category)}
-                          </div>
-                          <p className="text-sm font-medium text-gray-600">{p.category}</p>
-                        </div>
-                      </div>
+                      ) : (
+                        <div className="text-gray-400">No image</div>
+                      )}
                     </div>
                     <div className="flex flex-col flex-1 p-4">
                       <div className="flex items-start justify-between gap-2">
@@ -486,9 +414,8 @@ const Shop = () => {
           </div>
         </main>
       </div>
-
+      
       <Footer />
-
       {toast && (
         <div className="fixed p-3 bg-white border rounded-md shadow bottom-6 right-6">
           <div className="text-sm">{toast.message}</div>
