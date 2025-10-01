@@ -15,7 +15,7 @@ import DeliveryDashboard from "./Pages/dashboards/DeliveryDashboard";
 
 //Chanula's pages
 import HomePage from "./Pages/HomePage";
-import ProductsPage from "./Pages/ProductsPage";
+//import ProductsPage from "./Pages/ProductsPage";
 import AboutUsPage from "./Pages/AboutUsPage";
 import CartPage from "./Pages/CartPage";
 import CheckoutPage from "./Pages/CheckoutPage";
@@ -25,7 +25,7 @@ import PaymentSuccessPage from "./Pages/PaymentSuccessPage";
 //Kawya's pages
 import SupplierProfile from "./Pages/SupplierProfile";
 import OtpVerification from "./Pages/OtpVerification";
-import SupplierAdminDashboard from "./Pages/SupplierAdminDashboard.jsx";
+import SupplierAdminDashboard from "./Pages/SupplierAdminDashboard";
 import SupplierList from "./Pages/SupplierList";
 import SupplierForm from "./Pages/SupplierForm";
 import RegisterSupplier from "./Pages/RegisterSupplier";
@@ -153,8 +153,9 @@ function App() {
         <Route
           path="/dashboard/admin"
           element={
-
+            <ProtectedRoute requiredRole="admin">
               <AdminDashboard />
+            </ProtectedRoute>
           }
         />
         <Route
@@ -194,21 +195,25 @@ function App() {
         <Route
           path="/admin"
           element={
-            
+            <ProtectedRoute requireAdmin={true}>
               <SupplierAdminDashboard />
-      
+            </ProtectedRoute>
           }
         />
         <Route
           path="/admin/messages/:supplierId"
           element={
-            <AdminMessages />
+            <ProtectedRoute requireAdmin={true}>
+              <AdminMessages />
+            </ProtectedRoute>
           }
         />
         <Route
           path="/admin/suppliers/:id"
           element={
-            <AdminSupplierProfile />
+            <ProtectedRoute requireAdmin={true}>
+              <AdminSupplierProfile />
+            </ProtectedRoute>
           }
         />
 
