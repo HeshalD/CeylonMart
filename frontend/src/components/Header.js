@@ -1,22 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { useUser } from '../contexts/UserContext';
 import CeylonMartLogo from '../ceylonlogo2.jpeg';
 import CartIcon from '../cart4.png';
 
 const Header = () => {
-  const [user, setUser] = useState(null);
+  const { user, isAuthenticated, logout } = useUser();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
 
-  useEffect(() => {
-    const userData = localStorage.getItem('user');
-    if (userData) {
-      setUser(JSON.parse(userData));
-    }
-  }, []);
-
   const handleLogout = () => {
+    logout();
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     navigate('/login');

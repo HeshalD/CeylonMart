@@ -12,19 +12,37 @@ export const useUser = () => {
 
 export const UserProvider = ({ children }) => {
   const [user, setUser] = useState(null);
-  const [userRole, setUserRole] = useState(null); // 'driver' or 'manager'
+  const [userRole, setUserRole] = useState(null); // 'driver', 'manager', or main user role
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   // Check for existing login on app load
   useEffect(() => {
+    // Check for main user authentication first
+    const savedUser = localStorage.getItem('user');
+    const savedToken = localStorage.getItem('token');
+    
+    if (savedUser && savedToken) {
+      try {
+        const userData = JSON.parse(savedUser);
+        setUser(userData);
+        setUserRole(userData.role);
+        setIsAuthenticated(true);
+        return;
+      } catch (error) {
+        console.error('Error parsing user data:', error);
+        localStorage.removeItem('user');
+        localStorage.removeItem('token');
+      }
+    }
+
+    // Check for driver login
     const savedDriverId = localStorage.getItem('driverId');
     if (savedDriverId) {
-      // Driver is logged in
       setUser({ id: savedDriverId, role: 'driver' });
       setUserRole('driver');
       setIsAuthenticated(true);
     } else {
-      // Check if manager is logged in (you can implement manager login later)
+      // Check if manager is logged in
       const savedManagerId = localStorage.getItem('managerId');
       if (savedManagerId) {
         setUser({ id: savedManagerId, role: 'manager' });
@@ -44,6 +62,9 @@ export const UserProvider = ({ children }) => {
       localStorage.setItem('driverId', userData.id);
     } else if (role === 'manager') {
       localStorage.setItem('managerId', userData.id);
+    } else {
+      // Main user authentication - already handled by Login component
+      // Just update the context state
     }
   };
 
@@ -52,9 +73,11 @@ export const UserProvider = ({ children }) => {
     setUserRole(null);
     setIsAuthenticated(false);
     
-    // Clear localStorage
+    // Clear all localStorage items
     localStorage.removeItem('driverId');
     localStorage.removeItem('managerId');
+    localStorage.removeItem('user');
+    localStorage.removeItem('token');
   };
 
   const value = {
