@@ -33,7 +33,7 @@ const driverSchema = new Schema({
   vehicleType: {
     type: String,
     required: true,
-    enum: ["car", "van"]
+    enum: ["car", "van", "bike", "lorry"]
   },
   vehicleNumber: {
     type: String,

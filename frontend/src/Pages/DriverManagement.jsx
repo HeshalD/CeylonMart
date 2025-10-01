@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import client from '../api/client';
+import Header from '../components/Header';
+import './DriverManagement.css';
 
 function DriverManagement() {
   const [drivers, setDrivers] = useState([]);
@@ -172,6 +174,35 @@ function DriverManagement() {
     setFilterDistrict('');
   };
 
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+    
+    // Clear error for this field
+    if (formErrors[name]) {
+      setFormErrors(prev => ({
+        ...prev,
+        [name]: ''
+      }));
+    }
+  };
+
+  const updateDriverStatus = async (driverId, newStatus) => {
+    try {
+      setLoading(true);
+      await client.put(`/drivers/${driverId}/status`, { status: newStatus });
+      setSuccess(`Driver status updated to ${newStatus}`);
+      await fetchDrivers();
+    } catch (e) {
+      setError(e.response?.data?.error || 'Failed to update driver status');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Helper functions for status colors (currently unused but kept for future use)
   // const getStatusColor = (status) => {
   //   switch (status) {
@@ -209,15 +240,18 @@ function DriverManagement() {
   const districts = ['Colombo', 'Gampaha', 'Kalutara'];
 
   return (
-    <div>
-      <div className="page-header">
+    <div className="driver-management-page">
+      <Header />
+      <main className="flex-grow max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+        <div className="px-4 py-6 sm:px-0">
+          <div className="page-header">
         <div>
           <h2 className="page-title">Driver Management</h2>
-          <p className="page-subtitle">Manage driver profiles, add new drivers, and update driver information</p>
+          <p className="page-subtitle">Manage your delivery drivers efficiently</p>
         </div>
         <div className="flex gap-3">
           <button onClick={openAddModal} className="btn-primary">
-            <span>+</span> Add New Driver
+            <span>+</span> Add Driver
           </button>
         </div>
       </div>
@@ -326,10 +360,10 @@ function DriverManagement() {
 
                 <div className="driver-actions">
                   <button onClick={() => handleEdit(driver)} className="btn-edit">
-                    ✏️ Edit
+                    <span>✏️</span> Edit
                   </button>
                   <button onClick={() => handleDelete(driver._id)} className="btn-delete">
-                    🗑️ Delete
+                    <span>🗑️</span> Delete
                   </button>
                 </div>
               </div>
@@ -413,8 +447,9 @@ function DriverManagement() {
                 <div className="field">
                   <label className="label">Vehicle Type *</label>
                   <select
+                    name="vehicleType"
                     value={formData.vehicleType}
-                    onChange={(e) => setFormData({...formData, vehicleType: e.target.value})}
+                    onChange={handleInputChange}
                     className={`input ${formErrors.vehicleType ? 'error' : ''}`}
                   >
                     <option value="">Select vehicle type</option>
@@ -479,6 +514,8 @@ function DriverManagement() {
           </div>
         </div>
       )}
+        </div>
+      </main>
     </div>
   );
 }

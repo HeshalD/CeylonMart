@@ -280,6 +280,8 @@ const Profile = () => {
                   // Handle special cases for different roles
                   if (user.role === 'inventory_manager') {
                     navigate('/dashboard/inventory');
+                  } else if (user.role === 'delivery_admin') {
+                    navigate('/drivers/management'); // Redirect delivery admin to driver management
                   } else if (user.role === 'customer') {
                     navigate('/shop'); // Redirect customers to shop page
                   } else {

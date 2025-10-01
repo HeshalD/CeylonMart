@@ -35,7 +35,7 @@ const Header = () => {
       case 'inventory_manager':
         return '/dashboard/inventory';
       case 'delivery_admin':
-        return '/dashboard/delivery';
+        return '/drivers/management';
       default:
         return '/dashboard/customer';
     }
