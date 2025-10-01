@@ -276,7 +276,18 @@ const Profile = () => {
             </div>
             <div className="flex space-x-4">
               <button
-                onClick={() => navigate(`/dashboard/${user.role}`)}
+                onClick={() => {
+                  // Handle special cases for different roles
+                  if (user.role === 'inventory_manager') {
+                    navigate('/dashboard/inventory');
+                  } else if (user.role === 'delivery_admin') {
+                    navigate('/drivers/management'); // Redirect delivery admin to driver management
+                  } else if (user.role === 'customer') {
+                    navigate('/shop'); // Redirect customers to shop page
+                  } else {
+                    navigate(`/dashboard/${user.role}`);
+                  }
+                }}
                 className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
               >
                 Back to Dashboard

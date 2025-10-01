@@ -239,6 +239,18 @@ const Shop = () => {
     <div className="min-h-screen bg-gray-50">
       <Header />
 
+      {/* Navigation Bar */}
+      <div className="bg-white border-b border-gray-200 shadow-sm">
+        <div className="px-4 py-4 mx-auto max-w-7xl sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900">CeylonMart Shop</h1>
+              <p className="text-gray-600">Fresh products at your fingertips</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* BODY */}
       <div className="flex gap-6 px-4 py-8 mx-auto max-w-7xl sm:px-6 lg:px-8">
         {/* Sidebar */}

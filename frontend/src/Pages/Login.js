@@ -61,7 +61,7 @@ export default function Login() {
         "shop_owner": "/dashboard/shop", 
         "supplier_admin": "/dashboard/supplier",
         "inventory_manager": "/dashboard/inventory",
-        "delivery_admin": "/dashboard/delivery",
+        "delivery_admin": "/drivers/management", // Redirect delivery admin to driver management
         "admin": "/dashboard/admin"
       };
 

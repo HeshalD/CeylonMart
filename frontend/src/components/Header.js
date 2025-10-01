@@ -30,7 +30,7 @@ const Header = () => {
       case 'inventory_manager':
         return '/dashboard/inventory';
       case 'delivery_admin':
-        return '/dashboard/delivery';
+        return '/drivers/management';
       default:
         return '/dashboard/customer';
     }
@@ -146,47 +146,82 @@ const Header = () => {
             </div>
           </div>
 
-          {/* Navigation Bar - Middle */}
-          <div className="hidden md:flex items-center space-x-8">
-            <button
-              onClick={() => navigate('/')}
-              className={`relative text-white hover:text-emerald-100 font-medium text-lg transition-colors duration-200 group ${
-                location.pathname === '/' ? 'text-emerald-100' : ''
-              }`}
-            >
-              Home
-              <span className={`absolute bottom-0 left-0 h-0.5 bg-emerald-100 transition-all duration-300 ${
-                location.pathname === '/' ? 'w-full' : 'w-0 group-hover:w-full'
-              }`}></span>
-            </button>
-            <button
-              onClick={() => navigate('/products')}
-              className={`relative text-white hover:text-emerald-100 font-medium text-lg transition-colors duration-200 group ${
-                location.pathname === '/products' ? 'text-emerald-100' : ''
-              }`}
-            >
-              Products
-              <span className={`absolute bottom-0 left-0 h-0.5 bg-emerald-100 transition-all duration-300 ${
-                location.pathname === '/products' ? 'w-full' : 'w-0 group-hover:w-full'
-              }`}></span>
-            </button>
-            <button
-              onClick={() => navigate('/about')}
-              className={`relative text-white hover:text-emerald-100 font-medium text-lg transition-colors duration-200 group ${
-                location.pathname === '/about' ? 'text-emerald-100' : ''
-              }`}
-            >
-              About Us
-              <span className={`absolute bottom-0 left-0 h-0.5 bg-emerald-100 transition-all duration-300 ${
-                location.pathname === '/about' ? 'w-full' : 'w-0 group-hover:w-full'
-              }`}></span>
-            </button>
-          </div>
+          {/* Navigation Bar - Middle - Hidden for Inventory Management */}
+          {!location.pathname.includes('/dashboard/inventory') && !location.pathname.includes('/inventory') && (
+            <div className="hidden md:flex items-center space-x-8">
+              {/* Driver Management Navigation */}
+              {(location.pathname.includes('/drivers/management') || location.pathname.includes('/drivers/availability')) && (
+                <>
+                  <button
+                    onClick={() => navigate('/drivers/management')}
+                    className={`relative text-white hover:text-emerald-100 font-medium text-lg transition-colors duration-200 group ${
+                      location.pathname === '/drivers/management' ? 'text-emerald-100' : ''
+                    }`}
+                  >
+                    Driver Management
+                    <span className={`absolute bottom-0 left-0 h-0.5 bg-emerald-100 transition-all duration-300 ${
+                      location.pathname === '/drivers/management' ? 'w-full' : 'w-0 group-hover:w-full'
+                    }`}></span>
+                  </button>
+                  <button
+                    onClick={() => navigate('/drivers/availability')}
+                    className={`relative text-white hover:text-emerald-100 font-medium text-lg transition-colors duration-200 group ${
+                      location.pathname === '/drivers/availability' ? 'text-emerald-100' : ''
+                    }`}
+                  >
+                    Driver Availability
+                    <span className={`absolute bottom-0 left-0 h-0.5 bg-emerald-100 transition-all duration-300 ${
+                      location.pathname === '/drivers/availability' ? 'w-full' : 'w-0 group-hover:w-full'
+                    }`}></span>
+                  </button>
+                </>
+              )}
+              
+              {/* General Navigation - Home, Products, About Us */}
+              {(location.pathname === '/' || location.pathname === '/cart' || location.pathname === '/products' || location.pathname === '/about') && (
+                <>
+                  <button
+                    onClick={() => navigate('/')}
+                    className={`relative text-white hover:text-emerald-100 font-medium text-lg transition-colors duration-200 group ${
+                      location.pathname === '/' ? 'text-emerald-100' : ''
+                    }`}
+                  >
+                    Home
+                    <span className={`absolute bottom-0 left-0 h-0.5 bg-emerald-100 transition-all duration-300 ${
+                      location.pathname === '/' ? 'w-full' : 'w-0 group-hover:w-full'
+                    }`}></span>
+                  </button>
+                  <button
+                    onClick={() => navigate('/products')}
+                    className={`relative text-white hover:text-emerald-100 font-medium text-lg transition-colors duration-200 group ${
+                      location.pathname === '/products' ? 'text-emerald-100' : ''
+                    }`}
+                  >
+                    Products
+                    <span className={`absolute bottom-0 left-0 h-0.5 bg-emerald-100 transition-all duration-300 ${
+                      location.pathname === '/products' ? 'w-full' : 'w-0 group-hover:w-full'
+                    }`}></span>
+                  </button>
+                  <button
+                    onClick={() => navigate('/about')}
+                    className={`relative text-white hover:text-emerald-100 font-medium text-lg transition-colors duration-200 group ${
+                      location.pathname === '/about' ? 'text-emerald-100' : ''
+                    }`}
+                  >
+                    About Us
+                    <span className={`absolute bottom-0 left-0 h-0.5 bg-emerald-100 transition-all duration-300 ${
+                      location.pathname === '/about' ? 'w-full' : 'w-0 group-hover:w-full'
+                    }`}></span>
+                  </button>
+                </>
+              )}
+            </div>
+          )}
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-3">
-            {/* Cart Button - Hidden on Payment Success and Orders Pages */}
-            {location.pathname !== '/payment-success' && location.pathname !== '/orders' && (
+            {/* Cart Button - Hidden on Payment Success, Orders, Inventory Management, Driver Management, and Driver Availability Pages */}
+            {location.pathname !== '/payment-success' && location.pathname !== '/orders' && !location.pathname.includes('/dashboard/inventory') && !location.pathname.includes('/inventory') && !location.pathname.includes('/drivers/management') && !location.pathname.includes('/drivers/availability') && (
               <button
                 onClick={() => navigate('/cart')}
                 className="relative bg-gradient-to-r from-white/20 to-white/30 text-white p-1.5 rounded-lg hover:from-white/30 hover:to-white/40 transform hover:scale-105 transition-all duration-300 shadow-lg hover:shadow-xl flex items-center justify-center border border-white/30 hover:border-white/50"
