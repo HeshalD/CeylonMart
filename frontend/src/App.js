@@ -11,7 +11,6 @@ import CustomerDashboard from "./Pages/dashboards/CustomerDashboard";
 import AdminDashboard from "./Pages/dashboards/AdminDashboard";
 import ShopDashboard from "./Pages/dashboards/ShopDashboard";
 import SupplierDashboard from "./Pages/dashboards/SupplierDashboard";
-import InventoryDashboard from "./Pages/dashboards/InventoryDashboard";
 import DeliveryDashboard from "./Pages/dashboards/DeliveryDashboard";
 
 //Chanula's pages
@@ -185,7 +184,7 @@ function App() {
           path="/dashboard/inventory"
           element={
             <ProtectedRoute requiredRole="inventory_manager">
-              <InventoryDashboard />
+              <InventoryManagement />
             </ProtectedRoute>
           }
         />
