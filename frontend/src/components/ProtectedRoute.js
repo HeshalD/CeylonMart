@@ -7,7 +7,7 @@ const ProtectedRoute = ({ children, requiredRole = null }) => {
   
   // Check if user is authenticated
   if (!token || !userData) {
-    return <Navigate to="/login" replace />;
+    return <Navigate to="/supplierLogin" replace />;
   }
   
   const user = JSON.parse(userData);

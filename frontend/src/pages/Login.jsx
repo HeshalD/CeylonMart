@@ -24,12 +24,11 @@ const Login = () => {
     }
 
     // Check if user is already logged in
-    const token = localStorage.getItem('authToken');
+    const token = localStorage.getItem('token') || localStorage.getItem('authToken');
     const supplierStatus = localStorage.getItem('supplierStatus');
     
-    if (token && supplierStatus === 'approved') {
-      navigate('/profile');
-    } else if (token && supplierStatus !== 'approved') {
+    // Do not auto-redirect to profile from supplier login page; allow re-login
+    if (token && supplierStatus !== 'approved') {
       setError('Your account is pending admin approval.');
     }
   }, [navigate, location.state]);
@@ -74,8 +73,18 @@ const Login = () => {
       const { token, role } = response.data;
 
       // Store token and role first
+      // Unify with general login: set both 'token' and 'user'
+      localStorage.setItem('token', token);
       localStorage.setItem('authToken', token);
       localStorage.setItem('userRole', role || 'supplier');
+      try {
+        // For general guard compatibility, ensure 'user' exists
+        const roleForUser = role || 'supplier_admin';
+        const existingUser = localStorage.getItem('user');
+        if (!existingUser) {
+          localStorage.setItem('user', JSON.stringify({ role: roleForUser }));
+        }
+      } catch (_) {}
 
       // If admin, go straight to admin dashboard (no supplier profile fetch)
       if ((role || 'supplier') === 'admin') {
@@ -91,7 +100,9 @@ const Login = () => {
       // Persist user for Header greeting
       try {
         const displayName = profile.contactName || profile.companyName || 'Supplier';
-        localStorage.setItem('user', JSON.stringify({ name: displayName, role: 'supplier' }));
+        // Keep role compatible with general guard expectations
+        const userObj = { name: displayName, role: 'supplier_admin' };
+        localStorage.setItem('user', JSON.stringify(userObj));
       } catch (_) {
         // ignore JSON/storage errors
       }
@@ -134,10 +145,12 @@ const Login = () => {
   };
 
   const handleLogout = () => {
+    localStorage.removeItem('token');
     localStorage.removeItem('authToken');
     localStorage.removeItem('supplierId');
     localStorage.removeItem('supplierStatus');
     localStorage.removeItem('userRole');
+    localStorage.removeItem('user');
     setError('');
     setSuccess('');
   };
