@@ -125,7 +125,7 @@ const EditProfile = () => {
       delete supplierData.product;
 
       await supplierAPI.updateSupplier(supplierId, supplierData);
-      navigate('/profile');
+      navigate('/supplierProfile');
 
     } catch (err) {
       console.error('Error updating supplier:', err);
@@ -151,7 +151,7 @@ const EditProfile = () => {
   };
 
   const handleCancel = () => {
-    navigate('/profile');
+    navigate('/supplierProfile');
   };
 
   if (loading) {
