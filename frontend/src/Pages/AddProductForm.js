@@ -26,6 +26,7 @@ const AddProductForm = () => {
 
   const [allProducts, setAllProducts] = useState([]);
   const [errors, setErrors] = useState({});
+  const [hints, setHints] = useState({});
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -39,6 +40,39 @@ const AddProductForm = () => {
     fetchProducts();
   }, []);
 
+  // Live validation hints for stock fields
+  useEffect(() => {
+    const newHints = {};
+
+    // Current Stock
+    if (currentStock) {
+      if (unitType === "Kg" || unitType === "g") {
+        if (!/^\d+(\.\d{0,1})?$/.test(currentStock)) {
+          newHints.currentStock = "For Kg/g, you can enter up to 1 decimal place.";
+        } else if (parseFloat(currentStock) < 0) {
+          newHints.currentStock = "Stock cannot be negative.";
+        }
+      } else {
+        if (!/^\d+$/.test(currentStock)) newHints.currentStock = "Only non-negative integers allowed for this unit.";
+      }
+    }
+
+    // Minimum Stock Level
+    if (minimumStockLevel) {
+      if (unitType === "Kg" || unitType === "g") {
+        if (!/^\d+(\.\d{0,1})?$/.test(minimumStockLevel)) {
+          newHints.minimumStockLevel = "For Kg/g, you can enter up to 1 decimal place.";
+        } else if (parseFloat(minimumStockLevel) < 0) {
+          newHints.minimumStockLevel = "Minimum stock cannot be negative.";
+        }
+      } else {
+        if (!/^\d+$/.test(minimumStockLevel)) newHints.minimumStockLevel = "Only non-negative integers allowed for this unit.";
+      }
+    }
+
+    setHints(newHints);
+  }, [currentStock, minimumStockLevel, unitType]);
+
   const validateFields = () => {
     const newErrors = {};
 
@@ -50,7 +84,6 @@ const AddProductForm = () => {
     else if (isNaN(priceNum) || priceNum <= 0) newErrors.price = "Price must be greater than zero.";
     else if (!/^\d+(\.\d{1,2})?$/.test(priceNum.toString())) newErrors.price = "Price can have up to 2 decimal places.";
     else if (priceNum > 1000000) newErrors.price = "Price cannot exceed ₹1,000,000.";
-    else if (priceNum < 0) newErrors.price = "Price cannot be negative.";
 
     if (!unitType) newErrors.unitType = "Unit type is required.";
 
@@ -58,25 +91,31 @@ const AddProductForm = () => {
     else if (!/^[A-Za-z0-9-_]+$/.test(productCode)) newErrors.productCode = "Only letters, numbers, hyphens, and underscores are allowed.";
     else if (allProducts.some(p => p.productCode.toLowerCase() === productCode.toLowerCase())) newErrors.productCode = "This product code is already in use.";
 
-    const currentStockNum = parseInt(currentStock, 10);
-    if (currentStock === "" || isNaN(currentStockNum) || currentStockNum < 0 || !Number.isInteger(currentStockNum) || !/^\d+$/.test(currentStock))
-      newErrors.currentStock = "Current stock must be a positive integer (no decimals or negative numbers).";
+    const currentStockNum = parseFloat(currentStock);
+    const minStockNum = parseFloat(minimumStockLevel);
 
-    const minStockNum = parseInt(minimumStockLevel, 10);
-    if (
-      minimumStockLevel === "" ||
-      isNaN(minStockNum) ||
-      minStockNum < 0 ||
-      !/^\d+$/.test(minimumStockLevel)
-    )
-      newErrors.minimumStockLevel = "Minimum stock must be a non-negative integer.";
+    if (!currentStock) newErrors.currentStock = "Current stock is required.";
+    else if (unitType === "Kg" || unitType === "g") {
+      if (!/^\d+(\.\d{0,1})?$/.test(currentStock)) newErrors.currentStock = "For Kg/g, up to 1 decimal place allowed.";
+      else if (currentStockNum < 0) newErrors.currentStock = "Stock cannot be negative.";
+    } else {
+      if (!/^\d+$/.test(currentStock)) newErrors.currentStock = "Only non-negative integers allowed for this unit.";
+    }
+
+    if (!minimumStockLevel) newErrors.minimumStockLevel = "Minimum stock is required.";
+    else if (unitType === "Kg" || unitType === "g") {
+      if (!/^\d+(\.\d{0,1})?$/.test(minimumStockLevel)) newErrors.minimumStockLevel = "For Kg/g, up to 1 decimal place allowed.";
+      else if (minStockNum < 0) newErrors.minimumStockLevel = "Minimum stock cannot be negative.";
+    } else {
+      if (!/^\d+$/.test(minimumStockLevel)) newErrors.minimumStockLevel = "Only non-negative integers allowed for this unit.";
+    }
 
     if (!expiryDate) newErrors.expiryDate = "Expiry date is required.";
     else {
       const today = new Date();
       today.setHours(0, 0, 0, 0);
       const minDate = new Date();
-      minDate.setDate(today.getDate() + 3); // 3 days gap
+      minDate.setDate(today.getDate() + 3);
       if (expiryDate <= minDate) newErrors.expiryDate = "Expiry date must be at least 3 days from today.";
     }
 
@@ -182,7 +221,6 @@ const AddProductForm = () => {
               value={price}
               onChange={(e) => {
                 const value = e.target.value;
-                // Only allow positive numbers with up to 2 decimal places
                 if (value === '' || /^\d*\.?\d{0,2}$/.test(value)) {
                   setPrice(value);
                 }
@@ -237,15 +275,16 @@ const AddProductForm = () => {
               Current Stock <span className="text-red-500">*</span>
             </label>
             <input
-              type="number"
-              step="1"
+              type="text"
               placeholder="Enter current stock"
               value={currentStock}
               onChange={(e) => setCurrentStock(e.target.value)}
               className="w-full px-4 py-2 text-gray-900 placeholder-gray-500 border rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-400"
             />
-            <p className="text-xs text-gray-500">Non-negative integer values only.</p>
-            {errors.currentStock && <p className="mt-1 text-sm text-red-500">{errors.currentStock}</p>}
+            <p className="text-xs text-gray-500">{unitType === "Kg" || unitType === "g" ? "Can have 1 decimal place, non-negative." : "Non-negative integers only."}</p>
+            {(errors.currentStock || hints.currentStock) && (
+              <p className="mt-1 text-sm text-red-500">{errors.currentStock || hints.currentStock}</p>
+            )}
           </div>
 
           {/* Minimum Stock Level */}
@@ -254,15 +293,16 @@ const AddProductForm = () => {
               Minimum Stock Level <span className="text-red-500">*</span>
             </label>
             <input
-              type="number"
-              step="1"
+              type="text"
               placeholder="Enter minimum stock level"
               value={minimumStockLevel}
               onChange={(e) => setMinimumStockLevel(e.target.value)}
               className="w-full px-4 py-2 text-gray-900 placeholder-gray-500 border rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-400"
             />
-            <p className="text-xs text-gray-500">Non-negative integer values only.</p>
-            {errors.minimumStockLevel && <p className="mt-1 text-sm text-red-500">{errors.minimumStockLevel}</p>}
+            <p className="text-xs text-gray-500">{unitType === "Kg" || unitType === "g" ? "Can have 1 decimal place, non-negative." : "Non-negative integers only."}</p>
+            {(errors.minimumStockLevel || hints.minimumStockLevel) && (
+              <p className="mt-1 text-sm text-red-500">{errors.minimumStockLevel || hints.minimumStockLevel}</p>
+            )}
           </div>
 
           {/* Expiry Date */}

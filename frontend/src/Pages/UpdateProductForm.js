@@ -16,7 +16,7 @@ const UpdateProductForm = () => {
 
   const [productName, setProductName] = useState(product?.productName || "");
   const [brandName, setBrandName] = useState(product?.brandName || "");
- const [price, setPrice] = useState(product?.price?.toString() || "");
+  const [price, setPrice] = useState(product?.price?.toString() || "");
   const [unitType, setUnitType] = useState(product?.unitType || "");
   const [productCode] = useState(product?.productCode || "");
   const [currentStock, setCurrentStock] = useState(product?.currentStock || "");
@@ -59,18 +59,36 @@ const UpdateProductForm = () => {
     else if (allProducts.some(p => p.productCode.toLowerCase() === productCode.toLowerCase() && p._id !== product._id))
       newErrors.productCode = "This product code is already in use.";
 
-    const currentStockNum = parseInt(currentStock, 10);
-    if (currentStock === "" || isNaN(currentStockNum) || currentStockNum < 0 || !Number.isInteger(currentStockNum) || !/^\d+$/.test(currentStock))
-      newErrors.currentStock = "Current stock must be a positive integer (no decimals or negative numbers).";
+    const currentStockNum = parseFloat(currentStock);
+    const minStockNum = parseFloat(minimumStockLevel);
 
-    const minStockNum = parseInt(minimumStockLevel, 10);
-    if (
-      minimumStockLevel === "" ||
-      isNaN(minStockNum) ||
-      minStockNum < 0 ||
-      !/^\d+$/.test(minimumStockLevel)
-    )
-      newErrors.minimumStockLevel = "Minimum stock must be a non-negative integer.";
+    if (currentStock === "" || isNaN(currentStockNum) || currentStockNum < 0) {
+      newErrors.currentStock = "Current stock cannot be negative.";
+    } else {
+      if (unitType === "Kg" || unitType === "g") {
+        if (!/^\d+(\.\d{1})?$/.test(currentStock.toString())) {
+          newErrors.currentStock = "For Kg/g, stock can have at most 1 decimal place.";
+        }
+      } else {
+        if (!/^\d+$/.test(currentStock.toString())) {
+          newErrors.currentStock = "Stock must be a whole number for this unit type.";
+        }
+      }
+    }
+
+    if (minimumStockLevel === "" || isNaN(minStockNum) || minStockNum < 0) {
+      newErrors.minimumStockLevel = "Minimum stock cannot be negative.";
+    } else {
+      if (unitType === "Kg" || unitType === "g") {
+        if (!/^\d+(\.\d{1})?$/.test(minimumStockLevel.toString())) {
+          newErrors.minimumStockLevel = "For Kg/g, minimum stock can have at most 1 decimal place.";
+        }
+      } else {
+        if (!/^\d+$/.test(minimumStockLevel.toString())) {
+          newErrors.minimumStockLevel = "Minimum stock must be a whole number for this unit type.";
+        }
+      }
+    }
 
     if (!expiryDate) newErrors.expiryDate = "Expiry date is required.";
     else {
@@ -225,13 +243,13 @@ const UpdateProductForm = () => {
             </label>
             <input
               type="number"
-              step="1"
+              step="any"
               placeholder="Enter current stock"
               value={currentStock}
               onChange={(e) => setCurrentStock(e.target.value)}
               className="w-full px-4 py-2 text-gray-900 placeholder-gray-500 border rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-400"
             />
-            <p className="text-xs text-gray-500">Non-negative integer values only.</p>
+            <p className="text-xs text-gray-500">Non-negative integer values for most units. Kg/g allow 1 decimal place.</p>
             {errors.currentStock && <p className="mt-1 text-sm text-red-500">{errors.currentStock}</p>}
           </div>
 
@@ -242,13 +260,13 @@ const UpdateProductForm = () => {
             </label>
             <input
               type="number"
-              step="1"
+              step="any"
               placeholder="Enter minimum stock level"
               value={minimumStockLevel}
               onChange={(e) => setMinimumStockLevel(e.target.value)}
               className="w-full px-4 py-2 text-gray-900 placeholder-gray-500 border rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-400"
             />
-            <p className="text-xs text-gray-500">Non-negative integer values only.</p>
+            <p className="text-xs text-gray-500">Non-negative integer values for most units. Kg/g allow 1 decimal place.</p>
             {errors.minimumStockLevel && <p className="mt-1 text-sm text-red-500">{errors.minimumStockLevel}</p>}
           </div>
 
