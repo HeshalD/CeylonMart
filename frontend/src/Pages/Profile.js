@@ -113,8 +113,11 @@ const Profile = () => {
 
   const handlePasswordSubmit = async (e) => {
     e.preventDefault();
+    console.log('Password change attempt started');
+    
     const newErrors = validatePassword();
     if (Object.keys(newErrors).length > 0) {
+      console.log('Validation errors:', newErrors);
       setPasswordErrors(newErrors);
       return;
     }
@@ -122,6 +125,10 @@ const Profile = () => {
     setLoading(true);
     try {
       const token = localStorage.getItem('token');
+      console.log('Token exists:', !!token);
+      console.log('User ID:', user._id);
+      console.log('API URL:', `http://localhost:5000/api/users/${user._id}/password`);
+      
       const response = await axios.put(
         `http://localhost:5000/api/users/${user._id}/password`,
         {
@@ -133,6 +140,7 @@ const Profile = () => {
         }
       );
 
+      console.log('Password change successful:', response.data);
       setPasswordForm({
         currentPassword: '',
         newPassword: '',
@@ -144,6 +152,8 @@ const Profile = () => {
       
     } catch (err) {
       console.error('Password change error:', err);
+      console.error('Error response:', err.response?.data);
+      console.error('Error status:', err.response?.status);
       const errorMessage = err.response?.data?.message || 'Failed to change password';
       setPasswordErrors({ general: errorMessage });
     } finally {
