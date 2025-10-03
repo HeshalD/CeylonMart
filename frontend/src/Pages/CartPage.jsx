@@ -127,7 +127,7 @@ export default function CartPage({ customerId }) {
               Clear Cart
             </button>
             <Link
-              to="/"
+              to="/Shop"
               className="px-4 py-2 text-white rounded-lg shadow bg-emerald-600 hover:bg-emerald-700"
             >
               Add Items
