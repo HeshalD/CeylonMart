@@ -159,17 +159,27 @@ const Shop = () => {
   const confirmAddToCart = () => {
     if (!selectedProduct) return;
 
-   setCart((prev) => {
-      const found = prev.find((p) => p._id === selectedProduct._id);
-      if (found) {
-        return prev.map((p) =>
-          p._id === selectedProduct._id
-            ? { ...p, qty: (p.qty || 0) + quantity }
-            : p
-        );
-      }
-      return [...prev, { ...selectedProduct, qty: quantity }];
-    });
+   // Get existing cart from localStorage
+const existingCart = JSON.parse(localStorage.getItem("cart")) || [];
+
+// Add/update item in cart
+const updatedCart = (() => {
+  const found = existingCart.find((p) => p._id === selectedProduct._id);
+  if (found) {
+    return existingCart.map((p) =>
+      p._id === selectedProduct._id
+        ? { ...p, qty: (p.qty || 0) + quantity }
+        : p
+    );
+  }
+  return [...existingCart, { ...selectedProduct, qty: quantity }];
+})();
+
+// Save updated cart back to localStorage
+localStorage.setItem("cart", JSON.stringify(updatedCart));
+setCart(updatedCart);
+
+
 
     setToast({ message: `${selectedProduct.productName ?? selectedProduct.name} added to cart`, type: "success" });
     setTimeout(() => setToast(null), 2200);
