@@ -25,7 +25,7 @@ import PaymentSuccessPage from "./Pages/PaymentSuccessPage";
 //Kawya's pages
 import SupplierProfile from "./Pages/SupplierProfile";
 import OtpVerification from "./Pages/OtpVerification";
-import AdminDashboard from "./Pages/dashboards/AdminDashboard";
+import SupplierAdminDashboard from "./Pages/SupplierAdminDashboard";
 import SupplierList from "./Pages/SupplierList";
 import SupplierForm from "./Pages/SupplierForm";
 import RegisterSupplier from "./Pages/RegisterSupplier";
@@ -196,7 +196,7 @@ function App() {
           path="/admin"
           element={
             <ProtectedRoute requireAdmin={true}>
-              <AdminDashboard />
+              <SupplierAdminDashboard />
             </ProtectedRoute>
           }
         />

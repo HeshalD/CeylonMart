@@ -103,38 +103,22 @@ exports.updateUser = async (req, res) => {
 // PUT /api/users/:id/password  (protected: owner only)
 exports.changePassword = async (req, res) => {
   try {
-    console.log('Password change request received');
-    console.log('User ID from params:', req.params.id);
-    console.log('User ID from token:', req.user.id);
-    console.log('User role:', req.user.role);
-    
     const { currentPassword, newPassword } = req.body;
     const userId = req.params.id;
 
-    console.log('Request body:', { currentPassword: !!currentPassword, newPassword: !!newPassword });
-
     // Verify the user is changing their own password
     if (req.user.id !== userId && req.user.role !== 'admin') {
-      console.log('Access denied - not own password or admin');
       return res.status(403).json({ message: "You can only change your own password" });
     }
 
     const user = await User.findById(userId);
-    if (!user) {
-      console.log('User not found');
-      return res.status(404).json({ message: "User not found" });
-    }
-
-    console.log('User found, verifying current password');
+    if (!user) return res.status(404).json({ message: "User not found" });
 
     // Verify current password
     const isCurrentPasswordValid = await bcrypt.compare(currentPassword, user.password);
     if (!isCurrentPasswordValid) {
-      console.log('Current password is incorrect');
       return res.status(400).json({ message: "Current password is incorrect" });
     }
-
-    console.log('Current password verified, hashing new password');
 
     // Hash new password
     const hashedNewPassword = await bcrypt.hash(newPassword, 10);
@@ -142,10 +126,8 @@ exports.changePassword = async (req, res) => {
     // Update password
     await User.findByIdAndUpdate(userId, { password: hashedNewPassword });
 
-    console.log('Password updated successfully');
     res.json({ message: "Password changed successfully" });
   } catch (err) {
-    console.error('Password change error:', err);
     res.status(500).json({ message: err.message });
   }
 };
