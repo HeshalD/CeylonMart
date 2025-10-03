@@ -210,6 +210,7 @@ const ProductTable = () => {
           </div>
         </div>
       </div>
+      <Footer />
     </div>
   );
 };

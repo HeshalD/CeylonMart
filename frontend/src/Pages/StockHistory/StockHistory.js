@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { getStockHistory, getProducts } from '../../api/inventoryApi';
-import { subscribeToHistory, getStoredStockHistory } from '../../utils/historyEmitter';
+import { subscribeToHistory } from '../../utils/historyEmitter';
 
 const StockHistory = () => {
   const [stockHistory, setStockHistory] = useState([]);
@@ -17,8 +17,9 @@ const StockHistory = () => {
       const productsResponse = await getProducts();
       setProducts(productsResponse.data || []);
 
-      const storedHistory = getStoredStockHistory();
-      setStockHistory(storedHistory);
+      // ✅ Fetch stock history from backend
+      const historyResponse = await getStockHistory();
+      setStockHistory(historyResponse.data || []);
     } catch (error) {
       console.error('Error fetching data:', error);
     } finally {
@@ -61,10 +62,17 @@ const StockHistory = () => {
     });
   };
 
+  // ✅ Apply filters (category, action, date)
   const filteredHistory = stockHistory.filter((entry) => {
     const matchCategory = selectedCategory ? entry.category === selectedCategory : true;
     const matchAction = selectedAction ? entry.type === selectedAction : true;
-    return matchCategory && matchAction;
+
+    const days = parseInt(dateRange, 10);
+    const cutoff = new Date();
+    cutoff.setDate(cutoff.getDate() - days);
+    const matchDate = new Date(entry.date) >= cutoff;
+
+    return matchCategory && matchAction && matchDate;
   });
 
   if (loading) {

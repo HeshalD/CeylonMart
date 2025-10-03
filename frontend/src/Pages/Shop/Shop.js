@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import axios from "axios";
 import { getCategories } from "../../api/inventoryApi";
 import { useNavigate } from "react-router-dom";
+import { useUser } from "../../contexts/UserContext";
 import Header from "../../components/Header";
 import Footer from "../../components/Footer";
 
@@ -30,6 +31,7 @@ const Stars = ({ rating = 4 }) => (
 
 const Shop = () => {
   const navigate = useNavigate();
+  const { isAuthenticated } = useUser();
 
   const [categories, setCategories] = useState([]);
   const [products, setProducts] = useState([]);
@@ -42,8 +44,13 @@ const Shop = () => {
   const [sortBy, setSortBy] = useState("name-asc");
   const [activeCategoryChip, setActiveCategoryChip] = useState("");
 
-  const [cart, setCart] = useState([]);
+  const [, setCart] = useState([]);
   const [toast, setToast] = useState(null);
+  const [showLoginModal, setShowLoginModal] = useState(false);
+
+  const [showQtyModal, setShowQtyModal] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState(null);
+  const [quantity, setQuantity] = useState(0);
 
   useEffect(() => {
     let mounted = true;
@@ -134,21 +141,69 @@ const Shop = () => {
   }, [products, categoryFilter, activeCategoryChip, searchText, sortBy]);
 
   const addToCart = (product) => {
-    setCart((prev) => {
-      const found = prev.find((p) => p._id === product._id);
-      if (found) {
-        return prev.map((p) =>
-          p._id === product._id ? { ...p, qty: (p.qty || 1) + 1 } : p
-        );
-      }
-      return [...prev, { ...product, qty: 1 }];
-    });
-    setToast({ message: `${product.productName ?? product.name} added to cart`, type: "success" });
-    setTimeout(() => setToast(null), 2200);
+    // Check if user is authenticated
+    if (!isAuthenticated) {
+      setShowLoginModal(true);
+      return;
+    }
+
+    setSelectedProduct(product);
+    if (["kg", "g"].includes(product.unitType?.toLowerCase())) {
+      setQuantity(0.0);
+    } else {
+      setQuantity(0);
+    }
+    setShowQtyModal(true);
   };
 
-  const handleHeaderHome = () => {
-    navigate("/shop");
+  const confirmAddToCart = () => {
+    if (!selectedProduct) return;
+
+   // Get existing cart from localStorage
+const existingCart = JSON.parse(localStorage.getItem("cart")) || [];
+
+// Add/update item in cart
+const updatedCart = (() => {
+  const found = existingCart.find((p) => p._id === selectedProduct._id);
+  if (found) {
+    return existingCart.map((p) =>
+      p._id === selectedProduct._id
+        ? { ...p, qty: (p.qty || 0) + quantity }
+        : p
+    );
+  }
+  return [...existingCart, { ...selectedProduct, qty: quantity }];
+})();
+
+// Save updated cart back to localStorage
+localStorage.setItem("cart", JSON.stringify(updatedCart));
+setCart(updatedCart);
+
+
+
+    setToast({ message: `${selectedProduct.productName ?? selectedProduct.name} added to cart`, type: "success" });
+    setTimeout(() => setToast(null), 2200);
+
+    setShowQtyModal(false);
+    navigate("/cart");
+  };
+
+ const handleIncrease = () => {
+    if (!selectedProduct) return;
+    if (["kg", "g"].includes(selectedProduct.unitType?.toLowerCase())) {
+      setQuantity((q) => +(q + 0.1).toFixed(1));
+    } else {
+      setQuantity((q) => q + 1);
+    }
+  };
+
+  const handleDecrease = () => {
+    if (!selectedProduct) return;
+    if (["kg", "g"].includes(selectedProduct.unitType?.toLowerCase())) {
+      setQuantity((q) => Math.max(0, +(q - 0.1).toFixed(1)));
+    } else {
+      setQuantity((q) => Math.max(0, q - 1));
+    }
   };
 
   const getStatusLabel = (p) => {
@@ -193,8 +248,8 @@ const Shop = () => {
        {/* BODY */}
       <div className="flex gap-6 px-4 py-8 mx-auto max-w-7xl sm:px-6 lg:px-8">
         {/* Sidebar */}
-        <aside className="w-64 p-4 bg-white border-2 rounded-lg shadow-lg h-fit">
-          <h3 className="mb-3 text-lg font-semibold text-gray-800">
+        <aside className="w-64 p-6 border-2 border-gray-200 shadow-lg bg-gradient-to-br from-white to-gray-50 rounded-xl h-fit backdrop-blur-sm">
+          <h3 className="mb-4 text-xl font-bold text-transparent bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text">
             Shop by category
           </h3>
           {loadingCategories ? (
@@ -202,19 +257,19 @@ const Shop = () => {
           ) : categories.length === 0 ? (
             <div className="text-sm text-gray-500">No categories found</div>
           ) : (
-            <div className="flex flex-col gap-3">
+            <div className="flex flex-col gap-4">
               <button
-                className={`px-3 py-2 rounded-lg text-left border-2 ${
+                className={`px-4 py-3 rounded-xl text-left border-2 transition-all duration-300 transform hover:scale-105 ${
                   activeCategoryChip === ""
-                    ? "bg-emerald-100 border-emerald-500"
-                    : "hover:bg-emerald-50 hover:border-emerald-400"
-                } transition`}
+                    ? "bg-gradient-to-r from-emerald-100 to-teal-100 border-emerald-500 shadow-md"
+                    : "bg-white hover:bg-gradient-to-r hover:from-emerald-50 hover:to-teal-50 hover:border-emerald-300 border-gray-200 hover:shadow-md"
+                } `}
                 onClick={() => {
                   setActiveCategoryChip("");
                   setCategoryFilter("");
                 }}
               >
-               <span className="text-base font-medium text-teal-800">
+               <span className="text-lg font-semibold text-emerald-800">
                   All Categories
                   </span>
               </button>
@@ -227,26 +282,26 @@ const Shop = () => {
                       setActiveCategoryChip(label);
                       setCategoryFilter("");
                     }}
-                    className={`flex items-center gap-3 px-3 py-3 rounded-lg border-2 transition ${
+                    className={`flex items-center gap-3 px-4 py-4 rounded-xl border-2 transition-all duration-300 transform hover:scale-105 ${
                       activeCategoryChip === label
-                        ? "bg-teal-100 border-teal-500"
-                        : "hover:bg-teal-50 hover:border-teal-400"
+                        ? "bg-gradient-to-r from-teal-100 to-cyan-100 border-teal-500 shadow-md"
+                        : "bg-white hover:bg-gradient-to-r hover:from-teal-50 hover:to-cyan-50 hover:border-teal-300 border-gray-200 hover:shadow-md"
                     }`}
                   >
-                    <div className="flex items-center justify-center overflow-hidden bg-gray-100 rounded-full w-14 h-14">
+                    <div className="flex items-center justify-center w-16 h-16 overflow-hidden border-2 border-white rounded-full shadow-sm bg-gradient-to-br from-gray-100 to-gray-200">
                       {c.categoryImage ? (
                         <img
                           src={`http://localhost:5000/uploads/${c.categoryImage}`}
                           alt={label}
-                          className="object-cover w-full h-full"
+                          className="object-cover w-full h-full transition-transform duration-300 hover:scale-110"
                         />
                       ) : (
-                        <span className="text-lg font-bold text-gray-500">
+                        <span className="text-xl font-bold text-gray-600">
                           {label.charAt(0)}
                         </span>
                       )}
                     </div>
-                    <span className="text-base font-medium text-gray-800">
+                    <span className="text-base font-semibold text-gray-800 transition-colors group-hover:text-emerald-700">
                       {label}
                     </span>
                   </button>
@@ -259,10 +314,10 @@ const Shop = () => {
         {/* Main content */}
         <main className="flex-1">
           {/* Search + Sort */}
-          <div className="p-4 bg-white border-2 rounded-lg shadow-lg">
-            <div className="grid items-end grid-cols-1 gap-3 md:grid-cols-3">
+          <div className="p-6 border-2 border-gray-200 shadow-lg bg-gradient-to-r from-white to-gray-50 rounded-xl backdrop-blur-sm">
+            <div className="grid items-end grid-cols-1 gap-4 md:grid-cols-3">
               <div>
-                <label className="block mb-1 text-xs text-gray-800">
+                <label className="block mb-2 text-sm font-semibold text-transparent bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text">
                   Category
                 </label>
                 <select
@@ -271,7 +326,7 @@ const Shop = () => {
                     setCategoryFilter(e.target.value);
                     setActiveCategoryChip("");
                   }}
-                  className="w-full px-3 py-2 text-gray-800 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-200"
+                  className="w-full px-4 py-3 text-gray-800 transition-all duration-300 bg-white border-2 border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 hover:border-emerald-300"
                 >
                   <option value="">All Categories</option>
                   {categories.map((c) => (
@@ -286,26 +341,33 @@ const Shop = () => {
               </div>
 
               <div>
-                <label className="block mb-1 text-xs text-gray-800">
+                <label className="block mb-2 text-sm font-semibold text-transparent bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text">
                   Search product
                 </label>
-                <input
-                  type="text"
-                  value={searchText}
-                  onChange={(e) => setSearchText(e.target.value)}
-                  placeholder="Type product name..."
-                  className="w-full px-3 py-2 text-gray-800 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-200"
-                />
+                <div className="relative">
+                  <input
+                    type="text"
+                    value={searchText}
+                    onChange={(e) => setSearchText(e.target.value)}
+                    placeholder="Type product name..."
+                    className="w-full px-4 py-3 pl-12 text-gray-800 transition-all duration-300 bg-white border-2 border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 hover:border-emerald-300"
+                  />
+                  <div className="absolute inset-y-0 left-0 flex items-center pl-4">
+                    <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                  </div>
+                </div>
               </div>
 
               <div>
-                <label className="block mb-1 text-xs text-gray-800">
+                <label className="block mb-2 text-sm font-semibold text-transparent bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text">
                   Sort
                 </label>
                 <select
                   value={sortBy}
                   onChange={(e) => setSortBy(e.target.value)}
-                  className="w-full px-3 py-2 text-gray-800 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-200"
+                  className="w-full px-4 py-3 text-gray-800 transition-all duration-300 bg-white border-2 border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 hover:border-emerald-300"
                 >
                   {SORT_OPTIONS.map((s) => (
                     <option key={s.value} value={s.value}>
@@ -419,6 +481,112 @@ const Shop = () => {
       {toast && (
         <div className="fixed p-3 bg-white border rounded-md shadow bottom-6 right-6">
           <div className="text-sm">{toast.message}</div>
+        </div>
+      )}
+
+
+       {/* 🔹 Quantity Selection Modal */}
+      {showQtyModal && selectedProduct && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
+          <div className="w-full max-w-md p-6 bg-white shadow-lg rounded-xl">
+            <div className="text-center">
+              {selectedProduct.productImage && (
+                <img
+                  src={`http://localhost:5000/uploads/${selectedProduct.productImage}`}
+                  alt={selectedProduct.productName}
+                  className="object-contain w-32 h-32 mx-auto mb-4"
+                />
+              )}
+              <h3 className="text-lg font-bold text-gray-800">{selectedProduct.productName}</h3>
+              <p className="font-semibold text-green-600">{formatPrice(selectedProduct.price)} / {selectedProduct.unitType}</p>
+
+              <div className="flex items-center justify-center gap-4 mt-6">
+                <button
+          onClick={handleDecrease}
+                  className="px-4 py-2 text-xl bg-gray-200 rounded-lg hover:bg-gray-300"
+                >
+                  -
+                </button>
+                <div className="px-6 py-2 text-lg font-semibold border rounded-lg">
+                  {["kg", "g"].includes(selectedProduct.unitType?.toLowerCase())
+                    ? quantity.toFixed(1)
+                    : quantity}
+                </div>
+                <button
+                  onClick={handleIncrease}
+                  className="px-4 py-2 text-xl bg-gray-200 rounded-lg hover:bg-gray-300"
+                >
+                  +
+                </button>
+              </div>
+              <div className="flex gap-3 mt-6">
+                <button
+                  onClick={confirmAddToCart}
+                  className="flex-1 px-4 py-2 text-white rounded-lg bg-emerald-600 hover:bg-emerald-700"
+                >
+                  Add to Cart
+                </button>
+                <button
+                  onClick={() => setShowQtyModal(false)}
+                  className="flex-1 px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300"
+                >
+                  Back
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      
+      {/* Login Modal */}
+      {showLoginModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="w-full max-w-md p-8 mx-4 transition-all transform bg-white rounded-lg shadow-xl">
+            <div className="text-center">
+              <div className="mb-6">
+                <div className="flex items-center justify-center w-16 h-16 mx-auto mb-4 rounded-full bg-emerald-100">
+                  <svg className="w-8 h-8 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                  </svg>
+                </div>
+                <h3 className="mb-2 text-lg font-semibold text-gray-900">
+                  Thank you for choosing to shop at CeylonMart Online...!
+                </h3>
+                <p className="text-sm text-gray-600">
+                  Please Login or Signup to proceed
+                </p>
+              </div>
+              
+              <div className="flex flex-col gap-3 sm:flex-row">
+                <button
+                  onClick={() => {
+                    setShowLoginModal(false);
+                    navigate('/login');
+                  }}
+                  className="flex-1 px-6 py-3 font-medium text-white transition-colors rounded-lg bg-emerald-600 hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2"
+                >
+                  Login
+                </button>
+                <button
+                  onClick={() => {
+                    setShowLoginModal(false);
+                    navigate('/register');
+                  }}
+                  className="flex-1 px-6 py-3 font-medium transition-colors bg-white border-2 rounded-lg text-emerald-600 border-emerald-600 hover:bg-emerald-50 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2"
+                >
+                  Signup
+                </button>
+              </div>
+              
+              <button
+                onClick={() => setShowLoginModal(false)}
+                className="mt-4 text-sm text-gray-500 hover:text-gray-700 focus:outline-none"
+              >
+                Maybe later
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

@@ -92,7 +92,7 @@ const ProductInventory = () => {
           onClick={() => navigate('/add-category')}
           className="px-6 py-3 text-base font-semibold text-white transition-all rounded-lg shadow bg-emerald-700 hover:bg-emerald-800 focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-emerald-600"
         >
-          + Add New Category
+          Add New Category
         </button>
       </div>
 

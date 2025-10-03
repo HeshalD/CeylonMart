@@ -54,6 +54,40 @@ const updateDriver = async (req, res) => {
   }
 };
 
+// Update driver availability
+const updateDriverAvailability = async (req, res) => {
+  try {
+    const driver = await Driver.findByIdAndUpdate(
+      req.params.id,
+      { availability: req.body.availability },
+      { new: true, runValidators: true }
+    );
+    if (!driver) {
+      return res.status(404).json({ error: "Driver not found" });
+    }
+    res.json(driver);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+};
+
+// Update driver district
+const updateDriverDistrict = async (req, res) => {
+  try {
+    const driver = await Driver.findByIdAndUpdate(
+      req.params.id,
+      { district: req.body.district },
+      { new: true, runValidators: true }
+    );
+    if (!driver) {
+      return res.status(404).json({ error: "Driver not found" });
+    }
+    res.json(driver);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+};
+
 // Soft delete driver
 const deleteDriver = async (req, res) => {
   try {
@@ -76,6 +110,8 @@ module.exports = {
   getDrivers,
   getDriverById,
   updateDriver,
+  updateDriverAvailability,
+  updateDriverDistrict,
   deleteDriver
 };
 

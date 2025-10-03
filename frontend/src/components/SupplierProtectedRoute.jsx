@@ -12,12 +12,12 @@ const ProtectedRoute = ({ children, requireApproved = false, requireAdmin = fals
 
   // If no token, redirect to login
   if (!token) {
-    return <Navigate to="/login" state={{ from: location }} replace />;
+    return <Navigate to="/supllierLogin" state={{ from: location }} replace />;
   }
 
   // For admin routes, do not require supplierId
   if (!requireAdmin && !supplierId) {
-    return <Navigate to="/login" state={{ from: location }} replace />;
+    return <Navigate to="/supplierLogin" state={{ from: location }} replace />;
   }
 
   // If admin route is required but user is not admin

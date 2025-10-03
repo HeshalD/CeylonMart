@@ -322,7 +322,7 @@ function DriverManagement() {
       <Header />
       <main className="flex-grow max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
         <div className="px-4 py-6 sm:px-0">
-          <div className="page-header">
+      <div className="page-header">
         <div>
           <h2 className="page-title">Driver Management</h2>
           <p className="page-subtitle">Manage your delivery drivers efficiently</p>
