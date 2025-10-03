@@ -43,7 +43,7 @@ const productSchema = new Schema(
         "piece",
         "tin",
         "box",
-        "packets",
+        "packet",
       ],
       required: [true, "Unit type is required"],
     },
