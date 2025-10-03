@@ -26,19 +26,19 @@ export const getCategoryById = (id) => axios.get(`${API_URL}/${id}`);
 // Product-related functions
 export const getProducts = async () => {
   try {
-    const response = await axios.get('http://localhost:5000/products');
+    const response = await axios.get("http://localhost:5000/products");
     return { data: response.data.products || [] };
   } catch (error) {
-    console.error('Error fetching products:', error);
+    console.error("Error fetching products:", error);
     return { data: [] };
   }
 };
 
 export const getExpiringProducts = async () => {
   try {
-    const response = await axios.get('http://localhost:5000/products');
+    const response = await axios.get("http://localhost:5000/products");
     const products = response.data.products || [];
-    
+
     const calculateDaysLeft = (expiryDate) => {
       const today = new Date();
       today.setHours(0, 0, 0, 0);
@@ -47,11 +47,13 @@ export const getExpiringProducts = async () => {
       const diff = Math.floor((exp - today) / (1000 * 60 * 60 * 24));
       return diff;
     };
-    
-    const expiringProducts = products.filter(p => calculateDaysLeft(p.expiryDate) <= 10);
+
+    const expiringProducts = products.filter(
+      (p) => calculateDaysLeft(p.expiryDate) <= 10
+    );
     return { data: expiringProducts };
   } catch (error) {
-    console.error('Error fetching expiring products:', error);
+    console.error("Error fetching expiring products:", error);
     return { data: [] };
   }
 };
@@ -61,10 +63,13 @@ export const getReorderSuggestions = () => Promise.resolve({ data: [] });
 // ✅ Updated: connect to backend Reports API
 export const generateInventoryReport = async (reportType, payload) => {
   try {
-    const response = await axios.post('http://localhost:5000/api/reports/generate', {
-      reportType,
-      ...payload,
-    });
+    const response = await axios.post(
+      "http://localhost:5000/api/reports/generate",
+      {
+        reportType,
+        ...payload,
+      }
+    );
     return response;
   } catch (error) {
     console.error("Error generating report:", error);
@@ -74,7 +79,29 @@ export const generateInventoryReport = async (reportType, payload) => {
 
 export const getSalesTrends = () => Promise.resolve({ data: [] });
 
-export const getStockHistory = () => Promise.resolve({ data: [] });
+// ✅ UPDATED: Real stock history from backend
+export const getStockHistory = async () => {
+  try {
+    const response = await axios.get("http://localhost:5000/api/stock-history");
+    return { data: response.data.history || [] };
+  } catch (error) {
+    console.error("Error fetching stock history:", error);
+    return { data: [] };
+  }
+};
+
+export const addStockHistory = async (entry) => {
+  try {
+    const response = await axios.post(
+      "http://localhost:5000/api/stock-history",
+      entry
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error saving stock history:", error);
+    throw error;
+  }
+};
 
 const API = axios.create({ baseURL: "http://localhost:5000" });
 

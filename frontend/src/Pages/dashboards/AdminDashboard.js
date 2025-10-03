@@ -164,12 +164,18 @@ const AdminDashboard = () => {
     }
   };
 
-  const filteredUsers = users.filter(
-    (u) =>
-      (u.name.toLowerCase().includes(search.toLowerCase()) ||
-       u.role.toLowerCase().includes(search.toLowerCase())) &&
-      (roleFilter ? u.role === roleFilter : true)
-  );
+  const filteredUsers = users.filter((u) => {
+    // Check search filter
+    const matchesSearch = !search || 
+      u.name.toLowerCase().includes(search.toLowerCase()) ||
+      u.email.toLowerCase().includes(search.toLowerCase()) ||
+      u.role.toLowerCase().includes(search.toLowerCase());
+    
+    // Check role filter
+    const matchesRole = !roleFilter || u.role === roleFilter;
+    
+    return matchesSearch && matchesRole;
+  });
 
   if (!user) {
     return <div>Loading...</div>;
@@ -354,7 +360,7 @@ const AdminDashboard = () => {
                     All Users
                   </h3>
                   <p className="mt-1 text-sm text-gray-600 font-medium">
-                    Manage all registered users in the system ({filteredUsers.length} users)
+                    Manage all registered users in the system ({filteredUsers.length} of {users.length} users)
                   </p>
                 </div>
                 <div className="flex items-center space-x-2">
@@ -369,6 +375,21 @@ const AdminDashboard = () => {
                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
                   <span className="text-gray-600 font-medium">Loading users...</span>
                 </div>
+              </div>
+            ) : filteredUsers.length === 0 ? (
+              <div className="px-6 py-12 text-center">
+                <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
+                  </svg>
+                </div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">No users found</h3>
+                <p className="text-gray-600 mb-4">
+                  {search || roleFilter 
+                    ? "Try adjusting your search criteria to see all users."
+                    : "No users are registered in the system yet."
+                  }
+                </p>
               </div>
             ) : (
               <div className="divide-y divide-gray-200/50">

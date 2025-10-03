@@ -1,8 +1,9 @@
 const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 
-const productSchema = new Schema({
-   productName: {
+const productSchema = new Schema(
+  {
+    productName: {
       type: String,
       required: [true, "Product name is required"],
       trim: true,
@@ -21,10 +22,29 @@ const productSchema = new Schema({
       type: Number,
       required: [true, "Price is required"],
       min: [0, "Price cannot be negative"],
+      validate: {
+        validator: function (value) {
+          return /^\d+(\.\d{1,2})?$/.test(value.toString());
+        },
+        message: "Price can have at most 2 decimal places and cannot be negative",
+      },
     },
     unitType: {
       type: String,
-      enum: ["Kg", "g", "L", "ml", "pack", "pcs", "other"],
+      enum: [
+        "Kg",
+        "g",
+        "L",
+        "ml",
+        "pack",
+        "pcs",
+        "other",
+        "bottle",
+        "piece",
+        "tin",
+        "box",
+        "packets",
+      ],
       required: [true, "Unit type is required"],
     },
     productCode: {
@@ -37,11 +57,43 @@ const productSchema = new Schema({
       type: Number,
       required: [true, "Current stock is required"],
       min: [0, "Stock cannot be negative"],
+      validate: {
+        validator: function (value) {
+          if (value < 0) return false; // No negatives
+          if (this.unitType === "Kg" || this.unitType === "g") {
+            return /^\d+(\.\d{1})?$/.test(value.toString());
+          }
+          return Number.isInteger(value);
+        },
+        message: function (props) {
+          if (props.value < 0) return "Stock cannot be negative";
+          if (this.unitType === "Kg" || this.unitType === "g") {
+            return "Stock for Kg/g can have at most 1 decimal place";
+          }
+          return "Stock for this unit type must be a whole number";
+        },
+      },
     },
     minimumStockLevel: {
       type: Number,
       required: [true, "Minimum stock level is required"],
       min: [0, "Minimum stock cannot be negative"],
+      validate: {
+        validator: function (value) {
+          if (value < 0) return false; // No negatives
+          if (this.unitType === "Kg" || this.unitType === "g") {
+            return /^\d+(\.\d{1})?$/.test(value.toString());
+          }
+          return Number.isInteger(value);
+        },
+        message: function (props) {
+          if (props.value < 0) return "Minimum stock cannot be negative";
+          if (this.unitType === "Kg" || this.unitType === "g") {
+            return "Minimum stock for Kg/g can have at most 1 decimal place";
+          }
+          return "Minimum stock for this unit type must be a whole number";
+        },
+      },
     },
     expiryDate: {
       type: Date,
@@ -49,23 +101,20 @@ const productSchema = new Schema({
       validate: {
         validator: function (value) {
           const today = new Date();
-          today.setHours(0, 0, 0, 0); // remove time part
+          today.setHours(0, 0, 0, 0);
           return value > today;
         },
         message: "Expiry date must be a future date",
       },
     },
     productImage: {
-      type: String, // filename of uploaded image
+      type: String,
       required: [true, "Product image is required"],
     },
   },
-  
   {
     timestamps: true,
-  });
+  }
+);
 
-module.exports = mongoose.model(
-    "ProductModel", //file name
-     productSchema //function name
-)
+module.exports = mongoose.model("ProductModel", productSchema);
