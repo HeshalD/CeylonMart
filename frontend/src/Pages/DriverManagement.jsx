@@ -5,14 +5,19 @@ import './DriverManagement.css';
 
 function DriverManagement() {
   const [drivers, setDrivers] = useState([]);
+  const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [editingDriver, setEditingDriver] = useState(null);
+  const [showDriverSelectionModal, setShowDriverSelectionModal] = useState(false);
+  const [selectedOrder, setSelectedOrder] = useState(null);
+  const [availableDriversForOrder, setAvailableDriversForOrder] = useState([]);
+  const [showAllDrivers, setShowAllDrivers] = useState(false);
+  const [driverSearchTerm, setDriverSearchTerm] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState('');
-  const [filterStatus, setFilterStatus] = useState('');
   const [filterDistrict, setFilterDistrict] = useState('');
 
   const [formData, setFormData] = useState({
@@ -31,6 +36,7 @@ function DriverManagement() {
 
   useEffect(() => {
     fetchDrivers();
+    fetchOrders();
   }, []);
 
   const fetchDrivers = async () => {
@@ -45,6 +51,22 @@ function DriverManagement() {
       setError(e.response?.data?.error || 'Failed to fetch drivers');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchOrders = async () => {
+    try {
+      // Fetch orders that need driver assignment
+      const res = await client.get('/orders');
+      console.log('All orders:', res.data);
+      // Filter for orders that don't have a driver assigned yet
+      const unassignedOrders = res.data.filter(order => 
+        order.status === 'pending' && !order.driverId
+      );
+      setOrders(unassignedOrders);
+    } catch (e) {
+      console.error('Failed to fetch orders:', e);
+      setError(e.response?.data?.error || 'Failed to fetch orders');
     }
   };
 
@@ -170,7 +192,6 @@ function DriverManagement() {
   const clearFilters = () => {
     setSearchTerm('');
     setFilterType('');
-    setFilterStatus('');
     setFilterDistrict('');
   };
 
@@ -190,28 +211,86 @@ function DriverManagement() {
     }
   };
 
-  const updateDriverStatus = async (driverId, newStatus) => {
+  const findNearestDriver = (orderDistrict) => {
+    // Find available drivers in the same district
+    const availableDrivers = drivers.filter(driver => 
+      driver.availability === 'available' && 
+      driver.district === orderDistrict &&
+      !driver.isDeleted
+    );
+    
+    if (availableDrivers.length === 0) {
+      return null;
+    }
+    
+    // For now, return the first available driver in the same district
+    // In a real app, you might want to consider driver capacity, current load, etc.
+    return availableDrivers[0];
+  };
+
+  const showAvailableDriversForOrder = (order) => {
+    const orderDistrict = order.deliveryAddress?.district;
+    
+    if (!orderDistrict) {
+      setError('Order does not have a delivery district specified');
+      return;
+    }
+    
+    // Find available drivers in the same district
+    const availableDrivers = drivers.filter(driver => 
+      driver.availability === 'available' && 
+      driver.district === orderDistrict &&
+      !driver.isDeleted
+    );
+    
+    if (availableDrivers.length === 0) {
+      setError(`No available drivers found in ${orderDistrict} district`);
+      return;
+    }
+    
+    setSelectedOrder(order);
+    setAvailableDriversForOrder(availableDrivers);
+    setShowAllDrivers(false);
+    setDriverSearchTerm('');
+    setShowDriverSelectionModal(true);
+  };
+
+  const showAllDriversForOrder = (order) => {
+    setSelectedOrder(order);
+    setAvailableDriversForOrder(drivers.filter(driver => !driver.isDeleted));
+    setShowAllDrivers(true);
+    setDriverSearchTerm('');
+    setShowDriverSelectionModal(true);
+  };
+
+  const assignOrderToSelectedDriver = async (driverId, driverName) => {
     try {
       setLoading(true);
-      await client.put(`/drivers/${driverId}/status`, { status: newStatus });
-      setSuccess(`Driver status updated to ${newStatus}`);
+      setError('');
+      
+      // Assign the order to the selected driver
+      const response = await client.patch(`/orders/${selectedOrder._id}/assign`, {
+        driverId: driverId,
+        status: 'assigned'
+      });
+      
+      setSuccess(`Order assigned to ${driverName} in ${selectedOrder.deliveryAddress?.district}`);
+      
+      // Close modal and refresh data
+      setShowDriverSelectionModal(false);
+      setSelectedOrder(null);
+      setAvailableDriversForOrder([]);
+      await fetchOrders();
       await fetchDrivers();
+      
     } catch (e) {
-      setError(e.response?.data?.error || 'Failed to update driver status');
+      setError(e.response?.data?.error || 'Failed to assign order to driver');
     } finally {
       setLoading(false);
     }
   };
 
-  // Helper functions for status colors (currently unused but kept for future use)
-  // const getStatusColor = (status) => {
-  //   switch (status) {
-  //     case 'active': return 'bg-green-100 text-green-700';
-  //     case 'inactive': return 'bg-gray-100 text-gray-700';
-  //     case 'on_leave': return 'bg-yellow-100 text-yellow-700';
-  //     default: return 'bg-gray-100 text-gray-700';
-  //   }
-  // };
+
 
   // const getAvailabilityColor = (availability) => {
   //   switch (availability) {
@@ -230,10 +309,9 @@ function DriverManagement() {
       driver.email.toLowerCase().includes(searchTerm.toLowerCase());
     
     const matchesType = !filterType || driver.vehicleType === filterType;
-    const matchesStatus = !filterStatus || driver.status === filterStatus;
     const matchesDistrict = !filterDistrict || driver.district === filterDistrict;
     
-    return matchesSearch && matchesType && matchesStatus && matchesDistrict;
+    return matchesSearch && matchesType && matchesDistrict;
   });
 
   const vehicleTypes = ['car', 'van', 'bike', 'lorry'];
@@ -280,16 +358,6 @@ function DriverManagement() {
             ))}
           </select>
           <select
-            value={filterStatus}
-            onChange={(e) => setFilterStatus(e.target.value)}
-            className="input"
-          >
-            <option value="">All Status</option>
-            <option value="active">Active</option>
-            <option value="inactive">Inactive</option>
-            <option value="on_leave">On Leave</option>
-          </select>
-          <select
             value={filterDistrict}
             onChange={(e) => setFilterDistrict(e.target.value)}
             className="input"
@@ -301,6 +369,84 @@ function DriverManagement() {
           </select>
           <button onClick={clearFilters} className="btn-secondary">Clear Filters</button>
         </div>
+      </div>
+
+      {/* Orders Section */}
+      <div className="section">
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-2xl font-bold text-gray-800">Pending Orders</h2>
+          <button 
+            onClick={fetchOrders} 
+            className="btn-secondary"
+          >
+            🔄 Refresh Orders
+          </button>
+        </div>
+        
+        {orders.length === 0 ? (
+          <div className="empty-state">
+            <div className="empty-icon">📦</div>
+            <h3>No pending orders</h3>
+            <p>All orders have been assigned to drivers.</p>
+          </div>
+        ) : (
+          <div className="orders-grid">
+            {orders.map((order) => (
+              <div key={order._id} className="order-card">
+                <div className="order-header">
+                  <h4 className="order-id">Order #{order.orderId || order._id}</h4>
+                  <span className="order-status pending">Pending Assignment</span>
+                </div>
+                
+                <div className="order-details">
+                  <div className="detail-row">
+                    <span className="detail-label">Customer:</span>
+                    <span className="detail-value">
+                      {order.customerId?.firstName} {order.customerId?.lastName}
+                    </span>
+                  </div>
+                  <div className="detail-row">
+                    <span className="detail-label">Phone:</span>
+                    <span className="detail-value">{order.customerId?.phone}</span>
+                  </div>
+                  <div className="detail-row">
+                    <span className="detail-label">Delivery District:</span>
+                    <span className="detail-value">{order.deliveryAddress?.district || 'Not specified'}</span>
+                  </div>
+                  <div className="detail-row">
+                    <span className="detail-label">Items:</span>
+                    <span className="detail-value">
+                      {order.items?.length || 0} items ({order.totalWeight || 0}kg)
+                    </span>
+                  </div>
+                  <div className="detail-row">
+                    <span className="detail-label">Order Date:</span>
+                    <span className="detail-value">
+                      {new Date(order.createdAt).toLocaleDateString()}
+                    </span>
+                  </div>
+                </div>
+                
+                <div className="order-actions">
+                  <button 
+                    onClick={() => showAvailableDriversForOrder(order)}
+                    className="btn-primary"
+                    disabled={loading}
+                  >
+                    🚛 Select from District
+                  </button>
+                  <button 
+                    onClick={() => showAllDriversForOrder(order)}
+                    className="btn-secondary"
+                    disabled={loading}
+                  >
+                    👤 Choose Any Driver
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Drivers Grid */}
@@ -326,7 +472,6 @@ function DriverManagement() {
                     <div className="muted">{driver.email}</div>
                   </div>
                   <div className="availability-info">
-                    <span className={`badge ${driver.status}`}>{driver.status}</span>
                     <span className={`badge ${driver.availability}`}>{driver.availability}</span>
                   </div>
                 </div>
@@ -511,6 +656,145 @@ function DriverManagement() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Driver Selection Modal */}
+      {showDriverSelectionModal && selectedOrder && (
+        <div className="modal-overlay">
+          <div className="modal-content">
+            <div className="modal-header">
+              <h2>Select Driver for Order #{selectedOrder.orderId || selectedOrder._id}</h2>
+              <button 
+                onClick={() => {
+                  setShowDriverSelectionModal(false);
+                  setSelectedOrder(null);
+                  setAvailableDriversForOrder([]);
+                  setShowAllDrivers(false);
+                  setDriverSearchTerm('');
+                }}
+                className="modal-close"
+              >
+                ✕
+              </button>
+            </div>
+            
+            <div className="order-info-section">
+              <h3>Order Details:</h3>
+              <div className="order-info-grid">
+                <div className="info-item">
+                  <span className="info-label">Customer:</span>
+                  <span className="info-value">
+                    {selectedOrder.customerId?.firstName} {selectedOrder.customerId?.lastName}
+                  </span>
+                </div>
+                <div className="info-item">
+                  <span className="info-label">Delivery District:</span>
+                  <span className="info-value">{selectedOrder.deliveryAddress?.district}</span>
+                </div>
+                <div className="info-item">
+                  <span className="info-label">Items:</span>
+                  <span className="info-value">
+                    {selectedOrder.items?.length || 0} items ({selectedOrder.totalWeight || 0}kg)
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <div className="available-drivers-section">
+              <div className="drivers-section-header">
+                <h3>
+                  {showAllDrivers ? 'All Drivers' : `Available Drivers in ${selectedOrder.deliveryAddress?.district}`}
+                </h3>
+                {showAllDrivers && (
+                  <div className="driver-search-container">
+                    <input
+                      type="text"
+                      placeholder="Search drivers by name, email, or district..."
+                      value={driverSearchTerm}
+                      onChange={(e) => setDriverSearchTerm(e.target.value)}
+                      className="driver-search-input"
+                    />
+                  </div>
+                )}
+              </div>
+              
+              {(() => {
+                let filteredDrivers = availableDriversForOrder;
+                
+                if (showAllDrivers && driverSearchTerm) {
+                  filteredDrivers = availableDriversForOrder.filter(driver => 
+                    (driver.firstName && driver.firstName.toLowerCase().includes(driverSearchTerm.toLowerCase())) ||
+                    (driver.lastName && driver.lastName.toLowerCase().includes(driverSearchTerm.toLowerCase())) ||
+                    (driver.email && driver.email.toLowerCase().includes(driverSearchTerm.toLowerCase())) ||
+                    (driver.district && driver.district.toLowerCase().includes(driverSearchTerm.toLowerCase())) ||
+                    (driver.vehicleType && driver.vehicleType.toLowerCase().includes(driverSearchTerm.toLowerCase()))
+                  );
+                }
+                
+                return filteredDrivers.length === 0 ? (
+                  <div className="no-drivers-message">
+                    <p>
+                      {showAllDrivers ? 
+                        (driverSearchTerm ? 'No drivers found matching your search.' : 'No drivers available.') :
+                        'No available drivers found in this district.'
+                      }
+                    </p>
+                  </div>
+                ) : (
+                  <div className="drivers-selection-grid">
+                    {filteredDrivers.map((driver) => (
+                      <div key={driver._id} className="driver-selection-card">
+                        <div className="driver-selection-info">
+                          <div className="driver-avatar-small">
+                            {driver.firstName?.[0]}{driver.lastName?.[0]}
+                          </div>
+                          <div className="driver-details-small">
+                            <div className="driver-name-small">
+                              {driver.firstName} {driver.lastName}
+                              {showAllDrivers && (
+                                <span className={`availability-badge ${driver.availability}`}>
+                                  {driver.availability}
+                                </span>
+                              )}
+                            </div>
+                            <div className="driver-contact-small">
+                              {driver.phone} • {driver.email}
+                            </div>
+                            <div className="driver-vehicle-small">
+                              {driver.vehicleType?.toUpperCase()} • {driver.vehicleNumber}
+                            </div>
+                            <div className="driver-capacity-small">
+                              Capacity: {driver.capacity}kg
+                            </div>
+                            {showAllDrivers && (
+                              <div className="driver-district-small">
+                                District: {driver.district || 'Not specified'}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                        <button
+                          onClick={() => assignOrderToSelectedDriver(
+                            driver._id, 
+                            `${driver.firstName} ${driver.lastName}`
+                          )}
+                          className={`assign-driver-btn ${driver.availability !== 'available' && showAllDrivers ? 'disabled-driver' : ''}`}
+                          disabled={loading}
+                          title={driver.availability !== 'available' && showAllDrivers ? 
+                            `Warning: This driver is currently ${driver.availability}` : 
+                            'Assign order to this driver'
+                          }
+                        >
+                          Assign to this Driver
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                );
+              })()}
+            </div>
           </div>
         </div>
       )}

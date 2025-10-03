@@ -40,6 +40,30 @@ const driverSchema = new Schema({
     required: true,
     trim: true
   },
+  capacity: {
+    type: Number,
+    required: true
+  },
+  district: {
+    type: String,
+    required: false,
+    trim: true
+  },
+  availability: {
+    type: String,
+    enum: ['available', 'busy', 'unavailable'],
+    default: 'available'
+  },
+  completedDeliveries: {
+    type: Number,
+    default: 0
+  },
+  rating: {
+    type: Number,
+    default: 0,
+    min: 0,
+    max: 5
+  },
   isDeleted: {
     type: Boolean,
     default: false
