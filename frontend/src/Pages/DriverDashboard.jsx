@@ -44,6 +44,9 @@ function DriverDashboard() {
       );
 
       if (foundDriver) {
+        console.log('Driver found:', foundDriver);
+        console.log('Setting driver ID:', foundDriver._id);
+        
         // Use the user context to login
         login({ id: foundDriver._id, name: `${foundDriver.firstName} ${foundDriver.lastName}`, email: foundDriver.email }, 'driver');
         setDriver(foundDriver);
@@ -95,32 +98,64 @@ function DriverDashboard() {
   };
 
   const updateAvailability = async (availability) => {
+    if (!driverId) {
+      setError('Driver ID not found. Please login again.');
+      return;
+    }
+
     setLoading(true);
     setError('');
     setSuccess('');
 
     try {
-      await client.patch(`/drivers/${driverId}/availability`, { availability });
+      console.log('Updating availability for driver:', driverId, 'to:', availability);
+      const response = await client.patch(`/drivers/${driverId}/availability`, { availability });
+      console.log('Availability update response:', response.data);
+      
       setDriver({ ...driver, availability });
       setSuccess('Availability updated successfully');
     } catch (e) {
-      setError(e.response?.data?.error || 'Failed to update availability');
+      console.error('Failed to update availability:', e);
+      console.error('Error response:', e.response?.data);
+      setError(e.response?.data?.error || e.response?.data?.message || 'Failed to update availability');
     } finally {
       setLoading(false);
     }
   };
 
   const updateDriverInfo = async (field, value) => {
+    if (!driverId) {
+      setError('Driver ID not found. Please login again.');
+      return;
+    }
+
     setLoading(true);
     setError('');
     setSuccess('');
 
     try {
-      await client.put(`/drivers/${driverId}`, { [field]: value });
-      setDriver({ ...driver, [field]: value });
-      setSuccess('Driver information updated successfully');
+      console.log('Updating driver info for driver:', driverId, 'field:', field, 'value:', value);
+      console.log('Request payload:', { [field]: value });
+      
+      let response;
+      if (field === 'district') {
+        // Use specific district endpoint
+        response = await client.patch(`/drivers/${driverId}/district`, { district: value });
+      } else {
+        // Use general update endpoint for other fields
+        response = await client.put(`/drivers/${driverId}`, { [field]: value });
+      }
+      
+      console.log('Driver info update response:', response.data);
+      
+      // Update the driver state with the new value
+      setDriver(prevDriver => ({ ...prevDriver, [field]: value }));
+      setSuccess(`${field.charAt(0).toUpperCase() + field.slice(1)} updated successfully`);
     } catch (e) {
-      setError(e.response?.data?.error || 'Failed to update driver information');
+      console.error('Failed to update driver info:', e);
+      console.error('Error response:', e.response?.data);
+      console.error('Error status:', e.response?.status);
+      setError(e.response?.data?.error || e.response?.data?.message || 'Failed to update driver information');
     } finally {
       setLoading(false);
     }
@@ -224,6 +259,24 @@ function DriverDashboard() {
             <div className="driver-details">
               <h2 className="driver-name-large">{driver?.firstName} {driver?.lastName}</h2>
               <p className="driver-email-large">{driver?.email}</p>
+              <div className="driver-contact-info">
+                <div className="contact-item">
+                  <span className="contact-label">Phone:</span>
+                  <span className="contact-value">{driver?.phone || 'Not provided'}</span>
+                </div>
+                <div className="contact-item">
+                  <span className="contact-label">License:</span>
+                  <span className="contact-value">{driver?.licenseNumber || 'Not provided'}</span>
+                </div>
+                <div className="contact-item">
+                  <span className="contact-label">Vehicle:</span>
+                  <span className="contact-value">{driver?.vehicleType?.toUpperCase()} - {driver?.vehicleNumber}</span>
+                </div>
+                <div className="contact-item">
+                  <span className="contact-label">Capacity:</span>
+                  <span className="contact-value">{driver?.capacity}kg</span>
+                </div>
+              </div>
               <div className="driver-stats">
                 <span className="stat-item">
                   <strong>{driver?.completedDeliveries || 0}</strong> Completed
@@ -232,7 +285,7 @@ function DriverDashboard() {
                   <strong>{driver?.rating || 0}</strong> ⭐ Rating
                 </span>
                 <span className="stat-item">
-                  <strong>{driver?.district}</strong> District
+                  <strong>{driver?.district || 'Not set'}</strong> District
                 </span>
               </div>
             </div>
@@ -240,53 +293,68 @@ function DriverDashboard() {
           
           <div className="driver-actions-section">
             <div className="availability-controls">
-              <h3>Update Your Profile</h3>
-              <p className="text-sm text-gray-600 mb-4">
-                Update your operating district and availability status. This information helps managers assign deliveries to you.
+              <h3>Update Your Status</h3>
+              <p className="status-description">
+                Update your availability status to help managers assign deliveries to you.
               </p>
-              <div className="driver-update-form">
-                <div className="field">
-                  <label className="label">Operating District</label>
-                  <select
-                    value={driver?.district || ''}
-                    onChange={(e) => updateDriverInfo('district', e.target.value)}
-                    className="input"
-                    disabled={loading}
-                  >
-                    <option value="">Select district</option>
-                    <option value="Colombo">Colombo</option>
-                    <option value="Gampaha">Gampaha</option>
-                    <option value="Kalutara">Kalutara</option>
-                  </select>
-                </div>
-                
-                <div className="availability-buttons">
-                  <button 
-                    onClick={() => updateAvailability('available')}
-                    className={`btn-availability ${driver?.availability === 'available' ? 'active' : ''}`}
-                    disabled={loading}
-                  >
-                    ✅ Available
-                  </button>
-                  <button 
-                    onClick={() => updateAvailability('busy')}
-                    className={`btn-availability ${driver?.availability === 'busy' ? 'active' : ''}`}
-                    disabled={loading}
-                  >
-                    🚛 Busy
-                  </button>
-                  <button 
-                    onClick={() => updateAvailability('unavailable')}
-                    className={`btn-availability ${driver?.availability === 'unavailable' ? 'active' : ''}`}
-                    disabled={loading}
-                  >
-                    ❌ Unavailable
-                  </button>
-                </div>
-                <span className={`current-status ${getAvailabilityColor(driver?.availability)}`}>
-                  Current: {driver?.availability}
+              
+              <div className="availability-buttons">
+                <button 
+                  onClick={() => updateAvailability('available')}
+                  className={`btn-availability ${driver?.availability === 'available' ? 'active' : ''}`}
+                  disabled={loading}
+                  title="Click to set status as Available for new deliveries"
+                >
+                  <span className="availability-icon">✅</span>
+                  <span className="availability-text">Available</span>
+                  <span className="availability-description">Ready for new orders</span>
+                </button>
+                <button 
+                  onClick={() => updateAvailability('busy')}
+                  className={`btn-availability ${driver?.availability === 'busy' ? 'active' : ''}`}
+                  disabled={loading}
+                  title="Click to set status as Busy - currently on delivery"
+                >
+                  <span className="availability-icon">🚛</span>
+                  <span className="availability-text">Busy</span>
+                  <span className="availability-description">Currently on delivery</span>
+                </button>
+                <button 
+                  onClick={() => updateAvailability('unavailable')}
+                  className={`btn-availability ${driver?.availability === 'unavailable' ? 'active' : ''}`}
+                  disabled={loading}
+                  title="Click to set status as Unavailable"
+                >
+                  <span className="availability-icon">❌</span>
+                  <span className="availability-text">Unavailable</span>
+                  <span className="availability-description">Not available for orders</span>
+                </button>
+              </div>
+              
+              <div className="current-status-display">
+                <span className="status-label">Current Status:</span>
+                <span className={`status-badge ${driver?.availability}`}>
+                  {driver?.availability || 'Not set'}
                 </span>
               </div>
+            </div>
+            
+            <div className="district-controls">
+              <h4>Operating District</h4>
+              <select
+                value={driver?.district || ''}
+                onChange={(e) => {
+                  console.log('District changed to:', e.target.value);
+                  updateDriverInfo('district', e.target.value);
+                }}
+                className="district-select"
+                disabled={loading}
+              >
+                <option value="">Select district</option>
+                <option value="Colombo">Colombo</option>
+                <option value="Kalutara">Kalutara</option>
+                <option value="Gampaha">Gampaha</option>
+              </select>
             </div>
             
             <button onClick={handleLogout} className="btn-logout">

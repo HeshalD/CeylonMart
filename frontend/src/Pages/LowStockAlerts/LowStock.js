@@ -35,6 +35,7 @@ const LowStock = () => {
     return () => unsubscribeFromDashboardUpdates(handleUpdate);
   }, [fetchLowStockProducts]);
 
+  // ✅ Restock handler
   const handleAddStock = async (productId) => {
     const quantityToAdd = parseInt(restockInput[productId], 10);
 
@@ -52,9 +53,7 @@ const LowStock = () => {
         currentStock: newStock,
       });
 
-      emitHistory({
-        _id: new Date().getTime().toString(),
-        productId: productId,
+      const historyEntry = {
         productName: product.productName,
         productCode: product.productCode || "",
         category: product.category,
@@ -64,9 +63,10 @@ const LowStock = () => {
         previousQuantity: product.currentStock,
         newQuantity: newStock,
         reason: "Stock Added via Low Stock Management",
-        date: new Date().toISOString(),
-        user: "Store Manager",
-      });
+      };
+
+      // ✅ Emit in frontend (this will save to DB and notify subscribers)
+      await emitHistory(historyEntry);
 
       alert(`Successfully added ${quantityToAdd} units to ${product.productName}`);
 
@@ -89,6 +89,7 @@ const LowStock = () => {
     }
   };
 
+  // ✅ Remove product handler
   const handleRemoveProduct = async (productId) => {
     const product = lowStockProducts.find((p) => p._id === productId);
 
@@ -104,8 +105,7 @@ const LowStock = () => {
 
       setLowStockProducts(lowStockProducts.filter((p) => p._id !== productId));
 
-      emitHistory({
-        productId: product._id,
+      const historyEntry = {
         productName: product.productName,
         productCode: product.productCode,
         productImage: product.productImage,
@@ -118,8 +118,10 @@ const LowStock = () => {
           product.currentStock === 0
             ? "Removed product that was Out of Stock"
             : "Removed product while still Low Stock",
-        date: new Date(),
-      });
+      };
+
+      // ✅ Save in DB and emit in frontend
+      await emitHistory(historyEntry);
 
       alert("Product removed successfully.");
       emitDashboardUpdate();

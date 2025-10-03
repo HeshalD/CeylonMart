@@ -58,8 +58,40 @@ router.put(
       .optional()
       .isIn(["car", "van", "bike", "lorry"])
       .withMessage("Vehicle type must be car, van, bike or lorry"),
+    body("availability")
+      .optional()
+      .isIn(["available", "busy", "unavailable"])
+      .withMessage("Availability must be available, busy, or unavailable"),
+    body("district")
+      .optional()
+      .isString()
+      .withMessage("District must be a string"),
   ],
   ctrl.updateDriver
+);
+
+// Update driver availability specifically
+router.patch(
+  "/:id/availability",
+  [
+    param("id").isMongoId(),
+    body("availability")
+      .isIn(["available", "busy", "unavailable"])
+      .withMessage("Availability must be available, busy, or unavailable"),
+  ],
+  ctrl.updateDriverAvailability
+);
+
+// Update driver district specifically
+router.patch(
+  "/:id/district",
+  [
+    param("id").isMongoId(),
+    body("district")
+      .isString()
+      .withMessage("District must be a string"),
+  ],
+  ctrl.updateDriverDistrict
 );
 
 // Delete driver

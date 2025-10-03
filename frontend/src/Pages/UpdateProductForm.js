@@ -217,6 +217,11 @@ const UpdateProductForm = () => {
               <option value="L">L</option>
               <option value="ml">ml</option>
               <option value="pack">pack</option>
+              <option value="box">box</option>
+              <option value="bottle">bottle</option>
+              <option value="piece">piece</option>
+              <option value="tin">tin</option>
+              <option value="packet">packet</option>
               <option value="pcs">pcs</option>
               <option value="other">other</option>
             </select>

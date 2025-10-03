@@ -57,9 +57,7 @@ function Expiry() {
 
       const productRemoved = products.find((p) => p._id === id);
       if (productRemoved) {
-        emitHistory({
-          _id: new Date().getTime().toString(),
-          productId: id,
+        const historyEntry = {
           productName: productRemoved.productName,
           productCode: productRemoved.productCode || "",
           category: productRemoved.category,
@@ -69,9 +67,9 @@ function Expiry() {
           previousQuantity: productRemoved.currentStock || 0,
           newQuantity: 0,
           reason: "Expired Products Removed",
-          date: new Date().toISOString(),
-          user: "Store Manager",
-        });
+        };
+
+        await emitHistory(historyEntry);
       }
 
       alert(`"${name}" removed successfully!`);

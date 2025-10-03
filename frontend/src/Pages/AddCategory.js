@@ -101,12 +101,12 @@ const AddCategory = () => {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-white">
-      <div className="w-full max-w-2xl p-8 mx-4 border-4 shadow-lg bg-emerald-50 rounded-2xl border-emerald-200">
-        <h2 className="mb-2 font-sans text-3xl font-extrabold text-emerald-700">
+    <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-gray-50 to-emerald-50">
+      <div className="w-full max-w-2xl p-8 mx-4 border-4 shadow-xl bg-emerald-100 border-emerald-400 rounded-2xl">
+        <h2 className="mb-3 text-3xl font-bold text-gray-800">
           Add New Category
         </h2>
-        <p className="mb-6 font-light text-gray-600">
+        <p className="mb-8 text-gray-600">
           Fill in the details below to create a new category for your inventory.
         </p>
 
@@ -124,7 +124,7 @@ const AddCategory = () => {
                 setCategoryName(e.target.value);
                 setErrors({ ...errors, categoryName: "" });
               }}
-              className="w-full px-4 py-2 text-gray-900 placeholder-gray-400 border rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-400"
+              className="w-full px-4 py-3 text-gray-900 placeholder-gray-400 transition-all border-2 border-gray-200 rounded-lg bg-gray-50 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-emerald-400 hover:border-gray-300"
               required
             />
             {errors.categoryName && (
@@ -145,8 +145,8 @@ const AddCategory = () => {
                 setErrors({ ...errors, description: "" });
               }}
               maxLength="100"
-              className="w-full px-4 py-2 text-gray-900 placeholder-gray-400 border rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-400"
-              rows="3"
+              className="w-full px-4 py-3 text-gray-900 placeholder-gray-400 transition-all border-2 border-gray-200 rounded-lg resize-none bg-gray-50 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-emerald-400 hover:border-gray-300"
+              rows="4"
             />
             <p className="mt-1 text-xs text-gray-500">
               {100 - description.length} characters remaining
@@ -165,7 +165,7 @@ const AddCategory = () => {
               type="file"
               accept="image/*"
               onChange={handleImageChange}
-              className="w-full text-gray-800"
+              className="w-full px-3 py-2 text-gray-800 transition-all border-2 border-gray-200 rounded-lg bg-gray-50 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-emerald-400 hover:border-gray-300"
               required
             />
             <p className="mt-1 text-xs text-gray-500">
@@ -179,29 +179,29 @@ const AddCategory = () => {
 
             {/* Image Preview */}
             {previewImage && (
-              <div className="mt-4">
-                <p className="mb-2 text-sm text-gray-600">Preview:</p>
+              <div className="p-4 mt-4 border rounded-lg bg-emerald-50 border-emerald-200">
+                <p className="mb-2 text-sm font-medium text-emerald-700">Preview:</p>
                 <img
                   src={previewImage}
                   alt="Preview"
-                  className="object-cover w-40 h-40 border rounded-lg shadow-sm"
+                  className="object-cover w-40 h-40 border-2 border-white rounded-lg shadow-md"
                 />
               </div>
             )}
           </div>
 
           {/* Buttons */}
-          <div className="flex gap-4 pt-4">
+          <div className="flex gap-4 pt-6">
             <button
               type="submit"
-              className="px-6 py-2 text-white transition rounded-lg shadow bg-emerald-600 hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-400"
+              className="px-8 py-3 font-medium text-white transition-all transform rounded-lg shadow-md bg-emerald-600 hover:bg-emerald-700 focus:outline-none focus:ring-4 focus:ring-emerald-200 hover:scale-105"
             >
               Add Category
             </button>
             <button
               type="button"
               onClick={() => navigate("/dashboard")}
-              className="px-6 py-2 text-white transition bg-gray-600 border rounded-lg hover:bg-gray-700 focus:outline-none"
+              className="px-8 py-3 font-medium text-gray-700 transition-all transform bg-gray-100 border-2 border-gray-200 rounded-lg hover:bg-gray-200 hover:border-gray-300 focus:outline-none focus:ring-4 focus:ring-gray-100 hover:scale-105"
             >
               Cancel
             </button>
