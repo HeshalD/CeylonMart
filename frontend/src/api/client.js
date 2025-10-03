@@ -6,6 +6,12 @@ const api = axios.create({
 });
 
 export const OrdersAPI = {
+  createOrder(payload) {
+    return api.post(`/orders`, payload).then(r => r.data);
+  },
+  getOrderById(orderId) {
+    return api.get(`/orders/${orderId}`).then(r => r.data);
+  },
   getCart(customerId) {
     return api.get(`/orders/cart/${customerId}`).then(r => r.data);
   },
@@ -30,8 +36,20 @@ export const PaymentsAPI = {
   createPayment(payload) {
     return api.post(`/payments`, payload).then(r => r.data);
   },
+  getPaymentById(paymentId) {
+    return api.get(`/payments/${paymentId}`).then(r => r.data);
+  },
   getPayments() {
     return api.get(`/payments`).then(r => r.data);
+  }
+};
+
+export const CustomersAPI = {
+  createCustomer(payload) {
+    return api.post(`/api/customers`, payload).then(r => r.data);
+  },
+  getCustomer(id) {
+    return api.get(`/api/customers/${id}`).then(r => r.data);
   }
 };
 

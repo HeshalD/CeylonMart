@@ -38,8 +38,10 @@ const otpRoutes = require('./Routes/OtpRoutes');
 const adminRoutes = require('./Routes/admin');
 const supplierMsgRoutes = require('./Routes/supplier');
 const driverRoutes = require("./Routes/DriverRoutes");
+const customerRoutes = require("./Routes/CustomerRoutes");
 
 app.use('/api/users', userRoutes);
+app.use('/api/customers', customerRoutes);
 app.use('/api/auth', authRoutes);
 app.use("/payments", PaymentRoutes);
 app.use("/orders", TestRoutes);

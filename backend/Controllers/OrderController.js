@@ -223,3 +223,34 @@ exports.clearOrderItems = async (req, res) => {
     res.status(500).json({ message: "Server error", error: e.message });
   }
 };
+
+// Assign driver to order
+exports.assignDriverToOrder = async (req, res) => {
+  const { orderId } = req.params;
+  const { driverId } = req.body;
+
+  if (!mongoose.Types.ObjectId.isValid(orderId))
+    return res.status(400).json({ message: "Invalid order ID" });
+  
+  if (!mongoose.Types.ObjectId.isValid(driverId))
+    return res.status(400).json({ message: "Invalid driver ID" });
+
+  try {
+    const order = await Order.findOne({ _id: orderId, isDeleted: false });
+    if (!order) return res.status(404).json({ message: "Order not found" });
+
+    // Check if order is already assigned
+    if (order.driverId) {
+      return res.status(400).json({ message: "Order is already assigned to a driver" });
+    }
+
+    // Update order with driver assignment
+    order.driverId = driverId;
+    order.status = "assigned";
+    await order.save();
+
+    res.json({ message: "Driver assigned to order successfully", order });
+  } catch (e) {
+    res.status(500).json({ message: "Server error", error: e.message });
+  }
+};

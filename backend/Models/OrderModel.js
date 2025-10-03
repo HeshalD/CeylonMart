@@ -14,7 +14,7 @@ const ItemSchema = new mongoose.Schema({
   quantity: { 
     type: Number, 
     required: true, 
-    min: 1 
+    min: 0.1 
   },
   price: { 
     type: Number, 
@@ -37,8 +37,27 @@ const OrderSchema = new mongoose.Schema({
   },
   status: { 
     type: String, 
-    enum: ["pending", "confirmed", "shipped", "delivered", "cancelled"], 
+    enum: ["pending", "assigned", "picked", "in_transit", "delivered", "cancelled"], 
     default: "pending" 
+  },
+  paymentMethod: {
+    type: String,
+    enum: ["credit_card", "debit_card", "cash_on_delivery"],
+    required: true
+  },
+  district: {
+    type: String,
+    required: true,
+    enum: ["Colombo", "Gampaha", "Kaluthara"]
+  },
+  email: {
+    type: String,
+    required: true
+  },
+  driverId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Driver",
+    default: null
   },
   isDeleted: { 
     type: Boolean, 

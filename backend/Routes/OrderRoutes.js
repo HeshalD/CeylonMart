@@ -11,8 +11,11 @@ router.post(
   body("items").isArray({ min: 1 }),
   body("items.*.productId").isMongoId(),
   body("items.*.productName").notEmpty(),
-  body("items.*.quantity").isInt({ min: 1 }),
+  body("items.*.quantity").isFloat({ min: 0.1 }),
   body("items.*.price").isFloat({ min: 0 }),
+  body("paymentMethod").isIn(["credit_card", "debit_card", "cash_on_delivery"]),
+  body("district").isIn(["Colombo", "Gampaha", "Kaluthara"]),
+  body("email").isEmail(),
   ctrl.createOrder
 );
 
@@ -28,7 +31,7 @@ router.post(
   param("orderId").isMongoId(),
   body("productId").isMongoId(),
   body("productName").notEmpty(),
-  body("quantity").isInt({ min: 1 }),
+  body("quantity").isFloat({ min: 0.1 }),
   body("price").isFloat({ min: 0 }),
   ctrl.addItemToOrder
 );
@@ -38,7 +41,7 @@ router.put(
   "/:orderId/items/:productId",
   param("orderId").isMongoId(),
   param("productId").isMongoId(),
-  body("quantity").isInt({ min: 1 }),
+  body("quantity").isFloat({ min: 0.1 }),
   ctrl.updateOrderItem
 );
 
@@ -57,6 +60,14 @@ router.delete(
   ctrl.clearOrderItems
 );
 
+// Assign driver to order
+router.put(
+  "/:orderId/assign-driver",
+  param("orderId").isMongoId(),
+  body("driverId").isMongoId().withMessage("Valid driver ID is required"),
+  ctrl.assignDriverToOrder
+);
+
 // Soft delete entire order
 router.delete("/:id", param("id").isMongoId(), ctrl.deleteOrder);
 
@@ -67,7 +78,7 @@ router.post(
   param("customerId").isMongoId(),
   body("productId").isMongoId(),
   body("productName").notEmpty(),
-  body("quantity").isInt({ min: 1 }),
+  body("quantity").isFloat({ min: 0.1 }),
   body("price").isFloat({ min: 0 }),
   ctrl.addItemToCartByCustomer
 );

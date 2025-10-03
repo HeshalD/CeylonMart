@@ -283,7 +283,7 @@ const Profile = () => {
                   } else if (user.role === 'delivery_admin') {
                     navigate('/drivers/management'); // Redirect delivery admin to driver management
                   } else if (user.role === 'customer') {
-                    navigate('/shop'); // Redirect customers to shop page
+                    navigate('/products'); // Redirect customers to products page
                   } else {
                     navigate(`/dashboard/${user.role}`);
                   }

@@ -20,7 +20,7 @@ const MainHeader = () => {
             <div className="flex items-baseline ml-10 space-x-4">
               {/* ✅ Update: Add navigation on click */}
               <button 
-                onClick={() => navigate('/shop')}  
+                onClick={() => navigate('/products')}  
                 className="px-3 py-2 text-sm font-medium text-gray-600 transition-colors duration-200 rounded-md hover:text-blue-600"
               >
                 Home
