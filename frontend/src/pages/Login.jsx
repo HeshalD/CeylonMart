@@ -24,12 +24,11 @@ const Login = () => {
     }
 
     // Check if user is already logged in
-    const token = localStorage.getItem('authToken');
+    const token = localStorage.getItem('token') || localStorage.getItem('authToken');
     const supplierStatus = localStorage.getItem('supplierStatus');
     
-    if (token && supplierStatus === 'approved') {
-      navigate('/profile');
-    } else if (token && supplierStatus !== 'approved') {
+    // Do not auto-redirect to profile from supplier login page; allow re-login
+    if (token && supplierStatus !== 'approved') {
       setError('Your account is pending admin approval.');
     }
   }, [navigate, location.state]);
@@ -55,17 +54,8 @@ const Login = () => {
       setLoading(true);
       setError('');
 
-      const isAdminLogin = (formData.email || '').trim().toLowerCase() === 'ann03@gmail.com';
-
-      // For supplier accounts, hash password client-side (SHA-256). For admin demo, keep plaintext.
-      let passwordToSend = formData.password;
-      if (!isAdminLogin) {
-        const encoder = new TextEncoder();
-        const data = encoder.encode(formData.password);
-        const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-        const hashArray = Array.from(new Uint8Array(hashBuffer));
-        passwordToSend = hashArray.map((b) => b.toString(16).padStart(2, '0')).join('');
-      }
+      // Send plaintext; backend normalizes to SHA-256 for comparison
+      const passwordToSend = formData.password;
 
       const response = await authAPI.login({
         email: formData.email,
@@ -74,14 +64,18 @@ const Login = () => {
       const { token, role } = response.data;
 
       // Store token and role first
+      // Unify with general login: set both 'token' and 'user'
+      localStorage.setItem('token', token);
       localStorage.setItem('authToken', token);
       localStorage.setItem('userRole', role || 'supplier');
-
-      // If admin, go straight to admin dashboard (no supplier profile fetch)
-      if ((role || 'supplier') === 'admin') {
-        navigate('/admin');
-        return;
-      }
+      try {
+        // For general guard compatibility, ensure 'user' exists
+        const roleForUser = role || 'supplier_admin';
+        const existingUser = localStorage.getItem('user');
+        if (!existingUser) {
+          localStorage.setItem('user', JSON.stringify({ role: roleForUser }));
+        }
+      } catch (_) {}
 
       // Supplier flow: fetch fresh profile to get latest status/id
       const profileRes = await authAPI.getProfile();
@@ -91,7 +85,9 @@ const Login = () => {
       // Persist user for Header greeting
       try {
         const displayName = profile.contactName || profile.companyName || 'Supplier';
-        localStorage.setItem('user', JSON.stringify({ name: displayName, role: 'supplier' }));
+        // Keep role compatible with general guard expectations
+        const userObj = { name: displayName, role: 'supplier_admin' };
+        localStorage.setItem('user', JSON.stringify(userObj));
       } catch (_) {
         // ignore JSON/storage errors
       }
@@ -107,18 +103,15 @@ const Login = () => {
         return;
       }
 
-      navigate('/profile');
+      navigate('/supplierProfile');
 
     } catch (err) {
       console.error('Login error:', err);
       
-      const isAdminLogin = (formData.email || '').trim().toLowerCase() === 'admin@test.com';
       let errorMessage = 'Login failed. Please try again.';
       
       if (err.response?.data?.message) {
         errorMessage = err.response.data.message;
-      } else if (err.response?.status === 401) {
-        errorMessage = isAdminLogin ? 'Invalid admin credentials.' : 'Invalid email or password.';
       } else if (err.response?.status === 403) {
         errorMessage = 'Your account is pending admin approval.';
       } else if (err.response?.status === 404) {
@@ -134,10 +127,12 @@ const Login = () => {
   };
 
   const handleLogout = () => {
+    localStorage.removeItem('token');
     localStorage.removeItem('authToken');
     localStorage.removeItem('supplierId');
     localStorage.removeItem('supplierStatus');
     localStorage.removeItem('userRole');
+    localStorage.removeItem('user');
     setError('');
     setSuccess('');
   };
@@ -225,15 +220,7 @@ const Login = () => {
 
               {/* Forgot Password Link */}
               <div style={{ marginTop: 12 }} className="helper-text">
-                <button type="button" onClick={() => navigate('/forgot-password')} className="link-btn">Forgot Password?</button>
-              </div>
-
-              <div style={{ marginTop: 16, background: '#f8f9fa', border: '1px solid #e9ecef', borderRadius: 6, padding: 12 }}>
-                <h3 style={{ fontSize: 13, color: '#495057', marginBottom: 8 }}>Demo Credentials:</h3>
-                <div style={{ fontSize: 12, color: '#6c757d' }}>
-                  <p><strong>Supplier:</strong> supplier@test.com / password123</p>
-                  <p><strong>Admin:</strong> ann03@gmail.com / lamann01</p>
-                </div>
+                <button type="button" onClick={() => navigate('/supplierForgotPassword')} className="link-btn">Forgot Password?</button>
               </div>
             </form>
           </div>

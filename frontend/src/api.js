@@ -8,6 +8,18 @@ const api = axios.create({
   },
 });
 
+// Attach Authorization header automatically if token exists
+api.interceptors.request.use((config) => {
+  try {
+    const token = localStorage.getItem('authToken') || localStorage.getItem('token');
+    if (token) {
+      config.headers = config.headers || {};
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+  } catch (_) {}
+  return config;
+});
+
 // Authentication API functions
 export const authAPI = {
   // Register supplier

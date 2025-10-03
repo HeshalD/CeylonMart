@@ -35,7 +35,7 @@ import AdminSupplierProfile from "./Pages/AdminSupplierProfile";
 import RegisterOTP from "./Pages/Register";
 import SupplierMessages from "./Pages/SupplierMessages";
 import AdminMessages from "./Pages/AdminMessages";
-import SupplierForgotPassword from "./Pages/ForgotPassword";
+import SupplierForgotPassword from "./Pages/SupplierForgotPassword";  
 
 //Kaveesha's page
 import InventoryManagement from "./Pages/InventoryManagement";
@@ -87,6 +87,7 @@ function App() {
         <Route path="/suppliers/new" element={<SupplierForm />} />
         <Route path="/suppliers/:id/edit" element={<SupplierForm />} />
         <Route path="/suppliers/:id" element={<SupplierProfile />} />
+        <Route path="/supplierForgotPassword" element={<SupplierForgotPassword />} />
 
         {/* Driver Routes */}
         <Route path="/manager/login" element={<ManagerLogin />} />
@@ -214,6 +215,12 @@ function App() {
             <ProtectedRoute requireAdmin={true}>
               <AdminSupplierProfile />
             </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/supplierProfile"
+          element={
+            <SupplierProfile />
           }
         />
 

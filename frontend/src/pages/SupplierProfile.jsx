@@ -38,7 +38,7 @@ const SupplierProfile = () => {
   };
 
   const handleWhatsApp = () => {
-    const adminPhone = '+1234567890';
+    const adminPhone = '+94716440276';
     const message = encodeURIComponent(`Supplier ${supplier?.companyName} needs stock discussion`);
     window.open(`https://wa.me/${adminPhone}?text=${message}`, '_blank');
   };
