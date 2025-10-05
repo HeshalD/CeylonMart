@@ -11,7 +11,6 @@ import ScrollToTop from "./components/ScrollToTop";
 import CustomerDashboard from "./Pages/dashboards/CustomerDashboard";
 import AdminDashboard from "./Pages/dashboards/AdminDashboard";
 import ShopDashboard from "./Pages/dashboards/ShopDashboard";
-import SupplierDashboard from "./Pages/dashboards/SupplierDashboard";
 import DeliveryDashboard from "./Pages/dashboards/DeliveryDashboard";
 
 //Chanula's pages
@@ -150,7 +149,7 @@ function App() {
           path="/dashboard/customer"
           element={
             <ProtectedRoute requiredRole="customer">
-              <CustomerDashboard />
+              <AdminDashboard />
             </ProtectedRoute>
           }
         />
@@ -174,7 +173,7 @@ function App() {
           path="/dashboard/supplier"
           element={
             <ProtectedRoute requiredRole="supplier_admin">
-              <SupplierDashboard />
+              <SupplierAdminDashboard />
             </ProtectedRoute>
           }
         />

@@ -140,7 +140,9 @@ const SupplierProfile = () => {
                   </span>
                 </div>
               </div>
-              <div className="flex space-x-2">
+              <div className="flex items-center space-x-3">
+                {/* Supplier notifications (admin -> supplier messages/notifications) */}
+                <NotificationBell supplierId={supplier._id} />
                 <button
                   onClick={() => navigate('/profile/edit')}
                   className="bg-white text-blue-600 hover:bg-gray-100 font-semibold py-2 px-4 rounded-lg transition duration-200"

@@ -12,7 +12,7 @@ const EditProfile = () => {
     email: '',
     phone: '',
     product: '',
-    categories: '',
+    categories: [],
     address: ''
   });
 
@@ -20,6 +20,23 @@ const EditProfile = () => {
   const [loading, setLoading] = useState(false);
   const [submitLoading, setSubmitLoading] = useState(false);
   const [supplierId, setSupplierId] = useState(null);
+
+  const gmailRegex = /^\S+@gmail\.com$/;
+  const phoneRegex = /^07\d{8}$/; // 10 digits starting with 07
+  const contactNameRegex = /^[A-Za-z\s]{3,}$/; // letters/spaces only, min 3 chars
+
+  const CATEGORY_OPTIONS = [
+    'Fruits',
+    'Vegetables',
+    'Dairy',
+    'Bakery',
+    'Beverages',
+    'Snacks',
+    'Grains & Rice',
+    'Spices',
+    'Canned Foods',
+    'Household Essentials'
+  ];
 
   useEffect(() => {
     fetchSupplierProfile();
@@ -38,9 +55,7 @@ const EditProfile = () => {
         email: supplier.email || '',
         phone: supplier.phone || '',
         product: Array.isArray(supplier.product) ? supplier.product.join(', ') : (supplier.product || ''),
-        categories: Array.isArray(supplier.categories) 
-          ? supplier.categories.join(', ') 
-          : supplier.categories || '',
+        categories: Array.isArray(supplier.categories) ? supplier.categories : [],
         address: supplier.address || ''
       });
     } catch (err) {
@@ -60,16 +75,22 @@ const EditProfile = () => {
 
     if (!formData.contactName.trim()) {
       newErrors.contactName = 'Contact name is required';
+    } else if (!contactNameRegex.test(formData.contactName.trim())) {
+      newErrors.contactName = 'Only letters/spaces, min 3 characters';
     }
 
     if (!formData.email.trim()) {
       newErrors.email = 'Email is required';
     } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
       newErrors.email = 'Email is invalid';
+    } else if (!gmailRegex.test(formData.email)) {
+      newErrors.email = 'Email must be a gmail.com address';
     }
 
     if (!formData.phone.trim()) {
       newErrors.phone = 'Phone number is required';
+    } else if (!phoneRegex.test(String(formData.phone))) {
+      newErrors.phone = 'Phone must be 10 digits and start with 07';
     }
 
     if (!formData.address.trim()) {
@@ -80,24 +101,58 @@ const EditProfile = () => {
       newErrors.product = 'Product is required';
     }
 
+    if (!formData.categories || formData.categories.length === 0) {
+      newErrors.categories = 'Select at least one category';
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
+    setFormData(prev => {
+      const next = { ...prev, [name]: value };
+      const fieldErrors = {};
+      if (name === 'companyName') {
+        fieldErrors.companyName = next.companyName.trim() ? '' : 'Company name is required';
+      }
+      if (name === 'contactName') {
+        if (!next.contactName.trim()) fieldErrors.contactName = 'Contact name is required';
+        else fieldErrors.contactName = contactNameRegex.test(next.contactName.trim()) ? '' : 'Only letters/spaces, min 3 characters';
+      }
+      if (name === 'email') {
+        if (!next.email.trim()) fieldErrors.email = 'Email is required';
+        else if (!/\S+@\S+\.\S+/.test(next.email)) fieldErrors.email = 'Email is invalid';
+        else fieldErrors.email = gmailRegex.test(next.email) ? '' : 'Email must be a gmail.com address';
+      }
+      if (name === 'phone') {
+        if (!next.phone.trim()) fieldErrors.phone = 'Phone number is required';
+        else fieldErrors.phone = phoneRegex.test(String(next.phone)) ? '' : 'Phone must be 10 digits and start with 07';
+      }
+      if (name === 'address') {
+        fieldErrors.address = next.address.trim() ? '' : 'Address is required';
+      }
+      if (name === 'product') {
+        fieldErrors.product = next.product.trim() ? '' : 'Product is required';
+      }
+      setErrors(prevErr => ({ ...prevErr, ...fieldErrors }));
+      return next;
+    });
+  };
 
-    // Clear error when user starts typing
-    if (errors[name]) {
-      setErrors(prev => ({
-        ...prev,
-        [name]: ''
+  const handleCategoryToggle = (category) => {
+    setFormData(prev => {
+      const alreadySelected = prev.categories.includes(category);
+      const nextCategories = alreadySelected
+        ? prev.categories.filter(c => c !== category)
+        : [...prev.categories, category];
+      setErrors(prevErr => ({
+        ...prevErr,
+        categories: nextCategories.length === 0 ? 'Select at least one category' : ''
       }));
-    }
+      return { ...prev, categories: nextCategories };
+    });
   };
 
   const handleSubmit = async (e) => {
@@ -110,17 +165,13 @@ const EditProfile = () => {
     try {
       setSubmitLoading(true);
 
-      // Convert categories string to array
       const supplierData = {
         ...formData,
         products: formData.product
           .split(',')
           .map(p => p.trim())
           .filter(p => p.length > 0),
-        categories: formData.categories
-          .split(',')
-          .map(cat => cat.trim())
-          .filter(cat => cat.length > 0)
+        categories: Array.isArray(formData.categories) ? formData.categories : []
       };
       delete supplierData.product;
 
@@ -291,21 +342,25 @@ const EditProfile = () => {
             </div>
 
             <div>
-              <label htmlFor="categories" className="block text-sm font-medium text-gray-700 mb-2">
-                Categories
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Categories *
               </label>
-              <input
-                type="text"
-                id="categories"
-                name="categories"
-                value={formData.categories}
-                onChange={handleInputChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="Enter categories (comma separated)"
-              />
-              <p className="mt-1 text-sm text-gray-500">
-                Separate multiple categories with commas
-              </p>
+              <div className={`mt-1 grid grid-cols-1 sm:grid-cols-2 gap-2 border rounded-lg p-3 ${errors.categories ? 'border-red-500' : 'border-gray-300'}`}>
+                {CATEGORY_OPTIONS.map(option => (
+                  <label key={option} className="inline-flex items-center space-x-2">
+                    <input
+                      type="checkbox"
+                      className="h-4 w-4 text-blue-600 border-gray-300 rounded"
+                      checked={formData.categories.includes(option)}
+                      onChange={() => handleCategoryToggle(option)}
+                    />
+                    <span className="text-sm text-gray-700">{option}</span>
+                  </label>
+                ))}
+              </div>
+              {errors.categories && (
+                <p className="mt-1 text-sm text-red-600">{errors.categories}</p>
+              )}
             </div>
 
             <div>

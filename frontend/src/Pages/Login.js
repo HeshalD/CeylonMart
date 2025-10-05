@@ -92,7 +92,7 @@ export default function Login() {
         "inventory_manager": "/dashboard/inventory",
         "delivery_admin": "/drivers/management", // Redirect delivery admin to driver management
         // Admin supplier approvals live at /admin
-        "admin": "/admin"
+        "admin": "/dashboard/admin"
       };
 
       const redirectPath = dashboardRoutes[role] || "/";
