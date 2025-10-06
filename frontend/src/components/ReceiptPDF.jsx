@@ -3,6 +3,10 @@ import jsPDF from 'jspdf';
 
 const ReceiptPDF = ({ orderData, paymentData, isVisible = false }) => {
   const generatePDF = () => {
+    // Debug logging
+    console.log('Order Data:', orderData);
+    console.log('Payment Data:', paymentData);
+    
     const doc = new jsPDF();
     
     // CeylonMart Logo (text-based)
@@ -17,42 +21,59 @@ const ReceiptPDF = ({ orderData, paymentData, isVisible = false }) => {
     
     // Order details
     doc.setFontSize(12);
-    doc.text(`Order ID: ${orderData?._id || 'N/A'}`, 20, 70);
-    doc.text(`Date: ${new Date().toLocaleDateString()}`, 20, 80);
+    const orderId = orderData?._id || paymentData?.orderId || 'N/A';
+    const orderDate = orderData?.createdAt ? new Date(orderData.createdAt).toLocaleDateString() : new Date().toLocaleDateString();
+    const totalAmount = orderData?.totalAmount || paymentData?.amount || 0;
+    
+    doc.text(`Order ID: ${orderId}`, 20, 70);
+    doc.text(`Date: ${orderDate}`, 20, 80);
     doc.text(`Payment Method: ${paymentData?.paymentMethod || 'N/A'}`, 20, 90);
-    doc.text(`Status: ${paymentData?.status || 'N/A'}`, 20, 100);
+    doc.text(`Delivery District: ${paymentData?.district || 'N/A'}`, 20, 100);
+    doc.text(`Status: ${paymentData?.status || 'N/A'}`, 20, 110);
     
     // Items table header
-    doc.text('Items:', 20, 120);
-    doc.text('Product', 20, 130);
-    doc.text('Qty', 100, 130);
-    doc.text('Price', 130, 130);
-    doc.text('Total', 160, 130);
+    doc.text('Items:', 20, 130);
+    doc.text('Product', 20, 140);
+    doc.text('Qty', 100, 140);
+    doc.text('Price', 130, 140);
+    doc.text('Total', 160, 140);
     
     // Draw line under header
-    doc.line(20, 135, 190, 135);
+    doc.line(20, 145, 190, 145);
     
     // Items
-    let yPosition = 145;
-    orderData?.items?.forEach((item, index) => {
-      if (yPosition > 250) {
-        doc.addPage();
-        yPosition = 20;
-      }
-      
-      doc.text(item.productName || 'Unknown Product', 20, yPosition);
-      doc.text(item.quantity?.toString() || '0', 100, yPosition);
-      doc.text(`Rs. ${Number(item.price || 0).toFixed(2)}`, 130, yPosition);
-      doc.text(`Rs. ${(Number(item.price || 0) * Number(item.quantity || 0)).toFixed(2)}`, 160, yPosition);
+    let yPosition = 155;
+    const items = orderData?.items || [];
+    
+    if (items.length === 0) {
+      doc.text('No items found in order', 20, yPosition);
       yPosition += 10;
-    });
+    } else {
+      items.forEach((item, index) => {
+        if (yPosition > 250) {
+          doc.addPage();
+          yPosition = 20;
+        }
+        
+        const productName = item.productName || item.name || 'Unknown Product';
+        const quantity = item.quantity || item.qty || 0;
+        const price = Number(item.price || 0);
+        const itemTotal = price * quantity;
+        
+        doc.text(productName, 20, yPosition);
+        doc.text(quantity.toString(), 100, yPosition);
+        doc.text(`Rs. ${price.toFixed(2)}`, 130, yPosition);
+        doc.text(`Rs. ${itemTotal.toFixed(2)}`, 160, yPosition);
+        yPosition += 10;
+      });
+    }
     
     // Total
     yPosition += 10;
     doc.line(20, yPosition, 190, yPosition);
     yPosition += 10;
     doc.setFontSize(14);
-    doc.text(`Total Amount: Rs. ${Number(orderData?.totalAmount || 0).toFixed(2)}`, 20, yPosition);
+    doc.text(`Total Amount: Rs. ${Number(totalAmount).toFixed(2)}`, 20, yPosition);
     
     // Footer
     yPosition += 20;
@@ -60,8 +81,12 @@ const ReceiptPDF = ({ orderData, paymentData, isVisible = false }) => {
     doc.text('Thank you for your purchase!', 20, yPosition);
     doc.text('CeylonMart - Your trusted shopping partner', 20, yPosition + 10);
     
+    // Generate filename with timestamp if no order ID
+    const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, '-');
+    const filename = orderId !== 'N/A' ? `receipt-${orderId}.pdf` : `receipt-${timestamp}.pdf`;
+    
     // Save the PDF
-    doc.save(`receipt-${orderData?._id || 'unknown'}.pdf`);
+    doc.save(filename);
   };
 
   return (

@@ -182,7 +182,7 @@ const Header = () => {
           {!location.pathname.includes('/dashboard/inventory') && !location.pathname.includes('/inventory') && (
             <div className="hidden md:flex items-center space-x-8">
               {/* Driver Management Navigation */}
-              {(location.pathname.includes('/drivers/management') || location.pathname.includes('/drivers/availability')) && (
+              {(location.pathname.includes('/drivers/management') || location.pathname.includes('/drivers/availability') || location.pathname.includes('/drivers/orders')) && (
                 <>
                   <button
                     onClick={() => navigate('/drivers/management')}
@@ -193,6 +193,17 @@ const Header = () => {
                     Driver Management
                     <span className={`absolute bottom-0 left-0 h-0.5 bg-emerald-100 transition-all duration-300 ${
                       location.pathname === '/drivers/management' ? 'w-full' : 'w-0 group-hover:w-full'
+                    }`}></span>
+                  </button>
+                  <button
+                    onClick={() => navigate('/drivers/orders')}
+                    className={`relative text-white hover:text-emerald-100 font-medium text-lg transition-colors duration-200 group ${
+                      location.pathname === '/drivers/orders' ? 'text-emerald-100' : ''
+                    }`}
+                  >
+                    Orders
+                    <span className={`absolute bottom-0 left-0 h-0.5 bg-emerald-100 transition-all duration-300 ${
+                      location.pathname === '/drivers/orders' ? 'w-full' : 'w-0 group-hover:w-full'
                     }`}></span>
                   </button>
                   <button
@@ -252,8 +263,8 @@ const Header = () => {
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-3">
-            {/* Cart Button - Hidden on Payment Success, Orders, Inventory Management, Driver Management, and Driver Availability Pages */}
-            {location.pathname !== '/payment-success' && location.pathname !== '/orders' && !location.pathname.includes('/dashboard/inventory') && !location.pathname.includes('/inventory') && !location.pathname.includes('/drivers/management') && !location.pathname.includes('/drivers/availability') && (
+            {/* Cart Button - Hidden on Payment Success, Orders, Inventory Management, Driver Management, Driver Availability, Driver Orders, Driver Login, Customer Login, and Register Pages */}
+            {location.pathname !== '/payment-success' && location.pathname !== '/orders' && !location.pathname.includes('/dashboard/inventory') && !location.pathname.includes('/inventory') && !location.pathname.includes('/drivers/management') && !location.pathname.includes('/drivers/availability') && !location.pathname.includes('/drivers/orders') && location.pathname !== '/driver/dashboard' && location.pathname !== '/login' && location.pathname !== '/register' && (
               <button
                 onClick={() => navigate('/cart')}
                 className="relative bg-gradient-to-r from-white/20 to-white/30 text-white p-1.5 rounded-lg hover:from-white/30 hover:to-white/40 transform hover:scale-105 transition-all duration-300 shadow-lg hover:shadow-xl flex items-center justify-center border border-white/30 hover:border-white/50"
@@ -415,8 +426,8 @@ const Header = () => {
                 </button>
               </div>
               
-              {/* Cart Button for Mobile - Hidden on Payment Success and Orders Pages */}
-              {location.pathname !== '/payment-success' && location.pathname !== '/orders' && (
+              {/* Cart Button for Mobile - Hidden on Payment Success, Orders, Driver Pages, Driver Login, Customer Login, and Register */}
+              {location.pathname !== '/payment-success' && location.pathname !== '/orders' && !location.pathname.includes('/drivers/') && location.pathname !== '/driver/dashboard' && location.pathname !== '/login' && location.pathname !== '/register' && (
                 <button
                   onClick={() => {
                     navigate('/cart');

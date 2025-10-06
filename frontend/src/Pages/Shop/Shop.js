@@ -182,10 +182,9 @@ setCart(updatedCart);
 
 
     setToast({ message: `${selectedProduct.productName ?? selectedProduct.name} added to cart`, type: "success" });
-    setTimeout(() => setToast(null), 2200);
+    setTimeout(() => setToast(null), 3000);
 
     setShowQtyModal(false);
-    navigate("/cart");
   };
 
  const handleIncrease = () => {
@@ -479,8 +478,13 @@ setCart(updatedCart);
       
       <Footer />
       {toast && (
-        <div className="fixed p-3 bg-white border rounded-md shadow bottom-6 right-6">
-          <div className="text-sm">{toast.message}</div>
+        <div className="fixed bottom-6 right-6 z-50 p-4 bg-emerald-500 text-white rounded-lg shadow-lg border border-emerald-600 transform transition-all duration-300 ease-in-out animate-pulse">
+          <div className="flex items-center gap-3">
+            <svg className="w-5 h-5 text-emerald-100" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+            </svg>
+            <div className="text-sm font-medium">{toast.message}</div>
+          </div>
         </div>
       )}
 

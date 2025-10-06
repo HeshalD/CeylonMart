@@ -1,4 +1,5 @@
 const Driver = require("../Models/Driver");
+const Order = require("../Models/OrderModel");
 
 // Create driver
 const createDriver = async (req, res) => {
@@ -15,6 +16,19 @@ const createDriver = async (req, res) => {
 const getDrivers = async (req, res) => {
   try {
     const drivers = await Driver.find({ isDeleted: { $ne: true } });
+    res.json(drivers);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+// Get available drivers
+const getAvailableDrivers = async (req, res) => {
+  try {
+    const drivers = await Driver.find({ 
+      isDeleted: { $ne: true },
+      availability: 'available'
+    });
     res.json(drivers);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -88,6 +102,54 @@ const updateDriverDistrict = async (req, res) => {
   }
 };
 
+// Get driver history (assigned orders)
+const getDriverHistory = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.query;
+    
+    // Check if driver exists
+    const driver = await Driver.findOne({ 
+      _id: id, 
+      isDeleted: { $ne: true } 
+    });
+    
+    if (!driver) {
+      return res.status(404).json({ error: "Driver not found" });
+    }
+
+    // Build query for orders assigned to this driver
+    let query = { 
+      driverId: id, 
+      isDeleted: { $ne: true } 
+    };
+
+    // Filter by status if provided
+    if (status) {
+      const statusArray = status.split(',');
+      query.status = { $in: statusArray };
+    }
+
+    // Fetch orders with populated customer details
+    const orders = await Order.find(query)
+      .populate('customerId', 'firstName lastName email phone')
+      .sort({ createdAt: -1 });
+
+    res.json({ 
+      success: true, 
+      deliveries: orders,
+      driver: {
+        id: driver._id,
+        name: `${driver.firstName} ${driver.lastName}`,
+        email: driver.email
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching driver history:', error);
+    res.status(500).json({ error: error.message });
+  }
+};
+
 // Soft delete driver
 const deleteDriver = async (req, res) => {
   try {
@@ -108,10 +170,12 @@ const deleteDriver = async (req, res) => {
 module.exports = {
   createDriver,
   getDrivers,
+  getAvailableDrivers,
   getDriverById,
   updateDriver,
   updateDriverAvailability,
   updateDriverDistrict,
+  getDriverHistory,
   deleteDriver
 };
 

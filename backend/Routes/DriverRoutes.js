@@ -41,8 +41,14 @@ router.post("/", driverValidation, ctrl.createDriver);
 // Get all drivers
 router.get("/", ctrl.getDrivers);
 
+// Get available drivers
+router.get("/available", ctrl.getAvailableDrivers);
+
 // Get driver by ID
 router.get("/:id", param("id").isMongoId(), ctrl.getDriverById);
+
+// Get driver history (assigned orders)
+router.get("/:id/history", param("id").isMongoId(), ctrl.getDriverHistory);
 
 // Update driver
 router.put(

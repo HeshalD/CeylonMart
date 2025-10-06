@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import client from '../api/client';
 import { useUser } from '../contexts/UserContext';
+import DriverDashboardHeader from '../components/DriverDashboardHeader';
+import Header from '../components/Header';
+import Footer from '../components/Footer';
 import './DriverDashboard.css';
 
 function DriverDashboard() {
@@ -12,6 +15,8 @@ function DriverDashboard() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [showLogin, setShowLogin] = useState(true);
+  const [showCustomerDetails, setShowCustomerDetails] = useState(false);
+  const [selectedCustomer, setSelectedCustomer] = useState(null);
 
   // Login form state
   const [loginData, setLoginData] = useState({
@@ -89,11 +94,13 @@ function DriverDashboard() {
   const fetchDriverOrders = async (id) => {
     try {
       const res = await client.get(`/drivers/${id}/history`, {
-        params: { status: 'pending,picked,in_transit' }
+        params: { status: 'assigned,picked,in_transit' }
       });
+      console.log('Driver orders response:', res.data);
       setOrders(res.data.deliveries || []);
     } catch (e) {
       console.error('Failed to fetch orders:', e);
+      setError('Failed to fetch assigned orders');
     }
   };
 
@@ -180,10 +187,30 @@ function DriverDashboard() {
     }
   };
 
+  const handleShowCustomerDetails = async (customerId) => {
+    try {
+      setLoading(true);
+      const res = await client.get(`/api/customers/${customerId}`);
+      setSelectedCustomer(res.data);
+      setShowCustomerDetails(true);
+    } catch (e) {
+      console.error('Failed to fetch customer details:', e);
+      setError('Failed to fetch customer details');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const closeCustomerDetails = () => {
+    setShowCustomerDetails(false);
+    setSelectedCustomer(null);
+  };
+
 
   const getStatusColor = (status) => {
     switch (status) {
       case 'pending': return 'bg-yellow-100 text-yellow-700';
+      case 'assigned': return 'bg-orange-100 text-orange-700';
       case 'picked': return 'bg-blue-100 text-blue-700';
       case 'in_transit': return 'bg-purple-100 text-purple-700';
       case 'delivered': return 'bg-green-100 text-green-700';
@@ -203,52 +230,69 @@ function DriverDashboard() {
 
   if (showLogin) {
     return (
-      <div className="login-container">
-        <div className="login-card">
-          <div className="login-header">
-            <h2 className="login-title">Driver Login</h2>
-            <p className="login-subtitle">Access your dashboard and manage deliveries</p>
+      <div className="min-h-screen flex flex-col login-page">
+        <Header />
+
+        {/* Content */}
+        <main className="main-content">
+          <div className="login-container">
+            <div className="login-card">
+              <div className="login-header">
+                <h2 className="login-title">Driver Login</h2>
+                <p className="login-subtitle">Access your dashboard and manage deliveries</p>
+              </div>
+              
+              <form onSubmit={handleLogin} className="login-form">
+                <div className="field">
+                  <label className="label">Email Address</label>
+                  <input
+                    type="email"
+                    value={loginData.email}
+                    onChange={(e) => setLoginData({...loginData, email: e.target.value})}
+                    className="input"
+                    placeholder="Enter your email"
+                    required
+                  />
+                </div>
+                
+                <div className="field">
+                  <label className="label">License Number</label>
+                  <input
+                    type="text"
+                    value={loginData.licenseNumber}
+                    onChange={(e) => setLoginData({...loginData, licenseNumber: e.target.value})}
+                    className="input"
+                    placeholder="Enter your license number"
+                    required
+                  />
+                </div>
+                
+                {error && <div className="alert-error">{error}</div>}
+                {success && <div className="alert-success">{success}</div>}
+                
+                <button type="submit" className="btn-primary" disabled={loading}>
+                  {loading ? 'Logging in...' : 'Login'}
+                </button>
+              </form>
+            </div>
           </div>
-          
-          <form onSubmit={handleLogin} className="login-form">
-            <div className="field">
-              <label className="label">Email Address</label>
-              <input
-                type="email"
-                value={loginData.email}
-                onChange={(e) => setLoginData({...loginData, email: e.target.value})}
-                className="input"
-                placeholder="Enter your email"
-                required
-              />
-            </div>
-            
-            <div className="field">
-              <label className="label">License Number</label>
-              <input
-                type="text"
-                value={loginData.licenseNumber}
-                onChange={(e) => setLoginData({...loginData, licenseNumber: e.target.value})}
-                className="input"
-                placeholder="Enter your license number"
-                required
-              />
-            </div>
-            
-            {error && <div className="alert-error">{error}</div>}
-            {success && <div className="alert-success">{success}</div>}
-            
-            <button type="submit" className="btn-primary" disabled={loading}>
-              {loading ? 'Logging in...' : 'Login'}
-            </button>
-          </form>
-        </div>
+        </main>
+
+        <Footer />
       </div>
     );
   }
 
   return (
     <div className="driver-dashboard-page">
+      <DriverDashboardHeader driver={driver} onLogout={handleLogout} />
+      
+      {/* Alert Messages - Positioned right after header */}
+      <div className="alerts-container">
+        {error && <div className="alert-error">{error}</div>}
+        {success && <div className="alert-success">{success}</div>}
+      </div>
+      
       <div className="container">
         {/* Driver Profile Header */}
         <div className="driver-profile-header">
@@ -357,17 +401,9 @@ function DriverDashboard() {
               </select>
             </div>
             
-            <button onClick={handleLogout} className="btn-logout">
-              Logout
-            </button>
           </div>
         </div>
 
-        {/* Alert Messages */}
-        <div className="alerts-container">
-          {error && <div className="alert-error">{error}</div>}
-          {success && <div className="alert-success">{success}</div>}
-        </div>
 
         {/* Orders Section */}
         <div className="orders-section">
@@ -386,11 +422,13 @@ function DriverDashboard() {
             </div>
           ) : (
             <div className="orders-grid">
-              {orders.map((order) => (
+              {orders.map((order) => {
+                console.log('Order data:', order);
+                return (
                 <div key={order._id} className="order-card">
                   <div className="order-header">
                     <div className="order-info">
-                      <h4 className="order-id">Order #{order.orderId}</h4>
+                      <h4 className="order-id">Order #{order._id || order.orderId || 'N/A'}</h4>
                       <span className={`order-status ${getStatusColor(order.status)}`}>
                         {order.status}
                       </span>
@@ -404,7 +442,7 @@ function DriverDashboard() {
                     <div className="detail-row">
                       <span className="detail-label">Customer:</span>
                       <span className="detail-value">
-                        {order.customerId?.firstName} {order.customerId?.lastName}
+                        {order.customerId?.name || 'Guest Customer'}
                       </span>
                     </div>
                     <div className="detail-row">
@@ -412,29 +450,42 @@ function DriverDashboard() {
                       <span className="detail-value">{order.customerId?.phone}</span>
                     </div>
                     <div className="detail-row">
-                      <span className="detail-label">Delivery Address:</span>
-                      <span className="detail-value">
-                        {order.deliveryAddress?.street}, {order.deliveryAddress?.city}
+                      <span className="detail-label">Email:</span>
+                      <span className="detail-value">{order.customerId?.email}</span>
+                    </div>
+                    <div className="detail-row">
+                      <span className="detail-label">Total Amount:</span>
+                      <span className="detail-value">Rs. {order.totalAmount?.toFixed(2) || '0.00'}</span>
+                    </div>
+                    <div className="detail-row">
+                      <span className="detail-label">Payment Method:</span>
+                      <span className="detail-value capitalize">
+                        {order.paymentMethod === 'credit_card' ? 'Credit Card' :
+                         order.paymentMethod === 'debit_card' ? 'Debit Card' :
+                         order.paymentMethod === 'cash_on_delivery' ? 'Cash on Delivery' :
+                         order.paymentMethod || 'N/A'}
                       </span>
+                    </div>
+                    <div className="detail-row">
+                      <span className="detail-label">District:</span>
+                      <span className="detail-value">{order.district || 'N/A'}</span>
                     </div>
                     <div className="detail-row">
                       <span className="detail-label">Items:</span>
                       <span className="detail-value">
-                        {order.items?.length || 0} items ({order.totalWeight}kg)
+                        {order.items?.length || 0} items
                       </span>
                     </div>
                   </div>
 
                   <div className="order-actions">
-                    {order.status === 'pending' && (
-                      <button 
-                        onClick={() => updateDeliveryStatus(order._id, 'picked')}
-                        className="btn-status-update"
-                        disabled={loading}
-                      >
-                        📦 Mark as Picked
-                      </button>
-                    )}
+                    <button 
+                      onClick={() => handleShowCustomerDetails(order.customerId._id)}
+                      className="btn-status-update"
+                      disabled={loading}
+                    >
+                      📋 Details
+                    </button>
                     {order.status === 'picked' && (
                       <button 
                         onClick={() => updateDeliveryStatus(order._id, 'in_transit')}
@@ -455,11 +506,93 @@ function DriverDashboard() {
                     )}
                   </div>
                 </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>
       </div>
+
+      {/* Customer Details Modal */}
+      {showCustomerDetails && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-hidden">
+            <div className="p-6 border-b border-gray-200">
+              <div className="flex justify-between items-center">
+                <h3 className="text-2xl font-bold text-gray-900">
+                  Customer Details
+                </h3>
+                <button
+                  onClick={closeCustomerDetails}
+                  className="text-gray-400 hover:text-gray-600 transition-colors"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            <div className="p-6">
+              {selectedCustomer ? (
+                <div className="space-y-4">
+                  <div className="flex items-center space-x-3 mb-4">
+                    <div className="w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center">
+                      <span className="text-emerald-600 font-bold text-lg">
+                        {selectedCustomer.name?.charAt(0) || 'C'}
+                      </span>
+                    </div>
+                    <div>
+                      <h4 className="font-bold text-gray-900 text-lg">
+                        {selectedCustomer.name || 'N/A'}
+                      </h4>
+                      <p className="text-gray-600 text-sm">{selectedCustomer.email || 'N/A'}</p>
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-3">
+                    <div className="flex justify-between items-center py-2 border-b border-gray-100">
+                      <span className="text-sm font-medium text-gray-700">Name:</span>
+                      <span className="text-gray-900">{selectedCustomer.name || 'N/A'}</span>
+                    </div>
+                    
+                    <div className="flex justify-between items-center py-2 border-b border-gray-100">
+                      <span className="text-sm font-medium text-gray-700">Phone:</span>
+                      <span className="text-gray-900">{selectedCustomer.phone || 'N/A'}</span>
+                    </div>
+                    
+                    <div className="flex justify-between items-center py-2 border-b border-gray-100">
+                      <span className="text-sm font-medium text-gray-700">Email:</span>
+                      <span className="text-gray-900">{selectedCustomer.email || 'N/A'}</span>
+                    </div>
+                    
+                    <div className="flex justify-between items-start py-2">
+                      <span className="text-sm font-medium text-gray-700">Address:</span>
+                      <span className="text-gray-900 text-right max-w-48">
+                        {selectedCustomer.address || 'No address provided'}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="text-center py-8">
+                  <div className="text-gray-400 text-4xl mb-4">👤</div>
+                  <p className="text-gray-500">Loading customer details...</p>
+                </div>
+              )}
+            </div>
+
+            <div className="p-6 border-t border-gray-200">
+              <button
+                onClick={closeCustomerDetails}
+                className="w-full bg-emerald-600 text-white px-4 py-2 rounded-lg hover:bg-emerald-700 transition-colors font-medium"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
