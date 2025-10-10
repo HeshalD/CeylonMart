@@ -4,6 +4,9 @@ import { supplierAPI, notificationAPI } from "../api";
 import NotificationBell from "../components/NotificationBell";
 import Header from "../Header";
 import Footer from "../Footer";
+import { FaWhatsapp } from "react-icons/fa";
+import { MdEmail, MdEdit, MdMessage, MdCheck, MdDelete } from "react-icons/md";
+import jsPDF from "jspdf";
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
@@ -15,6 +18,69 @@ const AdminDashboard = () => {
   const [groupByCategory, setGroupByCategory] = useState(false);
   const [inventoryAlerts, setInventoryAlerts] = useState([]);
   const [deletedCount, setDeletedCount] = useState(0);
+  const [sortField, setSortField] = useState("company");
+  const [sortOrder, setSortOrder] = useState("asc");
+
+  const downloadPDF = () => {
+    // Use the currently visible list depending on view
+    const rows = groupByCategory ? Object.values(groupedByCategory).flat() : sortedSuppliers;
+    const uniqueById = new Map();
+    rows.forEach((s) => uniqueById.set(s._id, s));
+    const data = Array.from(uniqueById.values());
+
+    const doc = new jsPDF();
+    let y = 20;
+
+    doc.setFontSize(18);
+    doc.text("Suppliers Report", 20, y);
+    y += 8;
+    doc.setFontSize(11);
+    doc.text(`Generated: ${new Date().toLocaleString()}`, 20, y);
+    y += 10;
+
+    const addLine = (text, leading = 7) => {
+      const maxWidth = 180; // page width minus margins
+      const lines = doc.splitTextToSize(String(text ?? ''), maxWidth);
+      lines.forEach((ln) => {
+        if (y > 280) {
+          doc.addPage();
+          y = 20;
+        }
+        doc.text(ln, 20, y);
+        y += leading;
+      });
+    };
+
+    data.forEach((s, idx) => {
+      if (idx > 0) {
+        if (y > 275) {
+          doc.addPage();
+          y = 20;
+        }
+        doc.setDrawColor(200);
+        doc.line(20, y, 190, y);
+        y += 6;
+      }
+
+      doc.setFontSize(13);
+      addLine(`Company: ${s.companyName || ''}`);
+      doc.setFontSize(11);
+      addLine(`Contact: ${s.contactName || ''}`);
+      addLine(`Email: ${s.email || ''}`);
+      addLine(`Phone: ${s.phone || ''}`);
+
+      const categories = Array.isArray(s.categories) ? s.categories : (s.categories ? [s.categories] : []);
+      const products = Array.isArray(s.products) ? s.products : (s.products ? [s.products] : []);
+
+      addLine(`Categories: ${categories.join(', ')}`);
+      addLine(`Products: ${products.join(', ')}`);
+      addLine(`Status: ${s.status || ''}`);
+      y += 2;
+    });
+
+    const ts = new Date().toISOString().replace(/[:.]/g, '-');
+    doc.save(`suppliers-report-${ts}.pdf`);
+  };
 
   useEffect(() => {
     fetchSuppliers();
@@ -121,9 +187,46 @@ const AdminDashboard = () => {
     });
   }, [query, suppliers]);
 
+  const compareSuppliers = (a, b) => {
+    const getValue = (s) => {
+      switch (sortField) {
+        case "product": {
+          const v = Array.isArray(s.products)
+            ? s.products.join(" ")
+            : (s.products || "");
+          return v.toLowerCase();
+        }
+        case "category": {
+          const v = Array.isArray(s.categories)
+            ? s.categories.join(" ")
+            : (s.categories || "");
+          return v.toLowerCase();
+        }
+        case "status": {
+          const order = { approved: 2, pending: 1, rejected: 0 };
+          return order[s.status] ?? -1;
+        }
+        case "company":
+        default:
+          return (s.companyName || "").toLowerCase();
+      }
+    };
+    const va = getValue(a);
+    const vb = getValue(b);
+    if (va < vb) return sortOrder === "asc" ? -1 : 1;
+    if (va > vb) return sortOrder === "asc" ? 1 : -1;
+    return 0;
+  };
+
+  const sortedSuppliers = useMemo(() => {
+    const arr = [...filteredSuppliers];
+    arr.sort(compareSuppliers);
+    return arr;
+  }, [filteredSuppliers, sortField, sortOrder]);
+
   const approvedFilteredSuppliers = useMemo(() => {
-    return filteredSuppliers.filter((s) => s.status === "approved");
-  }, [filteredSuppliers]);
+    return sortedSuppliers.filter((s) => s.status === "approved");
+  }, [sortedSuppliers]);
 
   const groupedByCategory = useMemo(() => {
     const map = {};
@@ -334,6 +437,30 @@ const AdminDashboard = () => {
               >
                 {groupByCategory ? "Show Table" : "Sort By Category"}
               </button>
+              <select
+                value={sortField}
+                onChange={(e) => setSortField(e.target.value)}
+                className="rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="company">Sort: Company</option>
+                <option value="product">Sort: Product</option>
+                <option value="category">Sort: Category</option>
+                <option value="status">Sort: Status</option>
+              </select>
+              <select
+                value={sortOrder}
+                onChange={(e) => setSortOrder(e.target.value)}
+                className="rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="asc">Asc</option>
+                <option value="desc">Desc</option>
+              </select>
+              <button
+                onClick={downloadPDF}
+                className="bg-gray-700 hover:bg-gray-800 text-white font-semibold px-4 py-2 rounded-md"
+              >
+                Download PDF
+              </button>
             </div>
           </div>
 
@@ -366,6 +493,12 @@ const AdminDashboard = () => {
                         Phone
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Categories
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Products
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Status
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -374,7 +507,240 @@ const AdminDashboard = () => {
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
-                    {filteredSuppliers.map((supplier) => (
+                    {sortField === "status" ? (
+                      <>
+                        {sortedSuppliers.filter((s) => s.status === "approved").length > 0 && (
+                          <tr className="bg-green-50">
+                            <td colSpan={8} className="px-6 py-3 text-left text-sm font-semibold text-green-800">
+                              Approved
+                            </td>
+                          </tr>
+                        )}
+                        {sortedSuppliers
+                          .filter((s) => s.status === "approved")
+                          .map((supplier) => (
+                            <tr key={supplier._id} className="hover:bg-gray-50">
+                              <td className="px-6 py-4 whitespace-nowrap">
+                                <div className="text-sm font-medium text-gray-900">
+                                  {supplier.companyName}
+                                </div>
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap">
+                                <div className="text-sm text-gray-900">
+                                  {supplier.contactName}
+                                </div>
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap">
+                                <div className="text-sm text-gray-900">
+                                  {supplier.email}
+                                </div>
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap">
+                                <div className="text-sm text-gray-900">
+                                  {supplier.phone}
+                                </div>
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap">
+                                <div className="flex flex-wrap gap-1">
+                                  {(Array.isArray(supplier.categories)
+                                    ? supplier.categories
+                                    : [supplier.categories || ""]).filter(Boolean).map((c, idx) => (
+                                    <span key={idx} className="text-xs bg-gray-100 px-2 py-0.5 rounded-full text-gray-700">
+                                      {c}
+                                    </span>
+                                  ))}
+                                </div>
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap">
+                                <div className="flex flex-wrap gap-1">
+                                  {(Array.isArray(supplier.products)
+                                    ? supplier.products
+                                    : [supplier.products || ""]).filter(Boolean).map((p, idx) => (
+                                    <span key={idx} className="text-xs bg-gray-100 px-2 py-0.5 rounded-full text-gray-700">
+                                      {p}
+                                    </span>
+                                  ))}
+                                </div>
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap">
+                                {getStatusBadge(supplier.status)}
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                <div className="flex flex-wrap gap-2">
+                                  <a
+                                    href={`https://wa.me/${supplier.phone}?text=Need%20stock`}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    title="WhatsApp"
+                                    aria-label="WhatsApp"
+                                    className="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded flex items-center justify-center"
+                                  >
+                                    <FaWhatsapp />
+                                  </a>
+                                  <a
+                                    href={`mailto:${supplier.email}?subject=Stock%20Request&body=Please%20send%20the%20required%20stock`}
+                                    title="Email"
+                                    aria-label="Email"
+                                    className="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded flex items-center justify-center"
+                                  >
+                                    <MdEmail />
+                                  </a>
+                                  <button
+                                    onClick={() =>
+                                      navigate(`/admin/suppliers/${supplier._id}`)
+                                    }
+                                    title="Edit"
+                                    aria-label="Edit"
+                                    className="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded flex items-center justify-center"
+                                  >
+                                    <MdEdit />
+                                  </button>
+                                  <button
+                                    onClick={() => handleQuickMessage(supplier)}
+                                    title="Quick Message"
+                                    aria-label="Quick Message"
+                                    className="bg-indigo-500 hover:bg-indigo-600 text-white px-3 py-1 rounded flex items-center justify-center"
+                                  >
+                                    <MdMessage />
+                                  </button>
+                                  <button
+                                    onClick={() =>
+                                      handleStatusUpdate(
+                                        supplier._id,
+                                        supplier.status === "approved"
+                                          ? "rejected"
+                                          : "approved"
+                                      )
+                                    }
+                                    disabled={actionLoading === supplier._id}
+                                    title={supplier.status === "approved" ? "Reject & Delete" : "Approve"}
+                                    aria-label={supplier.status === "approved" ? "Reject & Delete" : "Approve"}
+                                    className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded disabled:opacity-50 flex items-center justify-center"
+                                  >
+                                    {supplier.status === "approved" ? <MdDelete /> : <MdCheck />}
+                                  </button>
+                                </div>
+                              </td>
+                            </tr>
+                          ))}
+
+                        {sortedSuppliers.filter((s) => s.status === "pending").length > 0 && (
+                          <tr className="bg-yellow-50">
+                            <td colSpan={8} className="px-6 py-3 text-left text-sm font-semibold text-yellow-800">
+                              Pending
+                            </td>
+                          </tr>
+                        )}
+                        {sortedSuppliers
+                          .filter((s) => s.status === "pending")
+                          .map((supplier) => (
+                            <tr key={supplier._id} className="hover:bg-gray-50">
+                              <td className="px-6 py-4 whitespace-nowrap">
+                                <div className="text-sm font-medium text-gray-900">
+                                  {supplier.companyName}
+                                </div>
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap">
+                                <div className="text-sm text-gray-900">
+                                  {supplier.contactName}
+                                </div>
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap">
+                                <div className="text-sm text-gray-900">
+                                  {supplier.email}
+                                </div>
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap">
+                                <div className="text-sm text-gray-900">
+                                  {supplier.phone}
+                                </div>
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap">
+                                <div className="flex flex-wrap gap-1">
+                                  {(Array.isArray(supplier.categories)
+                                    ? supplier.categories
+                                    : [supplier.categories || ""]).filter(Boolean).map((c, idx) => (
+                                    <span key={idx} className="text-xs bg-gray-100 px-2 py-0.5 rounded-full text-gray-700">
+                                      {c}
+                                    </span>
+                                  ))}
+                                </div>
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap">
+                                <div className="flex flex-wrap gap-1">
+                                  {(Array.isArray(supplier.products)
+                                    ? supplier.products
+                                    : [supplier.products || ""]).filter(Boolean).map((p, idx) => (
+                                    <span key={idx} className="text-xs bg-gray-100 px-2 py-0.5 rounded-full text-gray-700">
+                                      {p}
+                                    </span>
+                                  ))}
+                                </div>
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap">
+                                {getStatusBadge(supplier.status)}
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                <div className="flex flex-wrap gap-2">
+                                  <a
+                                    href={`https://wa.me/${supplier.phone}?text=Need%20stock`}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    title="WhatsApp"
+                                    aria-label="WhatsApp"
+                                    className="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded flex items-center justify-center"
+                                  >
+                                    <FaWhatsapp />
+                                  </a>
+                                  <a
+                                    href={`mailto:${supplier.email}?subject=Stock%20Request&body=Please%20send%20the%20required%20stock`}
+                                    title="Email"
+                                    aria-label="Email"
+                                    className="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded flex items-center justify-center"
+                                  >
+                                    <MdEmail />
+                                  </a>
+                                  <button
+                                    onClick={() =>
+                                      navigate(`/admin/suppliers/${supplier._id}`)
+                                    }
+                                    title="Edit"
+                                    aria-label="Edit"
+                                    className="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded flex items-center justify-center"
+                                  >
+                                    <MdEdit />
+                                  </button>
+                                  <button
+                                    onClick={() => handleQuickMessage(supplier)}
+                                    title="Quick Message"
+                                    aria-label="Quick Message"
+                                    className="bg-indigo-500 hover:bg-indigo-600 text-white px-3 py-1 rounded flex items-center justify-center"
+                                  >
+                                    <MdMessage />
+                                  </button>
+                                  <button
+                                    onClick={() =>
+                                      handleStatusUpdate(
+                                        supplier._id,
+                                        supplier.status === "approved"
+                                          ? "rejected"
+                                          : "approved"
+                                      )
+                                    }
+                                    disabled={actionLoading === supplier._id}
+                                    title={supplier.status === "approved" ? "Reject & Delete" : "Approve"}
+                                    aria-label={supplier.status === "approved" ? "Reject & Delete" : "Approve"}
+                                    className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded disabled:opacity-50 flex items-center justify-center"
+                                  >
+                                    {supplier.status === "approved" ? <MdDelete /> : <MdCheck />}
+                                  </button>
+                                </div>
+                              </td>
+                            </tr>
+                          ))}
+                      </>
+                    ) : (
+                      sortedSuppliers.map((supplier) => (
                       <tr key={supplier._id} className="hover:bg-gray-50">
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="text-sm font-medium text-gray-900">
@@ -397,6 +763,28 @@ const AdminDashboard = () => {
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="flex flex-wrap gap-1">
+                            {(Array.isArray(supplier.categories)
+                              ? supplier.categories
+                              : [supplier.categories || ""]).filter(Boolean).map((c, idx) => (
+                              <span key={idx} className="text-xs bg-gray-100 px-2 py-0.5 rounded-full text-gray-700">
+                                {c}
+                              </span>
+                            ))}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="flex flex-wrap gap-1">
+                            {(Array.isArray(supplier.products)
+                              ? supplier.products
+                              : [supplier.products || ""]).filter(Boolean).map((p, idx) => (
+                              <span key={idx} className="text-xs bg-gray-100 px-2 py-0.5 rounded-full text-gray-700">
+                                {p}
+                              </span>
+                            ))}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
                           {getStatusBadge(supplier.status)}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
@@ -405,29 +793,37 @@ const AdminDashboard = () => {
                               href={`https://wa.me/${supplier.phone}?text=Need%20stock`}
                               target="_blank"
                               rel="noreferrer"
-                              className="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded"
+                              title="WhatsApp"
+                              aria-label="WhatsApp"
+                              className="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded flex items-center justify-center"
                             >
-                              WhatsApp
+                              <FaWhatsapp />
                             </a>
                             <a
                               href={`mailto:${supplier.email}?subject=Stock%20Request&body=Please%20send%20the%20required%20stock`}
-                              className="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded"
+                              title="Email"
+                              aria-label="Email"
+                              className="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded flex items-center justify-center"
                             >
-                              Email
+                              <MdEmail />
                             </a>
                             <button
                               onClick={() =>
                                 navigate(`/admin/suppliers/${supplier._id}`)
                               }
-                              className="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded"
+                              title="Edit"
+                              aria-label="Edit"
+                              className="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded flex items-center justify-center"
                             >
-                              Edit
+                              <MdEdit />
                             </button>
                             <button
                               onClick={() => handleQuickMessage(supplier)}
-                              className="bg-indigo-500 hover:bg-indigo-600 text-white px-3 py-1 rounded"
+                              title="Quick Message"
+                              aria-label="Quick Message"
+                              className="bg-indigo-500 hover:bg-indigo-600 text-white px-3 py-1 rounded flex items-center justify-center"
                             >
-                              Quick Msg
+                              <MdMessage />
                             </button>
                             <button
                               onClick={() =>
@@ -439,25 +835,34 @@ const AdminDashboard = () => {
                                 )
                               }
                               disabled={actionLoading === supplier._id}
-                              className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded disabled:opacity-50"
+                              title={supplier.status === "approved" ? "Reject & Delete" : "Approve"}
+                              aria-label={supplier.status === "approved" ? "Reject & Delete" : "Approve"}
+                              className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded disabled:opacity-50 flex items-center justify-center"
                             >
-                              {supplier.status === "approved"
-                                ? "Reject & Delete"
-                                : "Approve"}
+                              {supplier.status === "approved" ? <MdDelete /> : <MdCheck />}
                             </button>
                           </div>
                         </td>
                       </tr>
-                    ))}
+                    ))
+                    )}
                   </tbody>
                 </table>
               ) : (
                 <div className="p-4">
-                  {Object.entries(groupedByCategory).map(([category, list]) => (
+                  {Object.entries(groupedByCategory)
+                    .sort((a, b) =>
+                      sortField === "category"
+                        ? (sortOrder === "asc"
+                            ? a[0].localeCompare(b[0])
+                            : b[0].localeCompare(a[0]))
+                        : 0
+                    )
+                    .map(([category, list]) => (
                     <div key={category} className="mb-6">
                       <h3 className="text-xl font-semibold mb-3">{category}</h3>
                       <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                        {list.map((supplier) => (
+                        {[...list].sort(compareSuppliers).map((supplier) => (
                           <div
                             key={supplier._id}
                             className="border rounded-lg p-4 shadow-sm"
@@ -477,6 +882,20 @@ const AdminDashboard = () => {
                             <p className="text-sm text-gray-700">
                               {supplier.phone}
                             </p>
+                            {supplier.categories && (
+                              <div className="mt-2">
+                                <p className="text-xs text-gray-500 mb-1">Categories:</p>
+                                <div className="flex flex-wrap gap-2">
+                                  {(Array.isArray(supplier.categories)
+                                    ? supplier.categories
+                                    : [supplier.categories]).filter(Boolean).map((c, idx) => (
+                                    <span key={idx} className="text-xs bg-gray-100 px-2 py-0.5 rounded-full">
+                                      {c}
+                                    </span>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
                             {supplier.products && (
                               <div className="mt-2">
                                 <p className="text-xs text-gray-500 mb-1">
@@ -502,23 +921,29 @@ const AdminDashboard = () => {
                                 href={`https://wa.me/${supplier.phone}?text=Need%20stock`}
                                 target="_blank"
                                 rel="noreferrer"
-                                className="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded"
+                                title="WhatsApp"
+                                aria-label="WhatsApp"
+                                className="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded flex items-center justify-center"
                               >
-                                WhatsApp
+                                <FaWhatsapp />
                               </a>
                               <a
                                 href={`mailto:${supplier.email}?subject=Stock%20Request&body=Please%20send%20the%20required%20stock`}
-                                className="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded"
+                                title="Email"
+                                aria-label="Email"
+                                className="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded flex items-center justify-center"
                               >
-                                Email
+                                <MdEmail />
                               </a>
                               <button
                                 onClick={() =>
                                   navigate(`/admin/suppliers/${supplier._id}`)
                                 }
-                                className="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded"
+                                title="Edit"
+                                aria-label="Edit"
+                                className="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded flex items-center justify-center"
                               >
-                                Edit
+                                <MdEdit />
                               </button>
                               <button
                                 onClick={() =>
@@ -530,11 +955,11 @@ const AdminDashboard = () => {
                                   )
                                 }
                                 disabled={actionLoading === supplier._id}
-                                className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded disabled:opacity-50"
+                                title={supplier.status === "approved" ? "Reject & Delete" : "Approve"}
+                                aria-label={supplier.status === "approved" ? "Reject & Delete" : "Approve"}
+                                className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded disabled:opacity-50 flex items-center justify-center"
                               >
-                                {supplier.status === "approved"
-                                  ? "Reject & Delete"
-                                  : "Approve"}
+                                {supplier.status === "approved" ? <MdDelete /> : <MdCheck />}
                               </button>
                             </div>
                           </div>

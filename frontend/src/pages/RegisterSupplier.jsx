@@ -228,243 +228,214 @@ const RegisterSupplier = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-emerald-50 to-teal-100 flex flex-col">
       <Header />
-      
-      <main className="flex-1 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-md w-full space-y-8">
-        <div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-            Supplier Registration
-          </h2>
-          <p className="mt-2 text-center text-sm text-gray-600">
-            Join CeylonMart as a supplier
-          </p>
-        </div>
 
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-          {errors.submit && (
-            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
-              {errors.submit}
+      <div className="flex-1 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-xl w-full">
+          <div className="bg-white/80 backdrop-blur-md shadow-2xl rounded-3xl border border-white/20 overflow-hidden">
+            <div className="bg-gradient-to-r from-emerald-600 to-teal-700 px-8 py-8 text-center">
+              <div className="w-16 h-16 bg-white/20 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
+                </svg>
+              </div>
+              <h2 className="text-3xl font-bold text-white">Supplier Registration</h2>
+              <p className="mt-2 text-emerald-100">Join CeylonMart as a supplier</p>
             </div>
-          )}
 
-          <div className="space-y-4">
-            <div>
-              <label htmlFor="companyName" className="block text-sm font-medium text-gray-700">
-                Company Name *
-              </label>
-              <input
-                id="companyName"
-                name="companyName"
-                type="text"
-                required
-                value={formData.companyName}
-                onChange={handleInputChange}
-                className={`mt-1 appearance-none relative block w-full px-3 py-2 border rounded-md placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm ${
-                  errors.companyName ? 'border-red-500' : 'border-gray-300'
-                }`}
-                placeholder="Enter company name"
-              />
-              {errors.companyName && (
-                <p className="mt-1 text-sm text-red-600">{errors.companyName}</p>
+            <div className="px-8 py-8">
+              {errors.submit && (
+                <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-xl mb-6">
+                  {errors.submit}
+                </div>
               )}
-            </div>
 
-            <div>
-              <label htmlFor="contactName" className="block text-sm font-medium text-gray-700">
-                Contact Name *
-              </label>
-              <input
-                id="contactName"
-                name="contactName"
-                type="text"
-                required
-                value={formData.contactName}
-                onChange={handleInputChange}
-                className={`mt-1 appearance-none relative block w-full px-3 py-2 border rounded-md placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm ${
-                  errors.contactName ? 'border-red-500' : 'border-gray-300'
-                }`}
-                placeholder="Enter contact person name"
-              />
-              {errors.contactName && (
-                <p className="mt-1 text-sm text-red-600">{errors.contactName}</p>
-              )}
-            </div>
-
-            <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-                Email Address *
-              </label>
-              <input
-                id="email"
-                name="email"
-                type="email"
-                required
-                value={formData.email}
-                onChange={handleInputChange}
-                className={`mt-1 appearance-none relative block w-full px-3 py-2 border rounded-md placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm ${
-                  errors.email ? 'border-red-500' : 'border-gray-300'
-                }`}
-                placeholder="Enter email address"
-              />
-              {errors.email && (
-                <p className="mt-1 text-sm text-red-600">{errors.email}</p>
-              )}
-            </div>
-
-            <div>
-              <label htmlFor="phone" className="block text-sm font-medium text-gray-700">
-                Phone Number *
-              </label>
-              <input
-                id="phone"
-                name="phone"
-                type="tel"
-                required
-                value={formData.phone}
-                onChange={handleInputChange}
-                className={`mt-1 appearance-none relative block w-full px-3 py-2 border rounded-md placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm ${
-                  errors.phone ? 'border-red-500' : 'border-gray-300'
-                }`}
-                placeholder="Enter phone number"
-              />
-              {errors.phone && (
-                <p className="mt-1 text-sm text-red-600">{errors.phone}</p>
-              )}
-            </div>
-
-            <div>
-              <label htmlFor="product" className="block text-sm font-medium text-gray-700">
-                Product *
-              </label>
-              <input
-                id="product"
-                name="product"
-                type="text"
-                required
-                value={formData.product}
-                onChange={handleInputChange}
-                className={`mt-1 appearance-none relative block w-full px-3 py-2 border rounded-md placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm ${
-                  errors.product ? 'border-red-500' : 'border-gray-300'
-                }`}
-                placeholder="Enter main product(s) you supply"
-              />
-              {errors.product && (
-                <p className="mt-1 text-sm text-red-600">{errors.product}</p>
-              )}
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700">
-                Categories *
-              </label>
-              <div className={`mt-2 grid grid-cols-1 sm:grid-cols-2 gap-2 border rounded-md p-3 ${errors.categories ? 'border-red-500' : 'border-gray-300'}`}>
-                {CATEGORY_OPTIONS.map(option => (
-                  <label key={option} className="inline-flex items-center space-x-2">
+              <form className="space-y-6" onSubmit={handleSubmit}>
+                <div className="space-y-5">
+                  <div>
+                    <label htmlFor="companyName" className="block text-sm font-semibold text-gray-700 mb-2">Company Name *</label>
                     <input
-                      type="checkbox"
-                      className="h-4 w-4 text-blue-600 border-gray-300 rounded"
-                      checked={formData.categories.includes(option)}
-                      onChange={() => handleCategoryToggle(option)}
+                      id="companyName"
+                      name="companyName"
+                      type="text"
+                      required
+                      value={formData.companyName}
+                      onChange={handleInputChange}
+                      className={`block w-full px-4 py-3 border rounded-xl bg-white/50 backdrop-blur-sm placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all duration-200 ${errors.companyName ? 'border-red-300 focus:ring-red-500' : 'border-gray-300'}`}
+                      placeholder="Enter company name"
                     />
-                    <span className="text-sm text-gray-700">{option}</span>
-                  </label>
-                ))}
-              </div>
-              {errors.categories && (
-                <p className="mt-1 text-sm text-red-600">{errors.categories}</p>
-              )}
-            </div>
+                    {errors.companyName && (
+                      <p className="mt-2 text-sm text-red-600">{errors.companyName}</p>
+                    )}
+                  </div>
 
-            <div>
-              <label htmlFor="address" className="block text-sm font-medium text-gray-700">
-                Address *
-              </label>
-              <textarea
-                id="address"
-                name="address"
-                required
-                rows={3}
-                value={formData.address}
-                onChange={handleInputChange}
-                className={`mt-1 appearance-none relative block w-full px-3 py-2 border rounded-md placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm ${
-                  errors.address ? 'border-red-500' : 'border-gray-300'
-                }`}
-                placeholder="Enter full address"
-              />
-              {errors.address && (
-                <p className="mt-1 text-sm text-red-600">{errors.address}</p>
-              )}
-            </div>
+                  <div>
+                    <label htmlFor="contactName" className="block text-sm font-semibold text-gray-700 mb-2">Contact Name *</label>
+                    <input
+                      id="contactName"
+                      name="contactName"
+                      type="text"
+                      required
+                      value={formData.contactName}
+                      onChange={handleInputChange}
+                      className={`block w-full px-4 py-3 border rounded-xl bg-white/50 backdrop-blur-sm placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all duration-200 ${errors.contactName ? 'border-red-300 focus:ring-red-500' : 'border-gray-300'}`}
+                      placeholder="Enter contact person name"
+                    />
+                    {errors.contactName && (
+                      <p className="mt-2 text-sm text-red-600">{errors.contactName}</p>
+                    )}
+                  </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label htmlFor="password" className="block text-sm font-medium text-gray-700">
-                  Password (optional)
-                </label>
-                <input
-                  id="password"
-                  name="password"
-                  type="password"
-                  value={formData.password}
-                  onChange={handleInputChange}
-                  className={`mt-1 appearance-none relative block w-full px-3 py-2 border rounded-md placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm ${
-                    errors.password ? 'border-red-500' : 'border-gray-300'
-                  }`}
-                  placeholder="At least 8 characters"
-                />
-                {errors.password && (
-                  <p className="mt-1 text-sm text-red-600">{errors.password}</p>
-                )}
-              </div>
-              <div>
-                <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700">
-                  Confirm Password
-                </label>
-                <input
-                  id="confirmPassword"
-                  name="confirmPassword"
-                  type="password"
-                  value={formData.confirmPassword}
-                  onChange={handleInputChange}
-                  className={`mt-1 appearance-none relative block w-full px-3 py-2 border rounded-md placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm ${
-                    errors.confirmPassword ? 'border-red-500' : 'border-gray-300'
-                  }`}
-                />
-                {errors.confirmPassword && (
-                  <p className="mt-1 text-sm text-red-600">{errors.confirmPassword}</p>
-                )}
-              </div>
+                  <div>
+                    <label htmlFor="email" className="block text-sm font-semibold text-gray-700 mb-2">Email Address *</label>
+                    <input
+                      id="email"
+                      name="email"
+                      type="email"
+                      required
+                      value={formData.email}
+                      onChange={handleInputChange}
+                      className={`block w-full px-4 py-3 border rounded-xl bg-white/50 backdrop-blur-sm placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all duration-200 ${errors.email ? 'border-red-300 focus:ring-red-500' : 'border-gray-300'}`}
+                      placeholder="Enter email address"
+                    />
+                    {errors.email && (
+                      <p className="mt-2 text-sm text-red-600">{errors.email}</p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label htmlFor="phone" className="block text-sm font-semibold text-gray-700 mb-2">Phone Number *</label>
+                    <input
+                      id="phone"
+                      name="phone"
+                      type="tel"
+                      required
+                      value={formData.phone}
+                      onChange={handleInputChange}
+                      className={`block w-full px-4 py-3 border rounded-xl bg-white/50 backdrop-blur-sm placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all duration-200 ${errors.phone ? 'border-red-300 focus:ring-red-500' : 'border-gray-300'}`}
+                      placeholder="Enter phone number"
+                    />
+                    {errors.phone && (
+                      <p className="mt-2 text-sm text-red-600">{errors.phone}</p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label htmlFor="product" className="block text-sm font-semibold text-gray-700 mb-2">Product *</label>
+                    <input
+                      id="product"
+                      name="product"
+                      type="text"
+                      required
+                      value={formData.product}
+                      onChange={handleInputChange}
+                      className={`block w-full px-4 py-3 border rounded-xl bg-white/50 backdrop-blur-sm placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all duration-200 ${errors.product ? 'border-red-300 focus:ring-red-500' : 'border-gray-300'}`}
+                      placeholder="Enter main product(s) you supply"
+                    />
+                    {errors.product && (
+                      <p className="mt-2 text-sm text-red-600">{errors.product}</p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">Categories *</label>
+                    <div className={`grid grid-cols-1 sm:grid-cols-2 gap-2 border rounded-xl p-3 bg-white/50 backdrop-blur-sm ${errors.categories ? 'border-red-300' : 'border-gray-300'}`}>
+                      {CATEGORY_OPTIONS.map(option => (
+                        <label key={option} className="inline-flex items-center space-x-2">
+                          <input
+                            type="checkbox"
+                            className="h-4 w-4 text-emerald-600 border-gray-300 rounded"
+                            checked={formData.categories.includes(option)}
+                            onChange={() => handleCategoryToggle(option)}
+                          />
+                          <span className="text-sm text-gray-700">{option}</span>
+                        </label>
+                      ))}
+                    </div>
+                    {errors.categories && (
+                      <p className="mt-2 text-sm text-red-600">{errors.categories}</p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label htmlFor="address" className="block text-sm font-semibold text-gray-700 mb-2">Address *</label>
+                    <textarea
+                      id="address"
+                      name="address"
+                      required
+                      rows={3}
+                      value={formData.address}
+                      onChange={handleInputChange}
+                      className={`block w-full px-4 py-3 border rounded-xl bg-white/50 backdrop-blur-sm placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all duration-200 ${errors.address ? 'border-red-300 focus:ring-red-500' : 'border-gray-300'}`}
+                      placeholder="Enter full address"
+                    />
+                    {errors.address && (
+                      <p className="mt-2 text-sm text-red-600">{errors.address}</p>
+                    )}
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label htmlFor="password" className="block text-sm font-semibold text-gray-700 mb-2">Password (optional)</label>
+                      <input
+                        id="password"
+                        name="password"
+                        type="password"
+                        value={formData.password}
+                        onChange={handleInputChange}
+                        className={`block w-full px-4 py-3 border rounded-xl bg-white/50 backdrop-blur-sm placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all duration-200 ${errors.password ? 'border-red-300 focus:ring-red-500' : 'border-gray-300'}`}
+                        placeholder="At least 8 characters"
+                      />
+                      {errors.password && (
+                        <p className="mt-2 text-sm text-red-600">{errors.password}</p>
+                      )}
+                    </div>
+                    <div>
+                      <label htmlFor="confirmPassword" className="block text-sm font-semibold text-gray-700 mb-2">Confirm Password</label>
+                      <input
+                        id="confirmPassword"
+                        name="confirmPassword"
+                        type="password"
+                        value={formData.confirmPassword}
+                        onChange={handleInputChange}
+                        className={`block w-full px-4 py-3 border rounded-xl bg-white/50 backdrop-blur-sm placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all duration-200 ${errors.confirmPassword ? 'border-red-300 focus:ring-red-500' : 'border-gray-300'}`}
+                      />
+                      {errors.confirmPassword && (
+                        <p className="mt-2 text-sm text-red-600">{errors.confirmPassword}</p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="pt-2">
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="group relative w-full flex justify-center py-4 px-6 border border-transparent text-base font-semibold rounded-xl text-white bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-700 hover:to-teal-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 transform hover:scale-105 transition-all duration-200 shadow-lg hover:shadow-xl disabled:opacity-70"
+                  >
+                    {loading ? 'Registering...' : 'Register'}
+                  </button>
+                </div>
+
+                <div className="text-center pt-6 border-t border-gray-200">
+                  <p className="text-sm text-gray-600">
+                    Already have an account?{' '}
+                    <button
+                      type="button"
+                      onClick={() => navigate('/supplierLogin')}
+                      className="font-semibold text-emerald-600 hover:text-emerald-700 transition-colors duration-200"
+                    >
+                      Sign in
+                    </button>
+                  </p>
+                </div>
+              </form>
             </div>
           </div>
-
-          <div>
-            <button
-              type="submit"
-              disabled={loading}
-              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
-            >
-              {loading ? 'Registering...' : 'Register'}
-            </button>
-          </div>
-
-          <div className="text-center">
-            <p className="text-sm text-gray-600">
-              Already have an account?{' '}
-              <button
-                type="button"
-                onClick={() => navigate('/supplierLogin')}
-                className="font-medium text-blue-600 hover:text-blue-500"
-              >
-                Sign in
-              </button>
-            </p>
-          </div>
-        </form>
         </div>
-      </main>
-      
+      </div>
+
       <Footer />
     </div>
   );
