@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { useUser } from "../contexts/UserContext";
 import Header from "../components/ui/Header";
 import Footer from "../components/ui/Footer";
+import bgPhoto from "../bgPhoto.jpg";
 
 export default function Login() {
   const [form, setForm] = useState({ email: "", password: "" });
@@ -106,9 +107,23 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-emerald-50 to-teal-100 flex flex-col">
-      <Header />
-      <div className="flex-grow flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+    <div 
+      className="min-h-screen flex flex-col relative"
+      style={{
+        backgroundImage: `url(${bgPhoto})`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat'
+      }}
+    >
+      {/* Blur overlay */}
+      <div className="absolute inset-0 bg-black/20 backdrop-blur-sm"></div>
+      
+      <div className="relative z-10">
+        <Header />
+      </div>
+      
+      <div className="flex-grow flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 relative z-10">
       <div className="max-w-md w-full">
         {/* Main Form Container */}
         <div className="bg-white/80 backdrop-blur-md shadow-2xl rounded-3xl border border-white/20 overflow-hidden">
@@ -235,7 +250,10 @@ export default function Login() {
         </div>
         </div>
       </div>
-      <Footer />
+      
+      <div className="relative z-10">
+        <Footer />
+      </div>
     </div>
   );
 }

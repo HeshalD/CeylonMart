@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { authAPI, supplierAPI } from '../api';
 import Header from '../Header';
 import Footer from '../Footer';
+import bgPhoto from '../bgPhoto.jpg';
 
 const EditProfile = () => {
   const navigate = useNavigate();
@@ -207,21 +208,53 @@ const EditProfile = () => {
 
   if (loading) {
     return (
-      <div>
-        <Header />
-        <div className="flex justify-center items-center min-h-screen">
+      <div 
+        className="min-h-screen flex flex-col relative"
+        style={{
+          backgroundImage: `url(${bgPhoto})`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          backgroundRepeat: 'no-repeat'
+        }}
+      >
+        {/* Blur overlay */}
+        <div className="absolute inset-0 bg-black/20 backdrop-blur-sm"></div>
+        
+        <div className="relative z-10">
+          <Header />
+        </div>
+        
+        <div className="flex-grow flex justify-center items-center relative z-10">
           <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-500"></div>
         </div>
-        <Footer />
+        
+        <div className="relative z-10">
+          <Footer />
+        </div>
       </div>
     );
   }
 
   return (
-    <div>
-      <Header />
-      <div className="container mx-auto px-4 py-8 max-w-2xl">
-        <div className="bg-white shadow-lg rounded-lg p-6">
+    <div 
+      className="min-h-screen flex flex-col relative"
+      style={{
+        backgroundImage: `url(${bgPhoto})`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat'
+      }}
+    >
+      {/* Blur overlay */}
+      <div className="absolute inset-0 bg-black/20 backdrop-blur-sm"></div>
+      
+      <div className="relative z-10">
+        <Header />
+      </div>
+      
+      <div className="flex-grow flex items-center justify-center py-8 px-4 relative z-10">
+        <div className="container mx-auto max-w-2xl w-full">
+          <div className="bg-white/90 backdrop-blur-md shadow-2xl rounded-3xl border border-white/20 p-8">
           <div className="flex justify-between items-center mb-6">
             <h1 className="text-3xl font-bold text-gray-800">Edit Profile</h1>
             <button
@@ -400,9 +433,13 @@ const EditProfile = () => {
               </button>
             </div>
           </form>
+          </div>
         </div>
       </div>
-      <Footer />
+      
+      <div className="relative z-10">
+        <Footer />
+      </div>
     </div>
   );
 };
