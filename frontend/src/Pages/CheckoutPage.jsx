@@ -127,8 +127,17 @@ export default function CheckoutPage({ customerId }) {
         const originalPrice = item.price || 0;
         const calculatedTotal = Number(originalQty) * Number(originalPrice);
         
+        // Use the actual product ID from the item - no fake IDs
+        const productId = item._id || item.productId;
+        
+        // Validate that we have a real product ID
+        if (!productId) {
+          console.error(`Item ${index} is missing a valid product ID:`, item);
+          throw new Error(`Item ${index} is missing a valid product ID`);
+        }
+        
         const transformedItem = {
-          productId: item._id || `507f1f77bcf86cd7994390${String(index + 10).padStart(2, '0')}`, // Generate valid ObjectId
+          productId: productId, // Use actual product ID
           productName: item.productName || item.name || "Unknown Product",
           quantity: Math.max(0.1, Number(originalQty)), // Allow fractional quantities (0.1 minimum)
           price: Math.max(0, Number(originalPrice)) // Ensure float >= 0
@@ -136,7 +145,13 @@ export default function CheckoutPage({ customerId }) {
         
         console.log(`Item ${index + 1}:`, {
           original: { qty: originalQty, price: originalPrice, total: calculatedTotal },
-          transformed: { quantity: transformedItem.quantity, price: transformedItem.price, total: transformedItem.quantity * transformedItem.price }
+          transformed: { 
+            productId: transformedItem.productId,
+            productName: transformedItem.productName,
+            quantity: transformedItem.quantity, 
+            price: transformedItem.price, 
+            total: transformedItem.quantity * transformedItem.price 
+          }
         });
         
         return transformedItem;
@@ -162,7 +177,7 @@ export default function CheckoutPage({ customerId }) {
         paymentMethod,
         email,
         district,
-        status: paymentMethod === "cash_on_delivery" ? "pending" : "successful"
+        status: "successful" // Always set to successful to immediately decrease stock
       });
       console.log('Payment created:', payment);
       

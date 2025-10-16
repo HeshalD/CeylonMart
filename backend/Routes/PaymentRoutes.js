@@ -11,7 +11,7 @@ router.post(
   body("customerId").isMongoId(),
   body("amount").isFloat({ min: 0 }),
   body("paymentMethod").isIn(["credit_card", "debit_card", "paypal", "stripe", "cash_on_delivery"]),
-  body("email").optional().isEmail(),
+  body("email").optional({ nullable: true }).isEmail().normalizeEmail(), // Make email optional and normalize it
   ctrl.createPayment
 );
 
