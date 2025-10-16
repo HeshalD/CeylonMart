@@ -6,6 +6,7 @@ import ResetPassword from "./Pages/ResetPassword";
 import Profile from "./Pages/Profile";
 import AccountSettings from "./Pages/AccountSettings";
 import ProtectedRoute from "./components/ProtectedRoute";
+import ScrollToTop from "./components/ScrollToTop";
 
 import CustomerDashboard from "./Pages/dashboards/CustomerDashboard";
 import AdminDashboard from "./Pages/dashboards/AdminDashboard";
@@ -20,6 +21,7 @@ import AboutUsPage from "./Pages/AboutUsPage";
 import CartPage from "./Pages/CartPage";
 import CheckoutPage from "./Pages/CheckoutPage";
 import OrdersPage from "./Pages/OrdersPage";
+import Orders from "./Pages/Orders";
 import PaymentSuccessPage from "./Pages/PaymentSuccessPage";
 
 //Kawya's pages
@@ -62,6 +64,7 @@ function App() {
   
   return (
     <UserProvider>
+      <ScrollToTop />
       <Routes>
         {/* Public Routes - No Authentication Required */}
         <Route path="/" element={<HomePage />} />
@@ -93,6 +96,7 @@ function App() {
         <Route path="/manager/login" element={<ManagerLogin />} />
         <Route path="/driver/dashboard" element={<DriverDashboard />} />
         <Route path="/drivers/management" element={<DriverManagement />} />
+        <Route path="/drivers/orders" element={<Orders />} />
         <Route path="/drivers/search" element={<DriversSearch />} />
         <Route path="/drivers/availability" element={<DriverAvailability />} />
         <Route path="/deliveries/status" element={<DeliveryStatus />} />
@@ -106,7 +110,6 @@ function App() {
         <Route path="/inventory/products" element={<ProductTable />} /> {/* 👈 Changed path */}
         <Route path="/add-product" element={<AddProductForm />} />
         <Route path="/update-product" element={<UpdateProductForm />} />
-        <Route path="/shop" element={<Shop />} />
 
         {/* Protected Routes - Require Authentication */}
         <Route

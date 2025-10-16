@@ -21,11 +21,17 @@ function DriverAvailability() {
       console.log('Fetched drivers:', res.data); // Debug log
       const allDrivers = res.data;
       
-      // Filter for available drivers only
-      const available = allDrivers.filter(driver => 
-        driver.status === 'active' && driver.availability === 'available'
-      );
+      // Filter for available drivers only (include drivers with default values)
+      const available = allDrivers.filter(driver => {
+        // Include drivers that are available (or have no availability set, which means available by default)
+        const isAvailable = !driver.availability || driver.availability === 'available';
+        // Don't include deleted drivers
+        const notDeleted = !driver.isDeleted;
+        
+        return isAvailable && notDeleted;
+      });
       
+      console.log('Available drivers after filtering:', available); // Debug log
       setDrivers(allDrivers);
       setAvailableDrivers(available);
     } catch (e) {
@@ -39,12 +45,18 @@ function DriverAvailability() {
 
   // Filter available drivers based on district and search term
   const filteredAvailableDrivers = availableDrivers.filter(driver => {
-    const matchesDistrict = !selectedDistrict || driver.district === selectedDistrict;
+    // District filter
+    const matchesDistrict = !selectedDistrict || 
+      (driver.district && driver.district.toLowerCase() === selectedDistrict.toLowerCase());
+    
+    // Search filter - search by name, email, or district
     const matchesSearch = !searchTerm || 
-      driver.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      driver.lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      driver.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (driver.district && driver.district.toLowerCase().includes(searchTerm.toLowerCase()));
+      (driver.firstName && driver.firstName.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (driver.lastName && driver.lastName.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (driver.email && driver.email.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (driver.district && driver.district.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      // Also search by full name combination
+      (`${driver.firstName || ''} ${driver.lastName || ''}`.toLowerCase().includes(searchTerm.toLowerCase()));
     
     return matchesDistrict && matchesSearch;
   });

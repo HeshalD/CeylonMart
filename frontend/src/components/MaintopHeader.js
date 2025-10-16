@@ -190,8 +190,8 @@ const Header = () => {
 
           {/* Desktop Navigation */}
           <div className="items-center hidden space-x-3 md:flex">
-            {/* Cart Button - Hidden on Payment Success and Orders Pages */}
-            {location.pathname !== '/payment-success' && location.pathname !== '/orders' && (
+            {/* Cart Button - Hidden on Payment Success, Orders Pages, Login, and Register Pages */}
+            {location.pathname !== '/payment-success' && location.pathname !== '/orders' && location.pathname !== '/login' && location.pathname !== '/register' && (
               <button
                 onClick={() => navigate('/cart')}
                 className="relative bg-gradient-to-r from-white/20 to-white/30 text-white p-1.5 rounded-lg hover:from-white/30 hover:to-white/40 transform hover:scale-105 transition-all duration-300 shadow-lg hover:shadow-xl flex items-center justify-center border border-white/30 hover:border-white/50"
@@ -315,8 +315,8 @@ const Header = () => {
                 </button>
               </div>
               
-              {/* Cart Button for Mobile - Hidden on Payment Success and Orders Pages */}
-              {location.pathname !== '/payment-success' && location.pathname !== '/orders' && (
+              {/* Cart Button for Mobile - Hidden on Payment Success, Orders Pages, Login, and Register Pages */}
+              {location.pathname !== '/payment-success' && location.pathname !== '/orders' && location.pathname !== '/login' && location.pathname !== '/register' && (
                 <button
                   onClick={() => {
                     navigate('/cart');

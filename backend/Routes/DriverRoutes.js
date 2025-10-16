@@ -41,8 +41,14 @@ router.post("/", driverValidation, ctrl.createDriver);
 // Get all drivers
 router.get("/", ctrl.getDrivers);
 
+// Get available drivers
+router.get("/available", ctrl.getAvailableDrivers);
+
 // Get driver by ID
 router.get("/:id", param("id").isMongoId(), ctrl.getDriverById);
+
+// Get driver history (assigned orders)
+router.get("/:id/history", param("id").isMongoId(), ctrl.getDriverHistory);
 
 // Update driver
 router.put(
@@ -58,8 +64,40 @@ router.put(
       .optional()
       .isIn(["car", "van", "bike", "lorry"])
       .withMessage("Vehicle type must be car, van, bike or lorry"),
+    body("availability")
+      .optional()
+      .isIn(["available", "busy", "unavailable"])
+      .withMessage("Availability must be available, busy, or unavailable"),
+    body("district")
+      .optional()
+      .isString()
+      .withMessage("District must be a string"),
   ],
   ctrl.updateDriver
+);
+
+// Update driver availability specifically
+router.patch(
+  "/:id/availability",
+  [
+    param("id").isMongoId(),
+    body("availability")
+      .isIn(["available", "busy", "unavailable"])
+      .withMessage("Availability must be available, busy, or unavailable"),
+  ],
+  ctrl.updateDriverAvailability
+);
+
+// Update driver district specifically
+router.patch(
+  "/:id/district",
+  [
+    param("id").isMongoId(),
+    body("district")
+      .isString()
+      .withMessage("District must be a string"),
+  ],
+  ctrl.updateDriverDistrict
 );
 
 // Delete driver

@@ -12,7 +12,6 @@ function DriverManagement() {
   const [editingDriver, setEditingDriver] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState('');
-  const [filterStatus, setFilterStatus] = useState('');
   const [filterDistrict, setFilterDistrict] = useState('');
 
   const [formData, setFormData] = useState({
@@ -47,6 +46,7 @@ function DriverManagement() {
       setLoading(false);
     }
   };
+
 
   const validateForm = () => {
     const errors = {};
@@ -170,7 +170,6 @@ function DriverManagement() {
   const clearFilters = () => {
     setSearchTerm('');
     setFilterType('');
-    setFilterStatus('');
     setFilterDistrict('');
   };
 
@@ -190,28 +189,25 @@ function DriverManagement() {
     }
   };
 
-  const updateDriverStatus = async (driverId, newStatus) => {
-    try {
-      setLoading(true);
-      await client.put(`/drivers/${driverId}/status`, { status: newStatus });
-      setSuccess(`Driver status updated to ${newStatus}`);
-      await fetchDrivers();
-    } catch (e) {
-      setError(e.response?.data?.error || 'Failed to update driver status');
-    } finally {
-      setLoading(false);
+  const findNearestDriver = (orderDistrict) => {
+    // Find available drivers in the same district
+    const availableDrivers = drivers.filter(driver => 
+      driver.availability === 'available' && 
+      driver.district === orderDistrict &&
+      !driver.isDeleted
+    );
+    
+    if (availableDrivers.length === 0) {
+      return null;
     }
+    
+    // For now, return the first available driver in the same district
+    // In a real app, you might want to consider driver capacity, current load, etc.
+    return availableDrivers[0];
   };
 
-  // Helper functions for status colors (currently unused but kept for future use)
-  // const getStatusColor = (status) => {
-  //   switch (status) {
-  //     case 'active': return 'bg-green-100 text-green-700';
-  //     case 'inactive': return 'bg-gray-100 text-gray-700';
-  //     case 'on_leave': return 'bg-yellow-100 text-yellow-700';
-  //     default: return 'bg-gray-100 text-gray-700';
-  //   }
-  // };
+
+
 
   // const getAvailabilityColor = (availability) => {
   //   switch (availability) {
@@ -230,10 +226,9 @@ function DriverManagement() {
       driver.email.toLowerCase().includes(searchTerm.toLowerCase());
     
     const matchesType = !filterType || driver.vehicleType === filterType;
-    const matchesStatus = !filterStatus || driver.status === filterStatus;
     const matchesDistrict = !filterDistrict || driver.district === filterDistrict;
     
-    return matchesSearch && matchesType && matchesStatus && matchesDistrict;
+    return matchesSearch && matchesType && matchesDistrict;
   });
 
   const vehicleTypes = ['car', 'van', 'bike', 'lorry'];
@@ -244,7 +239,7 @@ function DriverManagement() {
       <Header />
       <main className="flex-grow max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
         <div className="px-4 py-6 sm:px-0">
-          <div className="page-header">
+      <div className="page-header">
         <div>
           <h2 className="page-title">Driver Management</h2>
           <p className="page-subtitle">Manage your delivery drivers efficiently</p>
@@ -280,16 +275,6 @@ function DriverManagement() {
             ))}
           </select>
           <select
-            value={filterStatus}
-            onChange={(e) => setFilterStatus(e.target.value)}
-            className="input"
-          >
-            <option value="">All Status</option>
-            <option value="active">Active</option>
-            <option value="inactive">Inactive</option>
-            <option value="on_leave">On Leave</option>
-          </select>
-          <select
             value={filterDistrict}
             onChange={(e) => setFilterDistrict(e.target.value)}
             className="input"
@@ -302,6 +287,7 @@ function DriverManagement() {
           <button onClick={clearFilters} className="btn-secondary">Clear Filters</button>
         </div>
       </div>
+
 
       {/* Drivers Grid */}
       <div className="table-container">
@@ -326,7 +312,6 @@ function DriverManagement() {
                     <div className="muted">{driver.email}</div>
                   </div>
                   <div className="availability-info">
-                    <span className={`badge ${driver.status}`}>{driver.status}</span>
                     <span className={`badge ${driver.availability}`}>{driver.availability}</span>
                   </div>
                 </div>
@@ -514,6 +499,7 @@ function DriverManagement() {
           </div>
         </div>
       )}
+
         </div>
       </main>
     </div>
