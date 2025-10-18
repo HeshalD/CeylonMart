@@ -9,7 +9,7 @@ const ReceiptPDF = ({ orderData, paymentData, isVisible = false }) => {
     
     const doc = new jsPDF();
     
-    // CeylonMart Logo (text-based)
+    // CeylonMart Logo (only text)
     doc.setFontSize(24);
     doc.setTextColor(0, 120, 0);
     doc.text('CeylonMart', 20, 30);
