@@ -92,17 +92,49 @@ const AdminDashboard = () => {
   const generatePDF = () => {
     try {
       const doc = new jsPDF();
+      const now = new Date();
 
-      // Add title
-      doc.setFontSize(20);
-      doc.text("Users Report", 14, 22);
+      // CeylonMart Brand Colors
+      const primaryGreen = [5, 150, 105]; // #059669
+      const darkGreen = [44, 85, 48]; // #2c5530
+      const lightTeal = [110, 231, 183]; // #6ee7b7
+      const lightGreen = [200, 255, 215]; // #c8ffd7
 
-      // Add generation date
+      // Header Section with Brand Colors
+      doc.setFillColor(...primaryGreen);
+      doc.rect(0, 0, 210, 45, 'F');
+      
+      // Company Logo/Title - Centered
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(28);
+      doc.setFont("helvetica", "bold");
+      doc.text("CeylonMart", 105, 18, { align: 'center' });
+      
+      // Company Tagline - Centered
+      doc.setFontSize(12);
+      doc.setFont("helvetica", "normal");
+      doc.text("Smart shopping • Happy living", 105, 26, { align: 'center' });
+      
+      // Report Subtitle - Centered
+      doc.setFontSize(16);
+      doc.setFont("helvetica", "bold");
+      doc.text("Users Management Report", 105, 36, { align: 'center' });
+
+      // Generation Info Box
+      doc.setFillColor(...lightGreen);
+      doc.rect(10, 50, 190, 15, 'F');
+      doc.setTextColor(...darkGreen);
       doc.setFontSize(10);
-      doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 14, 30);
+      doc.setFont("helvetica", "bold");
+      doc.text(`Generated on: ${now.toLocaleDateString()} at ${now.toLocaleTimeString()}`, 105, 60, { align: 'center' });
 
-      // Add total users count
-      doc.text(`Total Users: ${filteredUsers.length}`, 14, 38);
+      // Total Users Count with Styling
+      doc.setFillColor(...lightTeal);
+      doc.rect(10, 70, 190, 12, 'F');
+      doc.setTextColor(...darkGreen);
+      doc.setFontSize(12);
+      doc.setFont("helvetica", "bold");
+      doc.text(`Total Users: ${filteredUsers.length}`, 105, 78, { align: 'center' });
 
       // Prepare table data with error handling
       const tableData = filteredUsers.map((user) => [
@@ -114,71 +146,121 @@ const AdminDashboard = () => {
         user.createdAt ? new Date(user.createdAt).toLocaleDateString() : "N/A",
       ]);
 
-      // Add table using autoTable
+      // Enhanced table with CeylonMart branding
       autoTable(doc, {
         head: [["Name", "Email", "Role", "Phone", "Address", "Created Date"]],
         body: tableData,
-        startY: 50,
+        startY: 90,
         styles: {
-          fontSize: 8,
-          cellPadding: 3,
+          fontSize: 9,
+          cellPadding: 4,
+          font: "helvetica",
+          textColor: [31, 41, 55], // Dark gray text
         },
         headStyles: {
-          fillColor: [41, 128, 185],
-          textColor: 255,
+          fillColor: primaryGreen,
+          textColor: [255, 255, 255],
           fontStyle: "bold",
+          fontSize: 10,
         },
         alternateRowStyles: {
-          fillColor: [245, 245, 245],
+          fillColor: [248, 250, 252], // Very light gray
         },
         columnStyles: {
-          0: { cellWidth: 30 },
-          1: { cellWidth: 40 },
-          2: { cellWidth: 25 },
-          3: { cellWidth: 25 },
-          4: { cellWidth: 30 },
-          5: { cellWidth: 25 },
+          0: { cellWidth: 32, halign: 'left', overflow: 'linebreak' },
+          1: { cellWidth: 45, halign: 'left', overflow: 'linebreak' },
+          2: { cellWidth: 28, halign: 'center', overflow: 'linebreak' },
+          3: { cellWidth: 30, halign: 'center', overflow: 'linebreak' },
+          4: { cellWidth: 32, halign: 'left', overflow: 'linebreak' },
+          5: { cellWidth: 23, halign: 'center', overflow: 'linebreak' },
         },
+        margin: { left: 10, right: 10 },
+        tableLineColor: [229, 231, 235], // Light border
+        tableLineWidth: 0.5,
       });
 
-      // Add summary statistics
-      const finalY = doc.lastAutoTable.finalY + 20;
-      doc.setFontSize(12);
-      doc.text("Summary Statistics:", 14, finalY);
+      // Summary Statistics Section with Enhanced Styling
+      const finalY = doc.lastAutoTable.finalY + 25;
+      
+      // Summary Header
+      doc.setFillColor(...darkGreen);
+      doc.rect(10, finalY - 5, 190, 12, 'F');
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(14);
+      doc.setFont("helvetica", "bold");
+      doc.text("Summary Statistics", 20, finalY + 2);
 
+      // Stats Grid Layout
       const stats = [
-        `Total Users: ${users.length}`,
-        `Customers: ${users.filter((u) => u.role === "customer").length}`,
-        `Shop Owners: ${users.filter((u) => u.role === "shop_owner").length}`,
-        `Suppliers: ${users.filter((u) => u.role === "supplier_admin").length}`,
-        `Inventory Managers: ${
-          users.filter((u) => u.role === "inventory_manager").length
-        }`,
-        `Delivery Managers: ${
-          users.filter((u) => u.role === "delivery_admin").length
-        }`,
-        `Admins: ${users.filter((u) => u.role === "admin").length}`,
+        { label: "Total Users", value: users.length, color: primaryGreen },
+        { label: "Customers", value: users.filter((u) => u.role === "customer").length, color: [34, 197, 94] },
+        { label: "Shop Owners", value: users.filter((u) => u.role === "shop_owner").length, color: [59, 130, 246] },
+        { label: "Suppliers", value: users.filter((u) => u.role === "supplier_admin").length, color: [168, 85, 247] },
+        { label: "Inventory Managers", value: users.filter((u) => u.role === "inventory_manager").length, color: [245, 158, 11] },
+        { label: "Delivery Managers", value: users.filter((u) => u.role === "delivery_admin").length, color: [239, 68, 68] },
+        { label: "Admins", value: users.filter((u) => u.role === "admin").length, color: [107, 114, 128] },
       ];
 
+      let currentY = finalY + 15;
+      const statsPerRow = 2;
+      const statWidth = 85;
+      const statHeight = 20;
+
       stats.forEach((stat, index) => {
-        doc.setFontSize(10);
-        doc.text(stat, 14, finalY + 10 + index * 6);
+        const row = Math.floor(index / statsPerRow);
+        const col = index % statsPerRow;
+        const x = 20 + (col * (statWidth + 10));
+        const y = currentY + (row * (statHeight + 5));
+
+        // Stat box background
+        doc.setFillColor(...lightGreen);
+        doc.rect(x, y, statWidth, statHeight, 'F');
+        
+        // Stat value (large)
+        doc.setTextColor(...stat.color);
+        doc.setFontSize(16);
+        doc.setFont("helvetica", "bold");
+        doc.text(stat.value.toString(), x + 5, y + 8);
+        
+        // Stat label (small)
+        doc.setTextColor(...darkGreen);
+        doc.setFontSize(8);
+        doc.setFont("helvetica", "normal");
+        doc.text(stat.label, x + 5, y + 15);
       });
 
-      // Save the PDF
-      doc.save(`users-report-${new Date().toISOString().split("T")[0]}.pdf`);
+      // Footer with CeylonMart branding
+      const footerY = 280;
+      doc.setFillColor(...primaryGreen);
+      doc.rect(0, footerY, 210, 15, 'F');
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(8);
+      doc.setFont("helvetica", "normal");
+      doc.text("CeylonMart - Your Gateway to Authentic Sri Lankan Products", 20, footerY + 10);
+      doc.text("www.ceylonmart.com", 150, footerY + 10);
+
+      // Save the PDF with enhanced filename
+      const dateStr = now.toISOString().split("T")[0];
+      const timeStr = now.toTimeString().split(" ")[0].replace(/:/g, "-");
+      doc.save(`CeylonMart-Users-Report-${dateStr}-${timeStr}.pdf`);
     } catch (error) {
       console.error("Error generating PDF:", error);
       alert("Error generating PDF. Please try again.");
     }
   };
 
-  const filteredUsers = users.filter(
-    (u) =>
-      (u.name.toLowerCase().includes(search.toLowerCase()) ||
-        u.role.toLowerCase().includes(search.toLowerCase())) &&
-      (roleFilter ? u.role === roleFilter : true)
-  );
+  const filteredUsers = users.filter((u) => {
+    // Check search filter
+    const matchesSearch = !search || 
+      u.name.toLowerCase().includes(search.toLowerCase()) ||
+      u.email.toLowerCase().includes(search.toLowerCase()) ||
+      u.role.toLowerCase().includes(search.toLowerCase());
+    
+    // Check role filter
+    const matchesRole = !roleFilter || u.role === roleFilter;
+    
+    return matchesSearch && matchesRole;
+  });
 
   if (!user) {
     return <div>Loading...</div>;
@@ -464,8 +546,7 @@ const AdminDashboard = () => {
                     All Users
                   </h3>
                   <p className="mt-1 text-sm text-gray-600 font-medium">
-                    Manage all registered users in the system (
-                    {filteredUsers.length} users)
+                    Manage all registered users in the system ({filteredUsers.length} of {users.length} users)
                   </p>
                 </div>
                 <div className="flex items-center space-x-2">
@@ -484,6 +565,21 @@ const AdminDashboard = () => {
                     Loading users...
                   </span>
                 </div>
+              </div>
+            ) : filteredUsers.length === 0 ? (
+              <div className="px-6 py-12 text-center">
+                <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
+                  </svg>
+                </div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">No users found</h3>
+                <p className="text-gray-600 mb-4">
+                  {search || roleFilter 
+                    ? "Try adjusting your search criteria to see all users."
+                    : "No users are registered in the system yet."
+                  }
+                </p>
               </div>
             ) : (
               <div className="divide-y divide-gray-200/50">

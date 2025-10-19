@@ -39,6 +39,7 @@ const adminRoutes = require('./Routes/admin');
 const supplierMsgRoutes = require('./Routes/supplier');
 const driverRoutes = require("./Routes/DriverRoutes");
 const customerRoutes = require("./Routes/CustomerRoutes");
+const userOTPRoutes = require("./Routes/UserOTPRoutes");
 
 app.use('/api/users', userRoutes);
 app.use('/api/customers', customerRoutes);
@@ -52,6 +53,7 @@ app.use('/api/supplierAuth', authRoutes);
 app.use("/categories", categoryRouter);
 app.use("/api/reports", reportRoutes);
 app.use('/api', otpRoutes);
+app.use('/api/user-otp', userOTPRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/supplier', supplierMsgRoutes);
 app.use("/drivers", driverRoutes);

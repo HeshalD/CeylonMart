@@ -115,7 +115,7 @@ const AdminDashboard = () => {
           doc.setTextColor(255, 255, 255);
           doc.setFontSize(12);
           doc.setFont('helvetica', 'bold');
-          const headerText = 'CeylonMart - Inventory Summary Report';
+          const headerText = 'CeylonMart - Supplier Management Summary Report';
           const headerWidth = doc.getTextWidth(headerText);
           doc.text(headerText, (pageWidth - headerWidth) / 2, 10);
           doc.setTextColor(0, 0, 0);
@@ -148,7 +148,7 @@ const AdminDashboard = () => {
           doc.setTextColor(255, 255, 255);
           doc.setFontSize(12);
           doc.setFont('helvetica', 'bold');
-          const headerText = 'CeylonMart - Inventory Summary Report';
+          const headerText = 'CeylonMart - Supplier Management Summary Report';
           const headerWidth = doc.getTextWidth(headerText);
           doc.text(headerText, (pageWidth - headerWidth) / 2, 10);
           doc.setTextColor(0, 0, 0);

@@ -81,7 +81,7 @@ const NotificationBell = ({ supplierId, adminMode = false }) => {
                       ) : null}
                       {n.title}
                     </div>
-                    <div className="text-sm text-gray-700">{adminMode ? n.content : n.message}</div>
+                    <div className="text-sm text-black">{adminMode ? n.content : n.message}</div>
                     <div className="text-xs text-gray-500 mt-1">{new Date(n.createdAt).toLocaleString()}</div>
                   </div>
                   <div className="flex flex-col items-end gap-1">

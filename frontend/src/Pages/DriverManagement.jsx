@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { DriversAPI } from '../api/client';
+import client from '../api/client';
 import Header from '../components/Header';
 import './DriverManagement.css';
 
@@ -37,9 +37,9 @@ function DriverManagement() {
     setError('');
     try {
       // Fetch all drivers (including inactive ones for management)
-      const drivers = await DriversAPI.getDrivers();
-      console.log('All drivers:', drivers);
-      setDrivers(drivers);
+      const res = await client.get('/drivers');
+      console.log('All drivers:', res.data);
+      setDrivers(res.data);
     } catch (e) {
       setError(e.response?.data?.error || 'Failed to fetch drivers');
     } finally {
@@ -89,13 +89,13 @@ function DriverManagement() {
       
       console.log('Submitting driver data:', submitData);
       if (editingDriver) {
-        const response = await DriversAPI.updateDriver(editingDriver._id, submitData);
-        console.log('Update response:', response);
+        const response = await client.put(`/drivers/${editingDriver._id}`, submitData);
+        console.log('Update response:', response.data);
         setSuccess('Driver updated successfully');
       } else {
         console.log('Creating new driver with data:', submitData);
-        const response = await DriversAPI.createDriver(submitData);
-        console.log('Create response:', response);
+        const response = await client.post('/drivers', submitData);
+        console.log('Create response:', response.data);
         setSuccess('Driver added successfully');
       }
       
@@ -118,7 +118,7 @@ function DriverManagement() {
     setSuccess('');
 
     try {
-      await DriversAPI.deleteDriver(id);
+      await client.delete(`/drivers/${id}`);
       setSuccess('Driver deleted successfully');
       await fetchDrivers();
     } catch (e) {
@@ -237,10 +237,12 @@ function DriverManagement() {
   const downloadDriversPDF = async () => {
     try {
       setLoading(true);
-      const response = await DriversAPI.downloadDriversPDF();
+      const response = await client.get('/drivers/pdf', {
+        responseType: 'blob'
+      });
       
       // Create blob link to download
-      const url = window.URL.createObjectURL(new Blob([response]));
+      const url = window.URL.createObjectURL(new Blob([response.data]));
       const link = document.createElement('a');
       link.href = url;
       link.setAttribute('download', 'drivers-report.pdf');
