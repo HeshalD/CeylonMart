@@ -17,10 +17,6 @@ const Reports = () => {
   const [generatedReport, setGeneratedReport] = useState(null);
   const [noteAboutDateFiltering, setNoteAboutDateFiltering] = useState("");
 
-  const highlightHeaderColors = [
-    "#e0f7fa", "#f1f8e9", "#fff9c4", "#ffe0b2", "#f8bbd0", "#d1c4e9"
-  ];
-
   useEffect(() => {
     const fetchCategories = async () => {
       try {
@@ -205,10 +201,11 @@ const Reports = () => {
       // Create beautiful PDF content with proper styling
       let htmlContent = `
         <div style="font-family: Arial, sans-serif; background: white;">
-          <div style="text-align: center; margin-bottom: 30px; border-bottom: 3px solid #059669; padding-bottom: 20px;">
-            <h1 style="color: #1f2937; margin: 0; font-size: 28px; font-weight: bold;">📊 Inventory Summary Report</h1>
-            <p style="color: #6b7280; margin: 10px 0; font-size: 14px;">Generated on: ${new Date(generatedAt).toLocaleDateString()} at ${new Date(generatedAt).toLocaleTimeString()}</p>
-            <p style="color: #059669; margin: 0; font-size: 16px; font-weight: 600;">Date Range: ${dateFromLabel} - ${dateToLabel}</p>
+          <div style="text-align: center; margin-bottom: 20px; padding: 15px; background: linear-gradient(to right, #059669, #0d9488, #0891b2); color: white; border-radius: 8px;">
+            <h1 style="font-size: 24px; margin-bottom: 5px; text-shadow: 1px 1px 2px rgba(0,0,0,0.3);">CeylonMart</h1>
+            <h2 style="font-size: 22px; margin-bottom: 8px; font-weight: 500;">📊 Inventory Summary Report</h2>
+            <p style="font-size: 14px; margin-bottom: 5px;">Generated on: ${new Date(generatedAt).toLocaleDateString()} at ${new Date(generatedAt).toLocaleTimeString()}</p>
+            <p style="font-size: 14px; margin: 0;">Date Range: ${dateFromLabel} - ${dateToLabel}</p>
           </div>
           
           <div style="margin-bottom: 25px; background: #f8fafc; padding: 15px; border-radius: 8px; border-left: 4px solid #059669;">
@@ -320,8 +317,8 @@ const Reports = () => {
       // Clean up
       document.body.removeChild(pdfContainer);
 
-      // Download PDF
-      const fileName = `Inventory_Summary_Report_${dateFromLabel.replace(/\//g, '-')}_to_${dateToLabel.replace(/\//g, '-')}.pdf`;
+      // Download PDF with CeylonMart in the filename
+      const fileName = `CeylonMart_Inventory_Summary_Report_${dateFromLabel.replace(/\//g, '-')}_to_${dateToLabel.replace(/\//g, '-')}.pdf`;
       pdf.save(fileName);
       
       alert('PDF report downloaded successfully!');
@@ -440,8 +437,6 @@ const Reports = () => {
           ) : (
             Object.keys(generatedReport.rowsByCategory).map((cat, idx) => {
               const rows = generatedReport.rowsByCategory[cat];
-              const highlight = highlightHeaderColors[idx % highlightHeaderColors.length];
-
               return (
                 <div key={cat} className={`bg-white rounded-lg shadow-sm border p-4 mb-6`}>
                   <h4 className="mb-3 text-lg font-semibold text-gray-900">{cat} — {rows.length} product(s)</h4>
