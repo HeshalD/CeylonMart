@@ -51,6 +51,29 @@ const Shop = () => {
   const [showQtyModal, setShowQtyModal] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [quantity, setQuantity] = useState(0);
+  const [showDetailsModal, setShowDetailsModal] = useState(false);
+  const [currentDescriptionIndex, setCurrentDescriptionIndex] = useState(0);
+
+  // Beautiful descriptions about CeylonMart products
+  const descriptions = [
+    "Discover the finest Sri Lankan products, handpicked for quality and authenticity",
+    "From traditional spices to modern essentials, we bring Ceylon's best to your doorstep",
+    "Experience the taste of Lanka with our premium selection of local delicacies",
+    "Fresh, organic, and sustainably sourced products from Sri Lanka's finest producers",
+    "Connecting you with the rich heritage and flavors of Ceylon through every product",
+    "Quality you can trust, delivered with care from our family to yours"
+  ];
+
+  // Rotate descriptions every 5 seconds
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentDescriptionIndex(prevIndex => 
+        prevIndex === descriptions.length - 1 ? 0 : prevIndex + 1
+      );
+    }, 5000);
+
+    return () => clearInterval(interval);
+  }, [descriptions.length]);
 
   useEffect(() => {
     let mounted = true;
@@ -232,14 +255,36 @@ setCart(updatedCart);
     <div className="min-h-screen bg-gray-50">
       <Header />
 
-      {/* Navigation Bar */}
-      <div className="bg-white border-b border-gray-200 shadow-sm">
-        <div className="px-4 py-4 mx-auto max-w-7xl sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">CeylonMart Shop</h1>
-              <p className="text-gray-600">Fresh products at your fingertips</p>
-            </div>
+      {/* Rotating Product Descriptions */}
+      <div 
+        className="py-8 mt-4 bg-center bg-no-repeat bg-cover shadow-lg"
+        style={{ 
+          backgroundImage: "url('/banner.jpg')",
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+          backgroundRepeat: "no-repeat"
+        }}
+      >
+        <div className="px-4 mx-auto max-w-7xl sm:px-6 lg:px-8">
+          <div className="text-center min-h-[120px] flex items-center justify-center">
+            <p className="text-3xl font-bold leading-tight text-white md:text-4xl">
+              {descriptions[currentDescriptionIndex]}
+            </p>
+          </div>
+          {/* Dots indicator */}
+          <div className="flex justify-center mt-6 space-x-3">
+            {descriptions.map((_, index) => (
+              <button
+                key={index}
+                onClick={() => setCurrentDescriptionIndex(index)}
+                className={`w-4 h-4 rounded-full transition-all duration-300 transform hover:scale-125 ${
+                  index === currentDescriptionIndex
+                    ? 'bg-white scale-125'
+                    : 'bg-white/50'
+                }`}
+                aria-label={`Go to slide ${index + 1}`}
+              />
+            ))}
           </div>
         </div>
       </div>
@@ -455,13 +500,10 @@ setCart(updatedCart);
                           Add to cart
                         </button>
                         <button
-                          onClick={() =>
-                            alert(
-                              `${p.productName ?? p.name}\n\nPrice: ${formatPrice(
-                                p.price
-                              )}\nCategory: ${p.category}\nStock: ${p.currentStock}`
-                            )
-                          }
+                          onClick={() => {
+                            setSelectedProduct(p);
+                            setShowDetailsModal(true);
+                          }}
                           className="px-3 py-2 text-sm text-gray-700 transition border-2 border-gray-300 rounded hover:bg-gray-100"
                         >
                           Details
@@ -478,7 +520,7 @@ setCart(updatedCart);
       
       <Footer />
       {toast && (
-        <div className="fixed bottom-6 right-6 z-50 p-4 bg-emerald-500 text-white rounded-lg shadow-lg border border-emerald-600 transform transition-all duration-300 ease-in-out animate-pulse">
+        <div className="fixed z-50 p-4 text-white transition-all duration-300 ease-in-out transform border rounded-lg shadow-lg bottom-6 right-6 bg-emerald-500 border-emerald-600 animate-pulse">
           <div className="flex items-center gap-3">
             <svg className="w-5 h-5 text-emerald-100" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
@@ -488,8 +530,121 @@ setCart(updatedCart);
         </div>
       )}
 
+      {/* 🔹 Product Details Modal */}
+      {showDetailsModal && selectedProduct && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="w-full max-w-2xl p-6 bg-white shadow-2xl rounded-xl">
+            <div className="flex items-center justify-between pb-4 mb-4 border-b border-gray-200">
+              <h3 className="text-2xl font-bold text-gray-800">Product Details</h3>
+              <button 
+                onClick={() => setShowDetailsModal(false)}
+                className="text-gray-500 transition-colors hover:text-gray-700"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+              <div className="flex items-center justify-center h-64 p-4 rounded-lg bg-gray-50">
+                {selectedProduct.productImage ? (
+                  <img
+                    src={`http://localhost:5000/uploads/${selectedProduct.productImage}`}
+                    alt={selectedProduct.productName ?? selectedProduct.name}
+                    className="object-contain max-h-56"
+                  />
+                ) : (
+                  <div className="text-center text-gray-400">
+                    <svg className="w-16 h-16 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                    <p>No image available</p>
+                  </div>
+                )}
+              </div>
+              
+              <div>
+                <h2 className="mb-2 text-2xl font-bold text-gray-900">
+                  {selectedProduct.productName ?? selectedProduct.name}
+                </h2>
+                
+                <div className="mb-4">
+                  <Stars rating={4} />
+                </div>
+                
+                <div className="space-y-3">
+                  <div className="flex justify-between py-2 border-b border-gray-100">
+                    <span className="font-medium text-gray-600">Category:</span>
+                    <span className="text-gray-800">{selectedProduct.category || "Not specified"}</span>
+                  </div>
+                  
+                  <div className="flex justify-between py-2 border-b border-gray-100">
+                    <span className="font-medium text-gray-600">Brand:</span>
+                    <span className="text-gray-800">{selectedProduct.brandName || "Not specified"}</span>
+                  </div>
+                  
+                  <div className="flex justify-between py-2 border-b border-gray-100">
+                    <span className="font-medium text-gray-600">Unit Type:</span>
+                    <span className="text-gray-800">{selectedProduct.unitType || "Not specified"}</span>
+                  </div>
+                  
+                  <div className="flex justify-between py-2 border-b border-gray-100">
+                    <span className="font-medium text-gray-600">Price:</span>
+                    <span className="text-xl font-bold text-green-600">{formatPrice(selectedProduct.price)}</span>
+                  </div>
+                  
+                  <div className="flex justify-between py-2">
+                    <span className="font-medium text-gray-600">Stock Status:</span>
+                    <span className={`px-2 py-1 rounded text-sm font-medium ${getStatusLabel(selectedProduct).color}`}>
+                      {getStatusLabel(selectedProduct).label}
+                    </span>
+                  </div>
+                  
+                  {/* Show available quantity only for low stock products */}
+                  {(() => {
+                    const current = Number(selectedProduct.currentStock ?? 0);
+                    const min = Number(selectedProduct.minimumStockLevel ?? selectedProduct.minStock ?? 0);
+                    const isLowStock = current > 0 && current <= min;
+                    
+                    return isLowStock ? (
+                      <div className="flex justify-between p-3 py-2 border border-yellow-200 rounded-lg bg-yellow-50">
+                        <span className="font-medium text-yellow-800">Available Quantity:</span>
+                        <span className="font-semibold text-yellow-800">{selectedProduct.currentStock || 0} units remaining</span>
+                      </div>
+                    ) : null;
+                  })()}
+                </div>
+              </div>
+            </div>
+            
+            <div className="flex flex-col gap-3 mt-6 sm:flex-row">
+              <button
+                disabled={Number(selectedProduct.currentStock ?? 0) <= 0}
+                onClick={() => {
+                  setShowDetailsModal(false);
+                  addToCart(selectedProduct);
+                }}
+                className={`flex-1 px-4 py-3 text-base font-semibold rounded-lg transition ${
+                  Number(selectedProduct.currentStock ?? 0) <= 0
+                    ? "bg-gray-300 text-gray-600 cursor-not-allowed"
+                    : "bg-emerald-600 text-white hover:bg-emerald-700 shadow-md hover:shadow-lg"
+                }`}
+              >
+                {Number(selectedProduct.currentStock ?? 0) <= 0 ? "Out of Stock" : "Add to Cart"}
+              </button>
+              <button
+                onClick={() => setShowDetailsModal(false)}
+                className="flex-1 px-4 py-3 text-base font-semibold text-gray-700 transition bg-white border-2 border-gray-300 rounded-lg hover:bg-gray-50"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
-       {/* 🔹 Quantity Selection Modal */}
+      {/* 🔹 Quantity Selection Modal */}
       {showQtyModal && selectedProduct && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
           <div className="w-full max-w-md p-6 bg-white shadow-lg rounded-xl">
