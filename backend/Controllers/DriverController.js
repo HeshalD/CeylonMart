@@ -21,7 +21,7 @@ const createDriver = async (req, res) => {
 const getDrivers = async (req, res) => {
   try {
     console.log('Fetching all drivers...');
-    const drivers = await Driver.find({ isDeleted: { $ne: true } });
+    const drivers = await Driver.find();
     console.log('Found drivers:', drivers.length);
     res.json(drivers);
   } catch (error) {
@@ -34,7 +34,6 @@ const getDrivers = async (req, res) => {
 const getAvailableDrivers = async (req, res) => {
   try {
     const drivers = await Driver.find({ 
-      isDeleted: { $ne: true },
       availability: 'available'
     });
     res.json(drivers);
@@ -46,10 +45,7 @@ const getAvailableDrivers = async (req, res) => {
 // Get driver by ID
 const getDriverById = async (req, res) => {
   try {
-    const driver = await Driver.findOne({ 
-      _id: req.params.id, 
-      isDeleted: { $ne: true } 
-    });
+    const driver = await Driver.findById(req.params.id);
     if (!driver) {
       return res.status(404).json({ error: "Driver not found" });
     }
@@ -117,10 +113,7 @@ const getDriverHistory = async (req, res) => {
     const { status } = req.query;
     
     // Check if driver exists
-    const driver = await Driver.findOne({ 
-      _id: id, 
-      isDeleted: { $ne: true } 
-    });
+    const driver = await Driver.findById(id);
     
     if (!driver) {
       return res.status(404).json({ error: "Driver not found" });
@@ -128,8 +121,7 @@ const getDriverHistory = async (req, res) => {
 
     // Build query for orders assigned to this driver
     let query = { 
-      driverId: id, 
-      isDeleted: { $ne: true } 
+      driverId: id
     };
 
     // Filter by status if provided
@@ -158,14 +150,10 @@ const getDriverHistory = async (req, res) => {
   }
 };
 
-// Soft delete driver
+// Delete driver
 const deleteDriver = async (req, res) => {
   try {
-    const driver = await Driver.findByIdAndUpdate(
-      req.params.id,
-      { isDeleted: true },
-      { new: true }
-    );
+    const driver = await Driver.findByIdAndDelete(req.params.id);
     if (!driver) {
       return res.status(404).json({ error: "Driver not found" });
     }
@@ -179,7 +167,7 @@ const deleteDriver = async (req, res) => {
 const downloadDriversPDF = async (req, res) => {
   try {
     // Get all drivers and sort alphabetically by first name
-    const drivers = await Driver.find({ isDeleted: { $ne: true } })
+    const drivers = await Driver.find()
       .sort({ firstName: 1, lastName: 1 });
 
     if (drivers.length === 0) {

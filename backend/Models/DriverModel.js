@@ -13,8 +13,7 @@ const DriverSchema = new mongoose.Schema({
   availability: { type: String, enum: ['available', 'busy', 'unavailable'], default: 'available' },
   completedDeliveries: { type: Number, default: 0 },
   rating: { type: Number, default: 0, min: 0, max: 5 },
-  status: { type: String, enum: ["active", "inactive", "on_leave"], default: "active" },
-  isDeleted: { type: Boolean, default: false } 
+  status: { type: String, enum: ["active", "inactive", "on_leave"], default: "active" }
 }, { timestamps: true });
 
 module.exports = mongoose.model("Driver", DriverSchema);
