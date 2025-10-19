@@ -12,6 +12,7 @@ router.post(
   body("amount").isFloat({ min: 0 }),
   body("paymentMethod").isIn(["credit_card", "debit_card", "paypal", "stripe", "cash_on_delivery"]),
   body("email").optional({ nullable: true }).isEmail().normalizeEmail(), // Make email optional and normalize it
+  body("transactionId").notEmpty().withMessage("Transaction ID is required"), // Add transactionId validation
   ctrl.createPayment
 );
 

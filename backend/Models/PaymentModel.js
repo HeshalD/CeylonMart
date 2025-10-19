@@ -28,7 +28,7 @@ const PaymentSchema = new mongoose.Schema({
   },
   transactionId: {
     type: String,
-    required: false, // Assigned by payment gateway
+    required: true, // Required for all payments
     unique: true,
     sparse: true
   },

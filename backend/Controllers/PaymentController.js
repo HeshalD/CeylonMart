@@ -74,6 +74,28 @@ exports.createPayment = async (req, res) => {
     res.status(201).json(payment);
   } catch (e) {
     console.error("[createPayment] Error:", e);
+    
+    // Handle specific MongoDB errors
+    if (e.name === 'ValidationError') {
+      const errors = Object.values(e.errors).map(err => ({
+        field: err.path,
+        message: err.message
+      }));
+      return res.status(400).json({ 
+        message: "Validation failed", 
+        errors: errors 
+      });
+    }
+    
+    if (e.code === 11000) {
+      // Duplicate key error (unique constraint violation)
+      const field = Object.keys(e.keyPattern)[0];
+      return res.status(400).json({ 
+        message: `${field} already exists`, 
+        error: e.message 
+      });
+    }
+    
     res.status(500).json({ message: "Server error", error: e.message });
   }
 };

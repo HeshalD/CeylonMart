@@ -177,7 +177,8 @@ export default function CheckoutPage({ customerId }) {
         paymentMethod,
         email,
         district,
-        status: "successful" // Always set to successful to immediately decrease stock
+        status: "successful", // Always set to successful to immediately decrease stock
+        transactionId: `TXN_${Date.now()}_${Math.random().toString(36).substr(2, 9)}` // Generate unique transaction ID
       });
       console.log('Payment created:', payment);
       
