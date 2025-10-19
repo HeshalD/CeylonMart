@@ -12,6 +12,7 @@ router.post("/login", userController.loginUser);
 router.get("/", verifyToken, isAdmin, userController.getAllUsers);
 router.get("/:id", verifyToken, userController.getUserById);
 router.put("/:id", verifyToken, isSelfOrAdmin, userController.updateUser);
+router.put("/:id/password", verifyToken, isSelfOrAdmin, userController.changePassword);
 router.delete("/:id", verifyToken, isAdmin, userController.deleteUser);
 
 module.exports = router;

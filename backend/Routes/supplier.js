@@ -1,7 +1,7 @@
 const express = require('express');
 const Notification = require('../Models/Notification');
 const Message = require('../Models/Message');
-const { auth } = require('../middleware/auth');
+const { auth } = require('../Middleware/auth');
 
 const router = express.Router();
 
@@ -49,7 +49,11 @@ router.post('/reply/:id', async (req, res) => {
     const { id } = req.params;
     const { title, content } = req.body;
     if (!title || !content) return res.status(400).json({ message: 'Missing fields' });
+    // Persist in Messages (admin thread)
     const msg = await Message.create({ supplierId: id, sender: 'supplier', title, content });
+    // Also persist a Notification record for visibility in notifications collection
+    // This mirrors admin send-notification behavior (which also mirrors into Messages)
+    await Notification.create({ supplierId: id, title, message: content });
     return res.status(201).json(msg);
   } catch (err) {
     return res.status(500).json({ message: 'Failed to send reply' });

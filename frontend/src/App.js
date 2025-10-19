@@ -5,13 +5,13 @@ import ForgotPassword from "./Pages/ForgotPassword";
 import ResetPassword from "./Pages/ResetPassword";
 import Profile from "./Pages/Profile";
 import AccountSettings from "./Pages/AccountSettings";
+import UserOTPVerification from "./Pages/UserOTPVerification";
 import ProtectedRoute from "./components/ProtectedRoute";
 import ScrollToTop from "./components/ScrollToTop";
 
 import CustomerDashboard from "./Pages/dashboards/CustomerDashboard";
 import AdminDashboard from "./Pages/dashboards/AdminDashboard";
 import ShopDashboard from "./Pages/dashboards/ShopDashboard";
-import SupplierDashboard from "./Pages/dashboards/SupplierDashboard";
 import DeliveryDashboard from "./Pages/dashboards/DeliveryDashboard";
 
 //Chanula's pages
@@ -70,6 +70,7 @@ function App() {
         <Route path="/" element={<HomePage />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+        <Route path="/user-otp-verification" element={<UserOTPVerification />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/about" element={<AboutUsPage />} />
@@ -150,7 +151,7 @@ function App() {
           path="/dashboard/customer"
           element={
             <ProtectedRoute requiredRole="customer">
-              <CustomerDashboard />
+              <AdminDashboard />
             </ProtectedRoute>
           }
         />
@@ -174,7 +175,7 @@ function App() {
           path="/dashboard/supplier"
           element={
             <ProtectedRoute requiredRole="supplier_admin">
-              <SupplierDashboard />
+              <SupplierAdminDashboard />
             </ProtectedRoute>
           }
         />
