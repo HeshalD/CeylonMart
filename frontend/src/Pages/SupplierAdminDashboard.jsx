@@ -1,9 +1,9 @@
-import React, { useMemo, useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { supplierAPI, notificationAPI } from '../api';
-import NotificationBell from '../components/NotificationBell';
-import Header from '../Header';
-import Footer from '../Footer';
+import React, { useMemo, useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { supplierAPI, notificationAPI } from "../api";
+import NotificationBell from "../components/NotificationBell";
+import Header from "../Header";
+import Footer from "../Footer";
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
@@ -11,14 +11,25 @@ const AdminDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [actionLoading, setActionLoading] = useState(null);
-  const [query, setQuery] = useState('');
+  const [query, setQuery] = useState("");
   const [groupByCategory, setGroupByCategory] = useState(false);
   const [inventoryAlerts, setInventoryAlerts] = useState([]);
   const [deletedCount, setDeletedCount] = useState(0);
+  const [reorderRequests, setReorderRequests] = useState([]);
+  const [showRejectModal, setShowRejectModal] = useState(false);
+  const [rejectReason, setRejectReason] = useState("");
+  const [currentRequest, setCurrentRequest] = useState(null);
 
   useEffect(() => {
     fetchSuppliers();
+    fetchReorderRequests();
   }, []);
+
+  const fetchReorderRequests = () => {
+    // Get reorder requests from localStorage for demo
+    const requests = JSON.parse(localStorage.getItem('reorderRequests') || '[]');
+    setReorderRequests(requests);
+  };
 
   const fetchSuppliers = async () => {
     try {
@@ -28,22 +39,27 @@ const AdminDashboard = () => {
       setDeletedCount(0); // Reset deleted count when fetching fresh data
       setError(null);
     } catch (err) {
-      console.error('Error fetching suppliers:', err);
-      setError('Failed to fetch suppliers');
+      console.error("Error fetching suppliers:", err);
+      setError("Failed to fetch suppliers");
     } finally {
       setLoading(false);
     }
   };
 
   const handleStatusUpdate = async (id, newStatus) => {
-    const isApprove = newStatus === 'approved';
-    const statusText = isApprove ? 'approve' : 'reject & delete';
-    if (!window.confirm(`Are you sure you want to ${statusText} this supplier?`)) return;
+    const isApprove = newStatus === "approved";
+    const statusText = isApprove ? "approve" : "reject & delete";
+    if (
+      !window.confirm(`Are you sure you want to ${statusText} this supplier?`)
+    )
+      return;
     try {
       setActionLoading(id);
       if (isApprove) {
         await supplierAPI.approveSupplier(id);
-        setSuppliers((prev) => prev.map((s) => (s._id === id ? { ...s, status: newStatus } : s)));
+        setSuppliers((prev) =>
+          prev.map((s) => (s._id === id ? { ...s, status: newStatus } : s))
+        );
       } else {
         // On reject, delete supplier entirely
         await supplierAPI.deleteSupplier(id);
@@ -51,7 +67,7 @@ const AdminDashboard = () => {
         setDeletedCount((prev) => prev + 1);
       }
     } catch (err) {
-      setError(`Failed to ${isApprove ? 'approve' : 'reject/delete'} supplier`);
+      setError(`Failed to ${isApprove ? "approve" : "reject/delete"} supplier`);
     } finally {
       setActionLoading(null);
     }
@@ -59,28 +75,37 @@ const AdminDashboard = () => {
 
   const handleQuickMessage = async (supplier) => {
     try {
-      const title = window.prompt('Title for message', 'Admin Message');
+      const title = window.prompt("Title for message", "Admin Message");
       if (title === null) return;
-      const message = window.prompt('Enter message to send to: ' + (supplier.companyName || supplier.contactName));
+      const message = window.prompt(
+        "Enter message to send to: " +
+          (supplier.companyName || supplier.contactName)
+      );
       if (!message) return;
-      await notificationAPI.sendToSupplier({ supplierId: supplier._id, title, message });
+      await notificationAPI.sendToSupplier({
+        supplierId: supplier._id,
+        title,
+        message,
+      });
       // optional: lightweight feedback
-      alert('Message sent');
+      alert("Message sent");
     } catch (err) {
-      alert('Failed to send message');
+      alert("Failed to send message");
     }
   };
   const getStatusBadge = (status) => {
     const statusConfig = {
-      pending: { color: 'bg-yellow-100 text-yellow-800', text: 'Pending' },
-      approved: { color: 'bg-green-100 text-green-800', text: 'Approved' },
-      rejected: { color: 'bg-red-100 text-red-800', text: 'Rejected' }
+      pending: { color: "bg-yellow-100 text-yellow-800", text: "Pending" },
+      approved: { color: "bg-green-100 text-green-800", text: "Approved" },
+      rejected: { color: "bg-red-100 text-red-800", text: "Rejected" },
     };
-    
+
     const config = statusConfig[status] || statusConfig.pending;
-    
+
     return (
-      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${config.color}`}>
+      <span
+        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${config.color}`}
+      >
         {config.text}
       </span>
     );
@@ -90,10 +115,14 @@ const AdminDashboard = () => {
     const q = query.trim().toLowerCase();
     if (!q) return suppliers;
     return suppliers.filter((s) => {
-      const company = s.companyName?.toLowerCase() || '';
-      const contact = s.contactName?.toLowerCase() || '';
-      const categoryStr = Array.isArray(s.categories) ? s.categories.join(' ').toLowerCase() : (s.categories || '').toLowerCase();
-      const productsStr = Array.isArray(s.products) ? s.products.join(' ').toLowerCase() : (s.products || '').toLowerCase();
+      const company = s.companyName?.toLowerCase() || "";
+      const contact = s.contactName?.toLowerCase() || "";
+      const categoryStr = Array.isArray(s.categories)
+        ? s.categories.join(" ").toLowerCase()
+        : (s.categories || "").toLowerCase();
+      const productsStr = Array.isArray(s.products)
+        ? s.products.join(" ").toLowerCase()
+        : (s.products || "").toLowerCase();
       return (
         company.includes(q) ||
         contact.includes(q) ||
@@ -104,15 +133,17 @@ const AdminDashboard = () => {
   }, [query, suppliers]);
 
   const approvedFilteredSuppliers = useMemo(() => {
-    return filteredSuppliers.filter((s) => s.status === 'approved');
+    return filteredSuppliers.filter((s) => s.status === "approved");
   }, [filteredSuppliers]);
 
   const groupedByCategory = useMemo(() => {
     const map = {};
     approvedFilteredSuppliers.forEach((s) => {
-      const cats = Array.isArray(s.categories) ? s.categories : [s.categories || 'Uncategorized'];
+      const cats = Array.isArray(s.categories)
+        ? s.categories
+        : [s.categories || "Uncategorized"];
       cats.forEach((c) => {
-        const key = c || 'Uncategorized';
+        const key = c || "Uncategorized";
         if (!map[key]) map[key] = [];
         map[key].push(s);
       });
@@ -132,18 +163,62 @@ const AdminDashboard = () => {
     );
   }
 
+  const handleApproveReorder = (index) => {
+    const updatedRequests = [...reorderRequests];
+    updatedRequests[index].status = 'approved';
+    updatedRequests[index].approvedAt = new Date().toISOString();
+    setReorderRequests(updatedRequests);
+    
+    // Update localStorage
+    localStorage.setItem('reorderRequests', JSON.stringify(updatedRequests));
+    
+    // Add notification for the approval
+    alert(`Reorder request for ${updatedRequests[index].product} has been approved.`);
+  };
+
+  const handleRejectReorder = (index) => {
+    setCurrentRequest(index);
+    setShowRejectModal(true);
+  };
+
+  const confirmRejectReorder = () => {
+    if (!rejectReason.trim()) {
+      alert("Please provide a reason for rejection.");
+      return;
+    }
+    
+    const updatedRequests = [...reorderRequests];
+    updatedRequests[currentRequest].status = 'rejected';
+    updatedRequests[currentRequest].rejectedAt = new Date().toISOString();
+    updatedRequests[currentRequest].rejectReason = rejectReason;
+    setReorderRequests(updatedRequests);
+    
+    // Update localStorage
+    localStorage.setItem('reorderRequests', JSON.stringify(updatedRequests));
+    
+    // Add notification for the rejection
+    alert(`Reorder request for ${updatedRequests[currentRequest].product} has been rejected.`);
+    
+    // Close modal and reset
+    setShowRejectModal(false);
+    setRejectReason("");
+    setCurrentRequest(null);
+  };
+
   return (
     <div>
+      <Header />
       <div className="container mx-auto px-4 py-8">
-        {/* Header */}
         <div className="flex justify-between items-center mb-6">
           <div className="flex items-center gap-3">
-            <h1 className="text-3xl font-bold text-gray-800">Admin Dashboard</h1>
+            <h1 className="text-3xl font-bold text-gray-800">
+              Admin Dashboard
+            </h1>
             <p className="text-gray-600 mt-1">Manage supplier approvals</p>
           </div>
           <div className="flex items-center gap-3">
-            {/* Admin inbox bell (supplier -> admin messages) */}
-            <NotificationBell adminMode />
+            {/* Admin inbox bell (supplier -> admin messages) - force admin mode on this admin page */}
+            <NotificationBell adminMode={true} />
           </div>
         </div>
 
@@ -158,13 +233,25 @@ const AdminDashboard = () => {
           <div className="bg-white p-6 rounded-lg shadow">
             <div className="flex items-center">
               <div className="p-2 bg-blue-100 rounded-lg">
-                <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                <svg
+                  className="w-6 h-6 text-blue-600"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
+                  />
                 </svg>
               </div>
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">Total</p>
-                <p className="text-2xl font-semibold text-gray-900">{suppliers.length + deletedCount}</p>
+                <p className="text-2xl font-semibold text-gray-900">
+                  {suppliers.length + deletedCount}
+                </p>
               </div>
             </div>
           </div>
@@ -172,14 +259,24 @@ const AdminDashboard = () => {
           <div className="bg-white p-6 rounded-lg shadow">
             <div className="flex items-center">
               <div className="p-2 bg-yellow-100 rounded-lg">
-                <svg className="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                <svg
+                  className="w-6 h-6 text-yellow-600"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
                 </svg>
               </div>
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">Pending</p>
                 <p className="text-2xl font-semibold text-gray-900">
-                  {suppliers.filter(s => s.status === 'pending').length}
+                  {suppliers.filter((s) => s.status === "pending").length}
                 </p>
               </div>
             </div>
@@ -188,14 +285,24 @@ const AdminDashboard = () => {
           <div className="bg-white p-6 rounded-lg shadow">
             <div className="flex items-center">
               <div className="p-2 bg-green-100 rounded-lg">
-                <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                <svg
+                  className="w-6 h-6 text-green-600"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M5 13l4 4L19 7"
+                  />
                 </svg>
               </div>
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">Approved</p>
                 <p className="text-2xl font-semibold text-gray-900">
-                  {suppliers.filter(s => s.status === 'approved').length}
+                  {suppliers.filter((s) => s.status === "approved").length}
                 </p>
               </div>
             </div>
@@ -204,40 +311,138 @@ const AdminDashboard = () => {
           <div className="bg-white p-6 rounded-lg shadow">
             <div className="flex items-center">
               <div className="p-2 bg-red-100 rounded-lg">
-                <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                <svg
+                  className="w-6 h-6 text-red-600"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
                 </svg>
               </div>
               <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Rejected & Deleted</p>
+                <p className="text-sm font-medium text-gray-600">
+                  Rejected & Deleted
+                </p>
                 <p className="text-2xl font-semibold text-gray-900">
                   {deletedCount}
                 </p>
               </div>
             </div>
           </div>
+
+          <div className="bg-white p-6 rounded-lg shadow">
+            <div className="flex items-center">
+              <div className="p-2 bg-purple-100 rounded-lg">
+                <svg
+                  className="w-6 h-6 text-purple-600"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
+                  />
+                </svg>
+              </div>
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-600">Reorder Requests</p>
+                <p className="text-2xl font-semibold text-gray-900">
+                  {reorderRequests.filter(r => r.status === 'pending').length}
+                </p>
+              </div>
+            </div>
+          </div>
         </div>
 
-        {/* Inventory Alerts (placeholder UI) */}
+        {/* Inventory Alerts with Reorder Requests */}
         <div className="bg-white p-6 rounded-lg shadow mb-8">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-gray-800">Inventory Alerts</h2>
-            <span className="text-sm text-gray-500">{inventoryAlerts.length} alerts</span>
+            <h2 className="text-lg font-semibold text-gray-800">
+              Inventory Alerts & Reorder Requests
+            </h2>
+            <span className="text-sm text-gray-500">
+              {reorderRequests.length} requests
+            </span>
           </div>
-          {inventoryAlerts.length === 0 ? (
-            <div className="text-sm text-gray-600">No inventory alerts right now.</div>
+          {reorderRequests.length === 0 ? (
+            <div className="text-sm text-gray-600">
+              No inventory alerts or reorder requests right now.
+            </div>
           ) : (
-            <ul className="divide-y divide-gray-200">
-              {inventoryAlerts.map((a) => (
-                <li key={a.id} className="py-3 flex items-start justify-between">
-                  <div>
-                    <div className="font-medium text-gray-900">{a.title}</div>
-                    <div className="text-sm text-gray-600">{a.description}</div>
+            <div className="space-y-4">
+              {reorderRequests.map((request, index) => (
+                <div 
+                  key={index} 
+                  className={`p-4 rounded-lg border-l-4 ${
+                    request.status === 'approved' 
+                      ? 'border-l-green-500 bg-green-50' 
+                      : request.status === 'rejected' 
+                        ? 'border-l-red-500 bg-red-50' 
+                        : 'border-l-yellow-500 bg-yellow-50'
+                  }`}
+                >
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <div className="font-medium text-gray-900">
+                        {request.product}
+                      </div>
+                      <div className="text-sm text-gray-700 mt-1">
+                        Quantity: {request.quantity} | Required by: {new Date(request.requiredDate).toLocaleDateString()}
+                      </div>
+                      <div className="text-xs text-gray-500 mt-1">
+                        Requested on: {new Date(request.createdAt).toLocaleString()}
+                      </div>
+                      {request.notes && (
+                        <div className="text-xs text-gray-600 mt-1">
+                          Notes: {request.notes}
+                        </div>
+                      )}
+                      {request.status === 'rejected' && request.rejectReason && (
+                        <div className="text-xs text-red-600 mt-1">
+                          Rejection reason: {request.rejectReason}
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex flex-col items-end">
+                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                        request.status === 'approved' 
+                          ? 'bg-green-100 text-green-800' 
+                          : request.status === 'rejected' 
+                            ? 'bg-red-100 text-red-800' 
+                            : 'bg-yellow-100 text-yellow-800'
+                      }`}>
+                        {request.status.charAt(0).toUpperCase() + request.status.slice(1)}
+                      </span>
+                      {request.status === 'pending' && (
+                        <div className="flex gap-2 mt-2">
+                          <button
+                            onClick={() => handleApproveReorder(index)}
+                            className="text-xs bg-green-500 hover:bg-green-600 text-white px-2 py-1 rounded"
+                          >
+                            Approve
+                          </button>
+                          <button
+                            onClick={() => handleRejectReorder(index)}
+                            className="text-xs bg-red-500 hover:bg-red-600 text-white px-2 py-1 rounded"
+                          >
+                            Reject
+                          </button>
+                        </div>
+                      )}
+                    </div>
                   </div>
-                  <span className="text-xs text-gray-500">{a.time}</span>
-                </li>
+                </div>
               ))}
-            </ul>
+            </div>
           )}
         </div>
 
@@ -257,14 +462,20 @@ const AdminDashboard = () => {
                 onClick={() => setGroupByCategory((v) => !v)}
                 className="bg-indigo-500 hover:bg-indigo-600 text-white font-semibold px-4 py-2 rounded-md"
               >
-                {groupByCategory ? 'Show Table' : 'Sort By Category'}
+                {groupByCategory ? "Show Table" : "Sort By Category"}
               </button>
             </div>
           </div>
 
-          {(groupByCategory ? approvedFilteredSuppliers.length === 0 : filteredSuppliers.length === 0) ? (
+          {(
+            groupByCategory
+              ? approvedFilteredSuppliers.length === 0
+              : filteredSuppliers.length === 0
+          ) ? (
             <div className="text-center py-12">
-              <div className="text-gray-500 text-lg mb-4">No suppliers found</div>
+              <div className="text-gray-500 text-lg mb-4">
+                No suppliers found
+              </div>
             </div>
           ) : (
             <div className="overflow-x-auto">
@@ -272,30 +483,52 @@ const AdminDashboard = () => {
                 <table className="min-w-full divide-y divide-gray-200">
                   <thead className="bg-gray-50">
                     <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Company</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Contact</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Phone</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Company
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Contact
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Email
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Phone
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Status
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Actions
+                      </th>
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
                     {filteredSuppliers.map((supplier) => (
                       <tr key={supplier._id} className="hover:bg-gray-50">
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm font-medium text-gray-900">{supplier.companyName}</div>
+                          <div className="text-sm font-medium text-gray-900">
+                            {supplier.companyName}
+                          </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm text-gray-900">{supplier.contactName}</div>
+                          <div className="text-sm text-gray-900">
+                            {supplier.contactName}
+                          </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm text-gray-900">{supplier.email}</div>
+                          <div className="text-sm text-gray-900">
+                            {supplier.email}
+                          </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm text-gray-900">{supplier.phone}</div>
+                          <div className="text-sm text-gray-900">
+                            {supplier.phone}
+                          </div>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap">{getStatusBadge(supplier.status)}</td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          {getStatusBadge(supplier.status)}
+                        </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                           <div className="flex flex-wrap gap-2">
                             <a
@@ -313,7 +546,9 @@ const AdminDashboard = () => {
                               Email
                             </a>
                             <button
-                              onClick={() => navigate(`/admin/suppliers/${supplier._id}`)}
+                              onClick={() =>
+                                navigate(`/admin/suppliers/${supplier._id}`)
+                              }
                               className="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded"
                             >
                               Edit
@@ -325,11 +560,20 @@ const AdminDashboard = () => {
                               Quick Msg
                             </button>
                             <button
-                              onClick={() => handleStatusUpdate(supplier._id, supplier.status === 'approved' ? 'rejected' : 'approved')}
+                              onClick={() =>
+                                handleStatusUpdate(
+                                  supplier._id,
+                                  supplier.status === "approved"
+                                    ? "rejected"
+                                    : "approved"
+                                )
+                              }
                               disabled={actionLoading === supplier._id}
                               className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded disabled:opacity-50"
                             >
-                              {supplier.status === 'approved' ? 'Reject & Delete' : 'Approve'}
+                              {supplier.status === "approved"
+                                ? "Reject & Delete"
+                                : "Approve"}
                             </button>
                           </div>
                         </td>
@@ -344,29 +588,84 @@ const AdminDashboard = () => {
                       <h3 className="text-xl font-semibold mb-3">{category}</h3>
                       <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
                         {list.map((supplier) => (
-                          <div key={supplier._id} className="border rounded-lg p-4 shadow-sm">
+                          <div
+                            key={supplier._id}
+                            className="border rounded-lg p-4 shadow-sm"
+                          >
                             <div className="flex items-center justify-between mb-2">
-                              <h4 className="font-semibold">{supplier.companyName}</h4>
+                              <h4 className="font-semibold">
+                                {supplier.companyName}
+                              </h4>
                               {getStatusBadge(supplier.status)}
                             </div>
-                            <p className="text-sm text-gray-700">{supplier.contactName}</p>
-                            <p className="text-sm text-gray-700">{supplier.email}</p>
-                            <p className="text-sm text-gray-700">{supplier.phone}</p>
+                            <p className="text-sm text-gray-700">
+                              {supplier.contactName}
+                            </p>
+                            <p className="text-sm text-gray-700">
+                              {supplier.email}
+                            </p>
+                            <p className="text-sm text-gray-700">
+                              {supplier.phone}
+                            </p>
                             {supplier.products && (
                               <div className="mt-2">
-                                <p className="text-xs text-gray-500 mb-1">Products:</p>
+                                <p className="text-xs text-gray-500 mb-1">
+                                  Products:
+                                </p>
                                 <div className="flex flex-wrap gap-2">
-                                  {(Array.isArray(supplier.products) ? supplier.products : [supplier.products]).map((p, idx) => (
-                                    <span key={idx} className="text-xs bg-gray-100 px-2 py-0.5 rounded-full">{p}</span>
+                                  {(Array.isArray(supplier.products)
+                                    ? supplier.products
+                                    : [supplier.products]
+                                  ).map((p, idx) => (
+                                    <span
+                                      key={idx}
+                                      className="text-xs bg-gray-100 px-2 py-0.5 rounded-full"
+                                    >
+                                      {p}
+                                    </span>
                                   ))}
                                 </div>
                               </div>
                             )}
                             <div className="mt-3 flex flex-wrap gap-2">
-                              <a href={`https://wa.me/${supplier.phone}?text=Need%20stock`} target="_blank" rel="noreferrer" className="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded">WhatsApp</a>
-                              <a href={`mailto:${supplier.email}?subject=Stock%20Request&body=Please%20send%20the%20required%20stock`} className="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded">Email</a>
-                              <button onClick={() => navigate(`/admin/suppliers/${supplier._id}`)} className="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded">Edit</button>
-                              <button onClick={() => handleStatusUpdate(supplier._id, supplier.status === 'approved' ? 'rejected' : 'approved')} disabled={actionLoading === supplier._id} className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded disabled:opacity-50">{supplier.status === 'approved' ? 'Reject & Delete' : 'Approve'}</button>
+                              <a
+                                href={`https://wa.me/${supplier.phone}?text=Need%20stock`}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded"
+                              >
+                                WhatsApp
+                              </a>
+                              <a
+                                href={`mailto:${supplier.email}?subject=Stock%20Request&body=Please%20send%20the%20required%20stock`}
+                                className="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded"
+                              >
+                                Email
+                              </a>
+                              <button
+                                onClick={() =>
+                                  navigate(`/admin/suppliers/${supplier._id}`)
+                                }
+                                className="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded"
+                              >
+                                Edit
+                              </button>
+                              <button
+                                onClick={() =>
+                                  handleStatusUpdate(
+                                    supplier._id,
+                                    supplier.status === "approved"
+                                      ? "rejected"
+                                      : "approved"
+                                  )
+                                }
+                                disabled={actionLoading === supplier._id}
+                                className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded disabled:opacity-50"
+                              >
+                                {supplier.status === "approved"
+                                  ? "Reject & Delete"
+                                  : "Approve"}
+                              </button>
                             </div>
                           </div>
                         ))}
@@ -379,6 +678,45 @@ const AdminDashboard = () => {
           )}
         </div>
       </div>
+      
+      {/* Reject Modal */}
+      {showRejectModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-lg shadow-xl w-96">
+            <h3 className="text-lg font-semibold mb-4">Reject Reorder Request</h3>
+            <p className="text-sm text-gray-600 mb-4">
+              Please provide a reason for rejecting this reorder request:
+            </p>
+            <textarea
+              value={rejectReason}
+              onChange={(e) => setRejectReason(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              rows="4"
+              placeholder="Enter rejection reason..."
+            />
+            <div className="flex justify-end gap-3 mt-4">
+              <button
+                onClick={() => {
+                  setShowRejectModal(false);
+                  setRejectReason("");
+                  setCurrentRequest(null);
+                }}
+                className="px-4 py-2 text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmRejectReorder}
+                className="px-4 py-2 text-white bg-red-500 rounded-md hover:bg-red-600"
+              >
+                Reject Request
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      
+      <Footer />
     </div>
   );
 };
