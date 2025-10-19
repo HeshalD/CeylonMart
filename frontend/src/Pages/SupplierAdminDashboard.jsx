@@ -17,10 +17,13 @@ const AdminDashboard = () => {
   const [query, setQuery] = useState("");
   const [groupByCategory, setGroupByCategory] = useState(false);
   const [inventoryAlerts, setInventoryAlerts] = useState([]);
+  const [reorderRequests, setReorderRequests] = useState([]);
   const [deletedCount, setDeletedCount] = useState(0);
-<<<<<<< HEAD
   const [sortField, setSortField] = useState("company");
   const [sortOrder, setSortOrder] = useState("asc");
+  const [showRejectModal, setShowRejectModal] = useState(false);
+  const [currentRequest, setCurrentRequest] = useState(null);
+  const [rejectReason, setRejectReason] = useState("");
 
   const downloadPDF = () => {
     // Use the currently visible list depending on view
@@ -32,62 +35,181 @@ const AdminDashboard = () => {
     const doc = new jsPDF();
     let y = 20;
 
-    doc.setFontSize(18);
-    doc.text("Suppliers Report", 20, y);
-    y += 8;
-    doc.setFontSize(11);
-    doc.text(`Generated: ${new Date().toLocaleString()}`, 20, y);
+    // Header with CeylonMart branding
+    doc.setFillColor(16, 185, 129); // Emerald color
+    doc.rect(0, 0, 210, 40, 'F');
+    
+    // CeylonMart logo/text - centered
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(24);
+    doc.setFont('helvetica', 'bold');
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const ceylonMartText = 'CeylonMart';
+    const ceylonMartWidth = doc.getTextWidth(ceylonMartText);
+    doc.text(ceylonMartText, (pageWidth - ceylonMartWidth) / 2, 25);
+    
+    doc.setFontSize(12);
+    doc.setFont('helvetica', 'normal');
+    const subtitleText = 'Inventory Management System';
+    const subtitleWidth = doc.getTextWidth(subtitleText);
+    doc.text(subtitleText, (pageWidth - subtitleWidth) / 2, 32);
+    
+    // Reset text color
+    doc.setTextColor(0, 0, 0);
+    y = 50;
+
+    // Report title
+    doc.setFontSize(20);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Inventory Summary Report', 20, y);
     y += 10;
 
-    const addLine = (text, leading = 7) => {
-      const maxWidth = 180; // page width minus margins
+    // Report metadata
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    doc.text(`Generated on: ${new Date().toLocaleString()}`, 20, y);
+    y += 5;
+    doc.text(`Total Suppliers: ${data.length}`, 20, y);
+    y += 5;
+    doc.text(`Pending Requests: ${suppliers.filter(s => s.status === 'pending').length}`, 20, y);
+    y += 5;
+    doc.text(`Approved Suppliers: ${suppliers.filter(s => s.status === 'approved').length}`, 20, y);
+    y += 5;
+    doc.text(`Reorder Requests: ${reorderRequests.filter(r => r.status === 'pending').length}`, 20, y);
+    y += 15;
+
+    // Summary statistics box
+    doc.setFillColor(240, 248, 255);
+    doc.rect(15, y - 5, 180, 25, 'F');
+    doc.setDrawColor(59, 130, 246);
+    doc.rect(15, y - 5, 180, 25, 'S');
+    
+    doc.setFontSize(12);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Quick Statistics', 20, y);
+    y += 8;
+    
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    doc.text(`• Total Suppliers: ${suppliers.length + deletedCount}`, 20, y);
+    doc.text(`• Active Suppliers: ${suppliers.length}`, 100, y);
+    y += 5;
+    doc.text(`• Pending Approval: ${suppliers.filter(s => s.status === 'pending').length}`, 20, y);
+    doc.text(`• Approved: ${suppliers.filter(s => s.status === 'approved').length}`, 100, y);
+    y += 5;
+    doc.text(`• Rejected/Deleted: ${deletedCount}`, 20, y);
+    doc.text(`• Pending Reorders: ${reorderRequests.filter(r => r.status === 'pending').length}`, 100, y);
+    y += 20;
+
+    const addLine = (text, leading = 7, fontSize = 11) => {
+      const maxWidth = 170; // page width minus margins
+      doc.setFontSize(fontSize);
       const lines = doc.splitTextToSize(String(text ?? ''), maxWidth);
       lines.forEach((ln) => {
         if (y > 280) {
           doc.addPage();
           y = 20;
+          // Add header to new page
+          doc.setFillColor(16, 185, 129);
+          doc.rect(0, 0, 210, 15, 'F');
+          doc.setTextColor(255, 255, 255);
+          doc.setFontSize(12);
+          doc.setFont('helvetica', 'bold');
+          const headerText = 'CeylonMart - Inventory Summary Report';
+          const headerWidth = doc.getTextWidth(headerText);
+          doc.text(headerText, (pageWidth - headerWidth) / 2, 10);
+          doc.setTextColor(0, 0, 0);
+          y = 25;
         }
         doc.text(ln, 20, y);
         y += leading;
       });
     };
 
+    // Section header
+    doc.setFontSize(16);
+    doc.setFont('helvetica', 'bold');
+    addLine('Supplier Details', 10, 16);
+    y += 5;
+
+    // Add separator line
+    doc.setDrawColor(200);
+    doc.line(20, y, 190, y);
+    y += 10;
+
     data.forEach((s, idx) => {
       if (idx > 0) {
-        if (y > 275) {
+        if (y > 270) {
           doc.addPage();
           y = 20;
+          // Add header to new page
+          doc.setFillColor(16, 185, 129);
+          doc.rect(0, 0, 210, 15, 'F');
+          doc.setTextColor(255, 255, 255);
+          doc.setFontSize(12);
+          doc.setFont('helvetica', 'bold');
+          const headerText = 'CeylonMart - Inventory Summary Report';
+          const headerWidth = doc.getTextWidth(headerText);
+          doc.text(headerText, (pageWidth - headerWidth) / 2, 10);
+          doc.setTextColor(0, 0, 0);
+          y = 25;
         }
-        doc.setDrawColor(200);
+        doc.setDrawColor(220);
         doc.line(20, y, 190, y);
-        y += 6;
+        y += 8;
       }
 
-      doc.setFontSize(13);
-      addLine(`Company: ${s.companyName || ''}`);
-      doc.setFontSize(11);
-      addLine(`Contact: ${s.contactName || ''}`);
-      addLine(`Email: ${s.email || ''}`);
-      addLine(`Phone: ${s.phone || ''}`);
+      // Company name with status badge
+      doc.setFontSize(14);
+      doc.setFont('helvetica', 'bold');
+      addLine(`${s.companyName || 'Unnamed Company'}`, 8, 14);
+      
+      // Status indicator
+      const statusColor = s.status === 'approved' ? [34, 197, 94] : 
+                         s.status === 'pending' ? [251, 191, 36] : [239, 68, 68];
+      doc.setFillColor(...statusColor);
+      doc.rect(20, y - 3, 15, 6, 'F');
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(8);
+      doc.setFont('helvetica', 'bold');
+      doc.text(s.status.toUpperCase(), 22, y);
+      doc.setTextColor(0, 0, 0);
+      y += 10;
 
+      // Contact information
+      doc.setFontSize(11);
+      doc.setFont('helvetica', 'normal');
+      addLine(`Contact Person: ${s.contactName || 'N/A'}`, 6, 11);
+      addLine(`Email: ${s.email || 'N/A'}`, 6, 11);
+      addLine(`Phone: ${s.phone || 'N/A'}`, 6, 11);
+
+      // Categories and Products
       const categories = Array.isArray(s.categories) ? s.categories : (s.categories ? [s.categories] : []);
       const products = Array.isArray(s.products) ? s.products : (s.products ? [s.products] : []);
 
-      addLine(`Categories: ${categories.join(', ')}`);
-      addLine(`Products: ${products.join(', ')}`);
-      addLine(`Status: ${s.status || ''}`);
-      y += 2;
+      if (categories.length > 0) {
+        addLine(`Categories: ${categories.join(', ')}`, 6, 11);
+      }
+      if (products.length > 0) {
+        addLine(`Products: ${products.join(', ')}`, 6, 11);
+      }
+      
+      y += 5;
     });
 
+    // Footer
+    const pageCount = doc.internal.getNumberOfPages();
+    for (let i = 1; i <= pageCount; i++) {
+      doc.setPage(i);
+      doc.setFontSize(8);
+      doc.setTextColor(128, 128, 128);
+      doc.text(`Page ${i} of ${pageCount}`, 20, 290);
+      doc.text('Generated by CeylonMart Inventory System', 150, 290);
+    }
+
     const ts = new Date().toISOString().replace(/[:.]/g, '-');
-    doc.save(`suppliers-report-${ts}.pdf`);
+    doc.save(`ceylonmart-inventory-summary-${ts}.pdf`);
   };
-=======
-  const [reorderRequests, setReorderRequests] = useState([]);
-  const [showRejectModal, setShowRejectModal] = useState(false);
-  const [rejectReason, setRejectReason] = useState("");
-  const [currentRequest, setCurrentRequest] = useState(null);
->>>>>>> origin/firstmerge
 
   useEffect(() => {
     fetchSuppliers();
@@ -311,6 +433,18 @@ const AdminDashboard = () => {
     setCurrentRequest(null);
   };
 
+  const handleDeleteReorder = (index) => {
+    if (window.confirm(`Are you sure you want to delete this reorder request for ${reorderRequests[index].product}?`)) {
+      const updatedRequests = reorderRequests.filter((_, i) => i !== index);
+      setReorderRequests(updatedRequests);
+      
+      // Update localStorage
+      localStorage.setItem('reorderRequests', JSON.stringify(updatedRequests));
+      
+      alert(`Reorder request for ${reorderRequests[index].product} has been deleted.`);
+    }
+  };
+
   return (
     <div>
       <Header />
@@ -528,22 +662,30 @@ const AdminDashboard = () => {
                       }`}>
                         {request.status.charAt(0).toUpperCase() + request.status.slice(1)}
                       </span>
-                      {request.status === 'pending' && (
-                        <div className="flex gap-2 mt-2">
-                          <button
-                            onClick={() => handleApproveReorder(index)}
-                            className="text-xs bg-green-500 hover:bg-green-600 text-white px-2 py-1 rounded"
-                          >
-                            Approve
-                          </button>
-                          <button
-                            onClick={() => handleRejectReorder(index)}
-                            className="text-xs bg-red-500 hover:bg-red-600 text-white px-2 py-1 rounded"
-                          >
-                            Reject
-                          </button>
-                        </div>
-                      )}
+                      <div className="flex gap-2 mt-2">
+                        {request.status === 'pending' && (
+                          <>
+                            <button
+                              onClick={() => handleApproveReorder(index)}
+                              className="text-xs bg-green-500 hover:bg-green-600 text-white px-2 py-1 rounded"
+                            >
+                              Approve
+                            </button>
+                            <button
+                              onClick={() => handleRejectReorder(index)}
+                              className="text-xs bg-red-500 hover:bg-red-600 text-white px-2 py-1 rounded"
+                            >
+                              Reject
+                            </button>
+                          </>
+                        )}
+                        <button
+                          onClick={() => handleDeleteReorder(index)}
+                          className="text-xs bg-gray-500 hover:bg-gray-600 text-white px-2 py-1 rounded"
+                        >
+                          Delete
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </div>
