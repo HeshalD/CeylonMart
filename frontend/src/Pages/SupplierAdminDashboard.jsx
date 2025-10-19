@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { supplierAPI, notificationAPI } from "../api";
 import NotificationBell from "../components/NotificationBell";
 import Header from "../Header";
-import Footer from "../Footer";
+import Footer from '../components/Footer';
 import { FaWhatsapp } from "react-icons/fa";
 import { MdEmail, MdEdit, MdMessage, MdCheck, MdDelete } from "react-icons/md";
 import jsPDF from "jspdf";
