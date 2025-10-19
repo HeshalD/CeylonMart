@@ -18,6 +18,7 @@ const AdminDashboard = () => {
   const [groupByCategory, setGroupByCategory] = useState(false);
   const [inventoryAlerts, setInventoryAlerts] = useState([]);
   const [deletedCount, setDeletedCount] = useState(0);
+<<<<<<< HEAD
   const [sortField, setSortField] = useState("company");
   const [sortOrder, setSortOrder] = useState("asc");
 
@@ -81,10 +82,23 @@ const AdminDashboard = () => {
     const ts = new Date().toISOString().replace(/[:.]/g, '-');
     doc.save(`suppliers-report-${ts}.pdf`);
   };
+=======
+  const [reorderRequests, setReorderRequests] = useState([]);
+  const [showRejectModal, setShowRejectModal] = useState(false);
+  const [rejectReason, setRejectReason] = useState("");
+  const [currentRequest, setCurrentRequest] = useState(null);
+>>>>>>> origin/firstmerge
 
   useEffect(() => {
     fetchSuppliers();
+    fetchReorderRequests();
   }, []);
+
+  const fetchReorderRequests = () => {
+    // Get reorder requests from localStorage for demo
+    const requests = JSON.parse(localStorage.getItem('reorderRequests') || '[]');
+    setReorderRequests(requests);
+  };
 
   const fetchSuppliers = async () => {
     try {
@@ -255,6 +269,48 @@ const AdminDashboard = () => {
     );
   }
 
+  const handleApproveReorder = (index) => {
+    const updatedRequests = [...reorderRequests];
+    updatedRequests[index].status = 'approved';
+    updatedRequests[index].approvedAt = new Date().toISOString();
+    setReorderRequests(updatedRequests);
+    
+    // Update localStorage
+    localStorage.setItem('reorderRequests', JSON.stringify(updatedRequests));
+    
+    // Add notification for the approval
+    alert(`Reorder request for ${updatedRequests[index].product} has been approved.`);
+  };
+
+  const handleRejectReorder = (index) => {
+    setCurrentRequest(index);
+    setShowRejectModal(true);
+  };
+
+  const confirmRejectReorder = () => {
+    if (!rejectReason.trim()) {
+      alert("Please provide a reason for rejection.");
+      return;
+    }
+    
+    const updatedRequests = [...reorderRequests];
+    updatedRequests[currentRequest].status = 'rejected';
+    updatedRequests[currentRequest].rejectedAt = new Date().toISOString();
+    updatedRequests[currentRequest].rejectReason = rejectReason;
+    setReorderRequests(updatedRequests);
+    
+    // Update localStorage
+    localStorage.setItem('reorderRequests', JSON.stringify(updatedRequests));
+    
+    // Add notification for the rejection
+    alert(`Reorder request for ${updatedRequests[currentRequest].product} has been rejected.`);
+    
+    // Close modal and reset
+    setShowRejectModal(false);
+    setRejectReason("");
+    setCurrentRequest(null);
+  };
+
   return (
     <div>
       <Header />
@@ -385,37 +441,114 @@ const AdminDashboard = () => {
               </div>
             </div>
           </div>
+
+          <div className="bg-white p-6 rounded-lg shadow">
+            <div className="flex items-center">
+              <div className="p-2 bg-purple-100 rounded-lg">
+                <svg
+                  className="w-6 h-6 text-purple-600"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
+                  />
+                </svg>
+              </div>
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-600">Reorder Requests</p>
+                <p className="text-2xl font-semibold text-gray-900">
+                  {reorderRequests.filter(r => r.status === 'pending').length}
+                </p>
+              </div>
+            </div>
+          </div>
         </div>
 
-        {/* Inventory Alerts (placeholder UI) */}
+        {/* Inventory Alerts with Reorder Requests */}
         <div className="bg-white p-6 rounded-lg shadow mb-8">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-semibold text-gray-800">
-              Inventory Alerts
+              Inventory Alerts & Reorder Requests
             </h2>
             <span className="text-sm text-gray-500">
-              {inventoryAlerts.length} alerts
+              {reorderRequests.length} requests
             </span>
           </div>
-          {inventoryAlerts.length === 0 ? (
+          {reorderRequests.length === 0 ? (
             <div className="text-sm text-gray-600">
-              No inventory alerts right now.
+              No inventory alerts or reorder requests right now.
             </div>
           ) : (
-            <ul className="divide-y divide-gray-200">
-              {inventoryAlerts.map((a) => (
-                <li
-                  key={a.id}
-                  className="py-3 flex items-start justify-between"
+            <div className="space-y-4">
+              {reorderRequests.map((request, index) => (
+                <div 
+                  key={index} 
+                  className={`p-4 rounded-lg border-l-4 ${
+                    request.status === 'approved' 
+                      ? 'border-l-green-500 bg-green-50' 
+                      : request.status === 'rejected' 
+                        ? 'border-l-red-500 bg-red-50' 
+                        : 'border-l-yellow-500 bg-yellow-50'
+                  }`}
                 >
-                  <div>
-                    <div className="font-medium text-gray-900">{a.title}</div>
-                    <div className="text-sm text-gray-600">{a.description}</div>
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <div className="font-medium text-gray-900">
+                        {request.product}
+                      </div>
+                      <div className="text-sm text-gray-700 mt-1">
+                        Quantity: {request.quantity} | Required by: {new Date(request.requiredDate).toLocaleDateString()}
+                      </div>
+                      <div className="text-xs text-gray-500 mt-1">
+                        Requested on: {new Date(request.createdAt).toLocaleString()}
+                      </div>
+                      {request.notes && (
+                        <div className="text-xs text-gray-600 mt-1">
+                          Notes: {request.notes}
+                        </div>
+                      )}
+                      {request.status === 'rejected' && request.rejectReason && (
+                        <div className="text-xs text-red-600 mt-1">
+                          Rejection reason: {request.rejectReason}
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex flex-col items-end">
+                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                        request.status === 'approved' 
+                          ? 'bg-green-100 text-green-800' 
+                          : request.status === 'rejected' 
+                            ? 'bg-red-100 text-red-800' 
+                            : 'bg-yellow-100 text-yellow-800'
+                      }`}>
+                        {request.status.charAt(0).toUpperCase() + request.status.slice(1)}
+                      </span>
+                      {request.status === 'pending' && (
+                        <div className="flex gap-2 mt-2">
+                          <button
+                            onClick={() => handleApproveReorder(index)}
+                            className="text-xs bg-green-500 hover:bg-green-600 text-white px-2 py-1 rounded"
+                          >
+                            Approve
+                          </button>
+                          <button
+                            onClick={() => handleRejectReorder(index)}
+                            className="text-xs bg-red-500 hover:bg-red-600 text-white px-2 py-1 rounded"
+                          >
+                            Reject
+                          </button>
+                        </div>
+                      )}
+                    </div>
                   </div>
-                  <span className="text-xs text-gray-500">{a.time}</span>
-                </li>
+                </div>
               ))}
-            </ul>
+            </div>
           )}
         </div>
 
@@ -973,6 +1106,44 @@ const AdminDashboard = () => {
           )}
         </div>
       </div>
+      
+      {/* Reject Modal */}
+      {showRejectModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-lg shadow-xl w-96">
+            <h3 className="text-lg font-semibold mb-4">Reject Reorder Request</h3>
+            <p className="text-sm text-gray-600 mb-4">
+              Please provide a reason for rejecting this reorder request:
+            </p>
+            <textarea
+              value={rejectReason}
+              onChange={(e) => setRejectReason(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              rows="4"
+              placeholder="Enter rejection reason..."
+            />
+            <div className="flex justify-end gap-3 mt-4">
+              <button
+                onClick={() => {
+                  setShowRejectModal(false);
+                  setRejectReason("");
+                  setCurrentRequest(null);
+                }}
+                className="px-4 py-2 text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmRejectReorder}
+                className="px-4 py-2 text-white bg-red-500 rounded-md hover:bg-red-600"
+              >
+                Reject Request
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      
       <Footer />
     </div>
   );

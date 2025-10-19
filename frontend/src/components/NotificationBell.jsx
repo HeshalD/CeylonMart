@@ -105,5 +105,3 @@ const NotificationBell = ({ supplierId, adminMode = false }) => {
 };
 
 export default NotificationBell;
-
-

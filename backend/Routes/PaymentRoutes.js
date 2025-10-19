@@ -7,11 +7,12 @@ const router = express.Router();
 // Create a new payment
 router.post(
   "/",
-  body("orderId").isMongoId(),
-  body("customerId").isMongoId(),
-  body("amount").isFloat({ min: 0 }),
-  body("paymentMethod").isIn(["credit_card", "debit_card", "paypal", "stripe", "cash_on_delivery"]),
-  body("email").optional().isEmail(),
+  body("orderId").isMongoId().withMessage("Valid Order ID is required"),
+  body("customerId").isMongoId().withMessage("Valid Customer ID is required"),
+  body("amount").isFloat({ min: 0 }).withMessage("Amount must be a positive number"),
+  body("paymentMethod").isIn(["credit_card", "debit_card", "paypal", "stripe", "cash_on_delivery"]).withMessage("Invalid payment method"),
+  body("email").optional({ nullable: true }).isEmail().normalizeEmail().withMessage("Valid email is required"), // Make email optional and normalize it
+  body("transactionId").notEmpty().withMessage("Transaction ID is required"), // Add transactionId validation
   ctrl.createPayment
 );
 
