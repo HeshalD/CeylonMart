@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import client from '../api/client';
+import { DriversAPI } from '../api/client';
 import Header from '../components/Header';
 import './DriverManagement.css';
 
@@ -37,9 +37,9 @@ function DriverManagement() {
     setError('');
     try {
       // Fetch all drivers (including inactive ones for management)
-      const res = await client.get('/drivers');
-      console.log('All drivers:', res.data);
-      setDrivers(res.data);
+      const drivers = await DriversAPI.getDrivers();
+      console.log('All drivers:', drivers);
+      setDrivers(drivers);
     } catch (e) {
       setError(e.response?.data?.error || 'Failed to fetch drivers');
     } finally {
@@ -56,8 +56,10 @@ function DriverManagement() {
     else if (!/\S+@\S+\.\S+/.test(formData.email.toString())) errors.email = 'Invalid email format';
     if (!formData.phone || !formData.phone.toString().trim()) errors.phone = 'Phone number is required';
     else if (isNaN(formData.phone)) errors.phone = 'Phone must be numeric';
+    else if (formData.phone.toString().length !== 10) errors.phone = 'Phone number must be exactly 10 digits';
     if (!formData.licenseNumber || !formData.licenseNumber.toString().trim()) errors.licenseNumber = 'License number is required';
     else if (isNaN(formData.licenseNumber)) errors.licenseNumber = 'License number must be numeric';
+    else if (formData.licenseNumber.toString().length !== 5) errors.licenseNumber = 'License number must be exactly 5 digits';
     if (!formData.vehicleType || !formData.vehicleType.toString().trim()) errors.vehicleType = 'Vehicle type is required';
     if (!formData.vehicleNumber || !formData.vehicleNumber.toString().trim()) errors.vehicleNumber = 'Vehicle number is required';
     if (!formData.capacity || !formData.capacity.toString().trim()) errors.capacity = 'Capacity is required';
@@ -76,23 +78,24 @@ function DriverManagement() {
     setError('');
     setSuccess('');
 
-    try {
-      // Convert numeric fields to numbers before sending to backend
-      const submitData = {
-        ...formData,
-        phone: parseInt(formData.phone),
-        licenseNumber: parseInt(formData.licenseNumber),
-        capacity: parseInt(formData.capacity)
-      };
+     try {
+       // Convert numeric fields appropriately before sending to backend
+       const submitData = {
+         ...formData,
+         phone: formData.phone.toString(), // Keep as string for phone
+         licenseNumber: formData.licenseNumber.toString(), // Keep as string for license
+         capacity: parseInt(formData.capacity) // Only capacity needs to be number
+       };
       
       console.log('Submitting driver data:', submitData);
       if (editingDriver) {
-        const response = await client.put(`/drivers/${editingDriver._id}`, submitData);
-        console.log('Update response:', response.data);
+        const response = await DriversAPI.updateDriver(editingDriver._id, submitData);
+        console.log('Update response:', response);
         setSuccess('Driver updated successfully');
       } else {
-        const response = await client.post('/drivers', submitData);
-        console.log('Create response:', response.data);
+        console.log('Creating new driver with data:', submitData);
+        const response = await DriversAPI.createDriver(submitData);
+        console.log('Create response:', response);
         setSuccess('Driver added successfully');
       }
       
@@ -115,7 +118,7 @@ function DriverManagement() {
     setSuccess('');
 
     try {
-      await client.delete(`/drivers/${id}`);
+      await DriversAPI.deleteDriver(id);
       setSuccess('Driver deleted successfully');
       await fetchDrivers();
     } catch (e) {
@@ -231,6 +234,30 @@ function DriverManagement() {
     return matchesSearch && matchesType && matchesDistrict;
   });
 
+  const downloadDriversPDF = async () => {
+    try {
+      setLoading(true);
+      const response = await DriversAPI.downloadDriversPDF();
+      
+      // Create blob link to download
+      const url = window.URL.createObjectURL(new Blob([response]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', 'drivers-report.pdf');
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+      
+      setSuccess('PDF downloaded successfully');
+    } catch (error) {
+      console.error('Error downloading PDF:', error);
+      setError('Failed to download PDF');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const vehicleTypes = ['car', 'van', 'bike', 'lorry'];
   const districts = ['Colombo', 'Gampaha', 'Kalutara'];
 
@@ -247,6 +274,9 @@ function DriverManagement() {
         <div className="flex gap-3">
           <button onClick={openAddModal} className="btn-primary">
             <span>+</span> Add Driver
+          </button>
+          <button onClick={downloadDriversPDF} className="btn-secondary">
+            📄 Download PDF
           </button>
         </div>
       </div>
@@ -409,9 +439,16 @@ function DriverManagement() {
                   <input
                     type="tel"
                     value={formData.phone}
-                    onChange={(e) => setFormData({...formData, phone: e.target.value})}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      // Only allow numeric input and limit to 10 digits
+                      if (/^\d*$/.test(value) && value.length <= 10) {
+                        setFormData({...formData, phone: value});
+                      }
+                    }}
                     className={`input ${formErrors.phone ? 'error' : ''}`}
-                    placeholder="Enter phone number"
+                    placeholder="Enter 10-digit phone number"
+                    maxLength="10"
                   />
                   {formErrors.phone && <div className="error">{formErrors.phone}</div>}
                 </div>
@@ -423,9 +460,16 @@ function DriverManagement() {
                   <input
                     type="text"
                     value={formData.licenseNumber}
-                    onChange={(e) => setFormData({...formData, licenseNumber: e.target.value})}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      // Only allow numeric input and limit to 5 digits
+                      if (/^\d*$/.test(value) && value.length <= 5) {
+                        setFormData({...formData, licenseNumber: value});
+                      }
+                    }}
                     className={`input ${formErrors.licenseNumber ? 'error' : ''}`}
-                    placeholder="Enter license number"
+                    placeholder="Enter 5-digit license number"
+                    maxLength="5"
                   />
                   {formErrors.licenseNumber && <div className="error">{formErrors.licenseNumber}</div>}
                 </div>

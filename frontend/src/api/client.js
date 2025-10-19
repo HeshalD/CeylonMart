@@ -53,6 +53,60 @@ export const CustomersAPI = {
   }
 };
 
+export const DriversAPI = {
+  // Create driver
+  createDriver(payload) {
+    return api.post(`/drivers`, payload).then(r => r.data);
+  },
+  
+  // Get all drivers
+  getDrivers() {
+    return api.get(`/drivers`).then(r => r.data);
+  },
+  
+  // Get available drivers
+  getAvailableDrivers() {
+    return api.get(`/drivers/available`).then(r => r.data);
+  },
+  
+  // Get driver by ID
+  getDriverById(id) {
+    return api.get(`/drivers/${id}`).then(r => r.data);
+  },
+  
+  // Get driver history
+  getDriverHistory(id) {
+    return api.get(`/drivers/${id}/history`).then(r => r.data);
+  },
+  
+  // Update driver
+  updateDriver(id, payload) {
+    return api.put(`/drivers/${id}`, payload).then(r => r.data);
+  },
+  
+  // Update driver availability
+  updateDriverAvailability(id, availability) {
+    return api.patch(`/drivers/${id}/availability`, { availability }).then(r => r.data);
+  },
+  
+  // Update driver district
+  updateDriverDistrict(id, district) {
+    return api.patch(`/drivers/${id}/district`, { district }).then(r => r.data);
+  },
+  
+  // Delete driver
+  deleteDriver(id) {
+    return api.delete(`/drivers/${id}`).then(r => r.data);
+  },
+  
+  // Download drivers PDF
+  downloadDriversPDF() {
+    return api.get(`/drivers/pdf`, {
+      responseType: 'blob'
+    }).then(r => r.data);
+  }
+};
+
 export default api;
 
 

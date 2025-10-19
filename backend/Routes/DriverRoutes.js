@@ -24,8 +24,11 @@ const driverValidation = [
       if (!driver.vehicleType) throw new Error(`Driver[${i}]: vehicleType is required`);
       if (!driver.vehicleNumber) throw new Error(`Driver[${i}]: vehicleNumber is required`);
 
+      // Validate phone number (must be numeric and exactly 10 digits)
+      if (!/^\d{10}$/.test(driver.phone.toString())) throw new Error(`Driver[${i}]: phone must be exactly 10 digits`);
       
-      if (isNaN(driver.phone)) throw new Error(`Driver[${i}]: phone must be numeric`);
+      // Validate license number (must be numeric and exactly 5 digits)
+      if (!/^\d{5}$/.test(driver.licenseNumber.toString())) throw new Error(`Driver[${i}]: licenseNumber must be exactly 5 digits`);
       if (!["car", "van", "bike", "lorry"].includes(driver.vehicleType)) {
         throw new Error(`Driver[${i}]: vehicleType must be car, van, bike or lorry`);
       }
@@ -44,6 +47,9 @@ router.get("/", ctrl.getDrivers);
 // Get available drivers
 router.get("/available", ctrl.getAvailableDrivers);
 
+// Download drivers PDF
+router.get("/pdf", ctrl.downloadDriversPDF);
+
 // Get driver by ID
 router.get("/:id", param("id").isMongoId(), ctrl.getDriverById);
 
@@ -55,11 +61,11 @@ router.put(
   "/:id",
   [
     param("id").isMongoId(),
-    body("phone").optional().isNumeric().withMessage("Phone must be numeric"),
+    body("phone").optional().matches(/^\d{10}$/).withMessage("Phone must be exactly 10 digits"),
     body("licenseNumber")
       .optional()
-      .notEmpty()
-      .withMessage("License number cannot be empty"),
+      .matches(/^\d{5}$/)
+      .withMessage("License number must be exactly 5 digits"),
     body("vehicleType")
       .optional()
       .isIn(["car", "van", "bike", "lorry"])
