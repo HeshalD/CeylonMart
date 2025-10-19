@@ -91,7 +91,7 @@ export default function Login() {
         "supplier_admin": "/dashboard/supplier",
         "inventory_manager": "/dashboard/inventory",
         "delivery_admin": "/drivers/management", // Redirect delivery admin to driver management
-        // Admin supplier approvals live at /admin
+        // Admin dashboard for system administration
         "admin": "/dashboard/admin"
       };
 

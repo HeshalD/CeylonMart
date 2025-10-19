@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from '../../components/ui/Header';
 import Footer from '../../components/ui/Footer';
-import AdminDashboard from '../SupplierAdminDashboard';
 
 const SupplierDashboard = () => {
   const [user, setUser] = useState(null);
@@ -31,7 +30,10 @@ const SupplierDashboard = () => {
       {/* Main Content */}
       <main className="flex-grow max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
         <div className="px-4 py-6 sm:px-0">
-            <AdminDashboard/>
+          <div className="text-center">
+            <h1 className="text-3xl font-bold text-gray-900 mb-4">Welcome to CeylonMart</h1>
+            <p className="text-lg text-gray-600">Your supplier dashboard for managing products and orders</p>
+          </div>
         </div>
       </main>
       <Footer />
