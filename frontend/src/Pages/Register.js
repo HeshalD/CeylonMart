@@ -3,6 +3,7 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import Header from "../components/ui/Header";
 import Footer from "../components/ui/Footer";
+import bgPhoto from "../bgPhoto.jpg";
 
 export default function Register() {
   const [form, setForm] = useState({
@@ -131,18 +132,22 @@ export default function Register() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-emerald-50 to-teal-100 flex flex-col relative">
-      {/* Background image with blur */}
-      <div
-        className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-        style={{
-          backgroundImage: 'url("/bgPhoto.jpg")',
-          filter: 'blur(4px)',
-          transform: 'scale(1.02)',
-          zIndex: -1
-        }}
-      />
-      <Header />
+    <div 
+      className="min-h-screen flex flex-col relative"
+      style={{
+        backgroundImage: `url(${bgPhoto})`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat'
+      }}
+    >
+      {/* Blur overlay */}
+      <div className="absolute inset-0 bg-black/20 backdrop-blur-sm"></div>
+      
+      <div className="relative z-10">
+        <Header />
+      </div>
+      
       <div className="flex-grow flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 relative z-10">
       <div className="max-w-md w-full">
         {/* Main Form Container */}
@@ -422,7 +427,10 @@ export default function Register() {
         </div>
         </div>
       </div>
-      <Footer />
+      
+      <div className="relative z-10">
+        <Footer />
+      </div>
     </div>
   );
 }
