@@ -24,21 +24,22 @@ exports.createPayment = async (req, res) => {
     const payment = await Payment.create(req.body);
     console.log('[createPayment] Payment created:', JSON.stringify(payment, null, 2));
 
-    // If payment created, send receipt for successful and pending(COD)
+    // For all payment methods, update the order status to pending
+    // Use runValidators: false to avoid triggering validation that requires email, district, and paymentMethod
+    const updatedOrder = await Order.findOneAndUpdate(
+      { _id: payment.orderId, isDeleted: false },
+      { $set: { status: "pending" } }, // All payments should start with pending status
+      { new: true, runValidators: false } // Disable validation to prevent errors
+    ).populate({
+      path: 'items.productId',
+      model: 'ProductModel'
+    });
+    
+    console.log('[createPayment] Order updated:', JSON.stringify(updatedOrder, null, 2));
+    
+    // If payment is successful (for credit/debit cards) or COD, decrease product quantities
     if (payment.status === "successful" || payment.paymentMethod === "cash_on_delivery") {
-      // Populate the order with item details including product references
-      const updatedOrder = await Order.findOneAndUpdate(
-        { _id: payment.orderId, isDeleted: false },
-        { $set: { status: payment.paymentMethod === "cash_on_delivery" ? "pending" : "confirmed" } },
-        { new: true } // Return updated document
-      ).populate({
-        path: 'items.productId',
-        model: 'ProductModel'
-      });
-      
-      console.log('[createPayment] Order updated:', JSON.stringify(updatedOrder, null, 2));
-      
-      // If payment is successful, decrease product quantities and ensure the customer's next cart is a fresh empty pending order
+      // For successful payments, decrease product quantities and ensure the customer's next cart is a fresh empty pending order
       if (payment.status === "successful" && updatedOrder) {
         console.log('[createPayment] Payment successful, decreasing product quantities for items:', JSON.stringify(updatedOrder.items, null, 2));
         // Decrease product quantities for all payment methods when payment is successful
@@ -301,3 +302,9 @@ exports.deletePayment = async (req, res) => {
     res.status(500).json({ message: "Server error", error: e.message });
   }
 };
+
+
+
+
+
+

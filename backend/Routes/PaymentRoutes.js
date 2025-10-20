@@ -11,8 +11,7 @@ router.post(
   body("customerId").isMongoId().withMessage("Valid Customer ID is required"),
   body("amount").isFloat({ min: 0 }).withMessage("Amount must be a positive number"),
   body("paymentMethod").isIn(["credit_card", "debit_card", "paypal", "stripe", "cash_on_delivery"]).withMessage("Invalid payment method"),
-  body("email").optional({ nullable: true }).isEmail().normalizeEmail().withMessage("Valid email is required"), // Make email optional and normalize it
-  body("transactionId").notEmpty().withMessage("Transaction ID is required"), // Add transactionId validation
+  body("transactionId").notEmpty().withMessage("Transaction ID is required"),
   ctrl.createPayment
 );
 

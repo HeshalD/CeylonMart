@@ -15,6 +15,7 @@ export default function OrdersPage() {
       setLoading(true); setError(null);
       try {
         const data = await OrdersAPI.getOrders();
+        // Display all orders, not just confirmed ones
         setOrders(data);
       } catch (e) { setError(e); }
       finally { setLoading(false); }
@@ -47,6 +48,8 @@ export default function OrdersPage() {
                 <div>
                   <div className="font-semibold">Order #{o._id}</div>
                   <div className="text-sm text-gray-600">Status: <span className="px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100">{o.status}</span></div>
+                  <div className="text-sm text-gray-600">Payment Method: <span className="px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-100">{o.paymentMethod}</span></div>
+                  <div className="text-sm text-gray-600">District: <span className="px-2 py-0.5 rounded-full bg-purple-50 text-purple-700 border border-purple-100">{o.district}</span></div>
                 </div>
                 <div className="text-right font-bold text-emerald-700">Rs. {Number(o.totalAmount).toFixed(2)}</div>
               </div>
@@ -69,5 +72,3 @@ export default function OrdersPage() {
     </div>
   );
 }
-
-
