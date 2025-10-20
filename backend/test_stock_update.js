@@ -1,10 +1,10 @@
+require('dotenv').config();
 const mongoose = require('mongoose');
 const Product = require('./Models/ProductModel');
 
 // MongoDB connection
-mongoose.connect('mongodb://localhost:27017/ceylonmart', {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
+mongoose.connect(process.env.MONGO_URI, {
+  // useNewUrlParser and useUnifiedTopology are deprecated in newer versions
 });
 
 async function testStockUpdate() {

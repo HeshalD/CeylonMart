@@ -41,6 +41,29 @@ export default function PaymentSuccessPage() {
     }
   };
 
+  // Update payment status to successful
+  const updatePaymentStatusToSuccessful = async (paymentId) => {
+    try {
+      console.log('Updating payment status to successful for payment ID:', paymentId);
+      // First get the current payment status
+      const currentPayment = await PaymentsAPI.getPaymentById(paymentId);
+      console.log('Current payment status:', currentPayment.status);
+      
+      // Only update if the payment is not already successful
+      if (currentPayment.status !== 'successful') {
+        const updatedPayment = await PaymentsAPI.updatePaymentStatus(paymentId, 'successful');
+        console.log('Payment status updated:', updatedPayment);
+        return updatedPayment;
+      } else {
+        console.log('Payment is already successful, skipping update');
+        return currentPayment;
+      }
+    } catch (err) {
+      console.error('Error updating payment status:', err);
+      throw err;
+    }
+  };
+
   useEffect(() => {
     // Get data from location state if available
     if (location.state?.orderData && location.state?.paymentData) {
@@ -48,6 +71,21 @@ export default function PaymentSuccessPage() {
       console.log('Payment Success - Payment Data from state:', location.state.paymentData);
       setOrderData(location.state.orderData);
       setPaymentData(location.state.paymentData);
+      
+      // Update payment status to successful
+      const paymentId = location.state.paymentData._id;
+      if (paymentId) {
+        // Only update if the payment is not already successful
+        if (location.state.paymentData.status !== 'successful') {
+          updatePaymentStatusToSuccessful(paymentId)
+            .catch(err => {
+              console.error('Failed to update payment status:', err);
+              setError('Payment processed but status update failed.');
+            });
+        } else {
+          console.log('Payment is already successful, skipping update');
+        }
+      }
     } else {
       // Try to fetch from localStorage and backend
       const orderId = localStorage.getItem('lastOrderId');
@@ -56,6 +94,26 @@ export default function PaymentSuccessPage() {
       if (orderId && paymentId) {
         console.log('No location state, fetching from backend...', { orderId, paymentId });
         fetchOrderAndPaymentData(orderId, paymentId);
+        
+        // Update payment status to successful
+        // First get the payment data to check current status
+        PaymentsAPI.getPaymentById(paymentId)
+          .then(payment => {
+            // Only update if the payment is not already successful
+            if (payment.status !== 'successful') {
+              updatePaymentStatusToSuccessful(paymentId)
+                .catch(err => {
+                  console.error('Failed to update payment status:', err);
+                  setError('Payment processed but status update failed.');
+                });
+            } else {
+              console.log('Payment is already successful, skipping update');
+            }
+          })
+          .catch(err => {
+            console.error('Failed to fetch payment data:', err);
+            setError('Payment processed but status update failed.');
+          });
       } else {
         console.log('No order/payment data available');
         setError('No order data available. Please complete a purchase first.');

@@ -175,13 +175,18 @@ export default function CheckoutPage({ customerId }) {
       });
       console.log('Order created:', order);
 
+      // Determine payment status based on payment method
+      const paymentStatus = (paymentMethod === "credit_card" || paymentMethod === "debit_card" || paymentMethod === "paypal") 
+        ? "successful" 
+        : "pending";
+      
       // Create payment with the order ID and all required fields
       console.log('Creating payment with data:', {
         orderId: order._id,
         customerId: customer._id,
         amount: total,
         paymentMethod,
-        status: "pending", // All payments should start with pending status
+        status: paymentStatus,
         transactionId: `TXN_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
       });
       const payment = await PaymentsAPI.createPayment({
@@ -189,7 +194,7 @@ export default function CheckoutPage({ customerId }) {
         customerId: customer._id,
         amount: total,
         paymentMethod,
-        status: "pending", // All payments should start with pending status
+        status: paymentStatus,
         transactionId: `TXN_${Date.now()}_${Math.random().toString(36).substr(2, 9)}` // Generate unique transaction ID
       });
       console.log('Payment created:', payment);
@@ -210,13 +215,14 @@ export default function CheckoutPage({ customerId }) {
       
       // Pass order and payment data to success page
       const paymentInfo = {
+        _id: payment._id, // Include the payment ID
         orderId: order._id,
         customerId: customer._id,
         amount: total,
         paymentMethod,
         email,
         district,
-        status: "pending" // All payments should start with pending status
+        status: paymentStatus
       };
       
       navigate('/payment-success', { 
