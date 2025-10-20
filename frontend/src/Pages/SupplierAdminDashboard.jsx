@@ -1,6 +1,6 @@
-import React, { useMemo, useState, useEffect } from "react";
+import React, { useMemo, useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { supplierAPI, notificationAPI } from "../api";
+import { supplierAPI, notificationAPI, reorderAPI } from "../api";
 import NotificationBell from "../components/NotificationBell";
 import Header from "../Header";
 import Footer from '../components/Footer';
@@ -16,7 +16,7 @@ const AdminDashboard = () => {
   const [actionLoading, setActionLoading] = useState(null);
   const [query, setQuery] = useState("");
   const [groupByCategory, setGroupByCategory] = useState(false);
-  const [inventoryAlerts, setInventoryAlerts] = useState([]);
+  
   const [reorderRequests, setReorderRequests] = useState([]);
   const [deletedCount, setDeletedCount] = useState(0);
   const [sortField, setSortField] = useState("company");
@@ -24,6 +24,14 @@ const AdminDashboard = () => {
   const [showRejectModal, setShowRejectModal] = useState(false);
   const [currentRequest, setCurrentRequest] = useState(null);
   const [rejectReason, setRejectReason] = useState("");
+  const [dismissedRequestIds, setDismissedRequestIds] = useState(() => {
+    try {
+      const raw = localStorage.getItem('dismissedReorderRequestIds');
+      return raw ? new Set(JSON.parse(raw)) : new Set();
+    } catch (_) {
+      return new Set();
+    }
+  });
 
   const downloadPDF = () => {
     // Use the currently visible list depending on view
@@ -216,10 +224,20 @@ const AdminDashboard = () => {
     fetchReorderRequests();
   }, []);
 
-  const fetchReorderRequests = () => {
-    // Get reorder requests from localStorage for demo
-    const requests = JSON.parse(localStorage.getItem('reorderRequests') || '[]');
-    setReorderRequests(requests);
+  useEffect(() => {
+    try {
+      localStorage.setItem('dismissedReorderRequestIds', JSON.stringify(Array.from(dismissedRequestIds)));
+    } catch (_) {}
+  }, [dismissedRequestIds]);
+
+  const fetchReorderRequests = async () => {
+    try {
+      const res = await reorderAPI.list();
+      setReorderRequests(res.data || []);
+    } catch (e) {
+      const requests = JSON.parse(localStorage.getItem('reorderRequests') || '[]');
+      setReorderRequests(requests);
+    }
   };
 
   const fetchSuppliers = async () => {
@@ -323,7 +341,7 @@ const AdminDashboard = () => {
     });
   }, [query, suppliers]);
 
-  const compareSuppliers = (a, b) => {
+  const compareSuppliers = useCallback((a, b) => {
     const getValue = (s) => {
       switch (sortField) {
         case "product": {
@@ -352,13 +370,13 @@ const AdminDashboard = () => {
     if (va < vb) return sortOrder === "asc" ? -1 : 1;
     if (va > vb) return sortOrder === "asc" ? 1 : -1;
     return 0;
-  };
+  }, [sortField, sortOrder]);
 
   const sortedSuppliers = useMemo(() => {
     const arr = [...filteredSuppliers];
     arr.sort(compareSuppliers);
     return arr;
-  }, [filteredSuppliers, sortField, sortOrder]);
+  }, [filteredSuppliers, compareSuppliers]);
 
   const approvedFilteredSuppliers = useMemo(() => {
     return sortedSuppliers.filter((s) => s.status === "approved");
@@ -391,17 +409,15 @@ const AdminDashboard = () => {
     );
   }
 
-  const handleApproveReorder = (index) => {
-    const updatedRequests = [...reorderRequests];
-    updatedRequests[index].status = 'approved';
-    updatedRequests[index].approvedAt = new Date().toISOString();
-    setReorderRequests(updatedRequests);
-    
-    // Update localStorage
-    localStorage.setItem('reorderRequests', JSON.stringify(updatedRequests));
-    
-    // Add notification for the approval
-    alert(`Reorder request for ${updatedRequests[index].product} has been approved.`);
+  const handleApproveReorder = async (index) => {
+    try {
+      const req = reorderRequests[index];
+      await reorderAPI.update(req._id, { status: 'approved', approvedAt: new Date().toISOString() });
+      await fetchReorderRequests();
+      alert(`Reorder request for ${req.product} has been approved.`);
+    } catch (e) {
+      alert('Failed to approve reorder request');
+    }
   };
 
   const handleRejectReorder = (index) => {
@@ -409,39 +425,31 @@ const AdminDashboard = () => {
     setShowRejectModal(true);
   };
 
-  const confirmRejectReorder = () => {
+  const confirmRejectReorder = async () => {
     if (!rejectReason.trim()) {
       alert("Please provide a reason for rejection.");
       return;
     }
-    
-    const updatedRequests = [...reorderRequests];
-    updatedRequests[currentRequest].status = 'rejected';
-    updatedRequests[currentRequest].rejectedAt = new Date().toISOString();
-    updatedRequests[currentRequest].rejectReason = rejectReason;
-    setReorderRequests(updatedRequests);
-    
-    // Update localStorage
-    localStorage.setItem('reorderRequests', JSON.stringify(updatedRequests));
-    
-    // Add notification for the rejection
-    alert(`Reorder request for ${updatedRequests[currentRequest].product} has been rejected.`);
-    
-    // Close modal and reset
-    setShowRejectModal(false);
-    setRejectReason("");
-    setCurrentRequest(null);
+    try {
+      const req = reorderRequests[currentRequest];
+      await reorderAPI.update(req._id, { status: 'rejected', rejectedAt: new Date().toISOString(), rejectReason });
+      await fetchReorderRequests();
+      alert(`Reorder request for ${req.product} has been rejected.`);
+    } catch (e) {
+      alert('Failed to reject reorder request');
+    } finally {
+      setShowRejectModal(false);
+      setRejectReason("");
+      setCurrentRequest(null);
+    }
   };
 
   const handleDeleteReorder = (index) => {
-    if (window.confirm(`Are you sure you want to delete this reorder request for ${reorderRequests[index].product}?`)) {
-      const updatedRequests = reorderRequests.filter((_, i) => i !== index);
-      setReorderRequests(updatedRequests);
-      
-      // Update localStorage
-      localStorage.setItem('reorderRequests', JSON.stringify(updatedRequests));
-      
-      alert(`Reorder request for ${reorderRequests[index].product} has been deleted.`);
+    const req = reorderRequests[index];
+    if (!req) return;
+    if (req.status === 'pending') return; // guard: no delete for pending
+    if (window.confirm(`Hide this reorder request for ${req.product} from admin dashboard?`)) {
+      setDismissedRequestIds(prev => new Set(prev).add(req._id || req.id));
     }
   };
 
@@ -613,15 +621,17 @@ const AdminDashboard = () => {
               {reorderRequests.length} requests
             </span>
           </div>
-          {reorderRequests.length === 0 ? (
+          {reorderRequests.filter(r => !dismissedRequestIds.has(r._id || r.id)).length === 0 ? (
             <div className="text-sm text-gray-600">
               No inventory alerts or reorder requests right now.
             </div>
           ) : (
             <div className="space-y-4">
-              {reorderRequests.map((request, index) => (
+              {reorderRequests
+                .filter((request) => !dismissedRequestIds.has(request._id || request.id))
+                .map((request, index) => (
                 <div 
-                  key={index} 
+                  key={request._id || request.id || index} 
                   className={`p-4 rounded-lg border-l-4 ${
                     request.status === 'approved' 
                       ? 'border-l-green-500 bg-green-50' 
@@ -679,12 +689,14 @@ const AdminDashboard = () => {
                             </button>
                           </>
                         )}
-                        <button
-                          onClick={() => handleDeleteReorder(index)}
-                          className="text-xs bg-gray-500 hover:bg-gray-600 text-white px-2 py-1 rounded"
-                        >
-                          Delete
-                        </button>
+                        {request.status !== 'pending' && (
+                          <button
+                            onClick={() => handleDeleteReorder(index)}
+                            className="text-xs bg-gray-500 hover:bg-gray-600 text-white px-2 py-1 rounded"
+                          >
+                            Delete
+                          </button>
+                        )}
                       </div>
                     </div>
                   </div>

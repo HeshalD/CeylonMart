@@ -92,3 +92,11 @@ export const messageAPI = {
   adminMarkRead: (messageId) => api.patch(`/admin/messages/${messageId}/mark-read`),
   adminDeleteMessage: (messageId) => api.delete(`/admin/messages/${messageId}`),
 };
+
+// Reorder Requests API
+export const reorderAPI = {
+  list: () => api.get('/reorders'),
+  create: (payload) => api.post('/reorders', payload), // payload can be one or many
+  update: (id, payload) => api.patch(`/reorders/${id}`, payload),
+  remove: (id) => api.delete(`/reorders/${id}`),
+};
