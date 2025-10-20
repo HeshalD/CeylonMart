@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { getProducts } from '../../api/inventoryApi';
+import { reorderAPI } from '../../api';
 
 const Reorder = () => {
   const [reorderSuggestions, setReorderSuggestions] = useState([]);
@@ -23,16 +24,22 @@ const Reorder = () => {
   const [sentReorderRequests, setSentReorderRequests] = useState([]);
   const [statusFilter, setStatusFilter] = useState('all'); // all, approved, rejected, pending
   const [dateRange, setDateRange] = useState('all'); // all, 7days, 30days, 90days
+  const [editingRequest, setEditingRequest] = useState(null);
+  const [editFields, setEditFields] = useState({ quantity: '', requiredDate: '', notes: '' });
 
   useEffect(() => {
     fetchData();
     fetchSentReorderRequests();
   }, []);
 
-  const fetchSentReorderRequests = () => {
-    // Get reorder requests from localStorage
-    const requests = JSON.parse(localStorage.getItem('reorderRequests') || '[]');
-    setSentReorderRequests(requests);
+  const fetchSentReorderRequests = async () => {
+    try {
+      const res = await reorderAPI.list();
+      setSentReorderRequests((res.data || []).filter(r => !r.archivedByRequester));
+    } catch (e) {
+      const requests = JSON.parse(localStorage.getItem('reorderRequests') || '[]');
+      setSentReorderRequests(requests);
+    }
   };
 
   const fetchData = async () => {
@@ -149,7 +156,7 @@ const Reorder = () => {
     return newErrors;
   };
 
-  const handlePlaceOrder = () => {
+  const handlePlaceOrder = async () => {
     const newErrors = validateOrderForm();
     
     if (Object.keys(newErrors).length > 0) {
@@ -161,7 +168,6 @@ const Reorder = () => {
     
     // Create reorder requests for each selected item
     const reorderRequests = selectedItemsData.map(item => ({
-      id: Date.now() + Math.random(), // Simple ID generation for demo
       type: 'reorder',
       product: item.productName,
       quantity: reorderQuantities[item._id] || item.suggestedQuantity,
@@ -170,16 +176,19 @@ const Reorder = () => {
       status: 'pending',
       createdAt: new Date().toISOString()
     }));
-    
-    // Store in localStorage
-    const existingRequests = JSON.parse(localStorage.getItem('reorderRequests') || '[]');
-    const updatedRequests = [...existingRequests, ...reorderRequests];
-    localStorage.setItem('reorderRequests', JSON.stringify(updatedRequests));
-    
-    // Update state
-    setSentReorderRequests(updatedRequests);
-    
-    alert(`Order placed for ${selectedItemsData.length} items.`);
+
+    try {
+      await reorderAPI.create(reorderRequests);
+      const res = await reorderAPI.list();
+      setSentReorderRequests(res.data || []);
+      alert(`Order placed for ${selectedItemsData.length} items.`);
+    } catch (err) {
+      const existingRequests = JSON.parse(localStorage.getItem('reorderRequests') || '[]');
+      const updatedRequests = [...existingRequests, ...reorderRequests];
+      localStorage.setItem('reorderRequests', JSON.stringify(updatedRequests));
+      setSentReorderRequests(updatedRequests);
+      alert(`Order placed for ${selectedItemsData.length} items (offline cache).`);
+    }
     
     // Reset form
     setSelectedItems(new Set());
@@ -233,7 +242,7 @@ const Reorder = () => {
     return newErrors;
   };
 
-  const handleAddNewRequest = () => {
+  const handleAddNewRequest = async () => {
     const newErrors = validateNewRequest();
     
     if (Object.keys(newErrors).length > 0) {
@@ -243,7 +252,6 @@ const Reorder = () => {
     
     // Create reorder request object
     const reorderRequest = {
-      id: Date.now() + Math.random(), // Simple ID generation for demo
       type: 'reorder',
       product: newRequest.product,
       quantity: newRequest.quantity,
@@ -252,16 +260,19 @@ const Reorder = () => {
       status: 'pending',
       createdAt: new Date().toISOString()
     };
-    
-    // Store in localStorage
-    const existingRequests = JSON.parse(localStorage.getItem('reorderRequests') || '[]');
-    const updatedRequests = [...existingRequests, reorderRequest];
-    localStorage.setItem('reorderRequests', JSON.stringify(updatedRequests));
-    
-    // Update state
-    setSentReorderRequests(updatedRequests);
-    
-    alert(`New reorder request added:\nProduct: ${newRequest.product}\nQuantity: ${newRequest.quantity}\nRequired by: ${newRequest.requiredDate}`);
+
+    try {
+      await reorderAPI.create(reorderRequest);
+      const res = await reorderAPI.list();
+      setSentReorderRequests(res.data || []);
+      alert(`New reorder request added\nProduct: ${newRequest.product}\nQuantity: ${newRequest.quantity}\nRequired by: ${newRequest.requiredDate}`);
+    } catch (err) {
+      const existingRequests = JSON.parse(localStorage.getItem('reorderRequests') || '[]');
+      const updatedRequests = [...existingRequests, reorderRequest];
+      localStorage.setItem('reorderRequests', JSON.stringify(updatedRequests));
+      setSentReorderRequests(updatedRequests);
+      alert(`New reorder request added (offline cache)\nProduct: ${newRequest.product}\nQuantity: ${newRequest.quantity}\nRequired by: ${newRequest.requiredDate}`);
+    }
     
     // Reset form
     setNewRequest({
@@ -309,6 +320,72 @@ const Reorder = () => {
       case 'pending':
       default:
         return <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">Pending</span>;
+    }
+  };
+
+  const handleDeleteRequest = async (request) => {
+    if (!window.confirm(`Delete reorder request for ${request.product}?`)) return;
+    try {
+      if (request._id) {
+        await reorderAPI.remove(request._id);
+        await fetchSentReorderRequests();
+      } else {
+        // Fallback: delete from localStorage by client id
+        const existing = JSON.parse(localStorage.getItem('reorderRequests') || '[]');
+        const updated = existing.filter(r => (r._id || r.id) !== (request._id || request.id));
+        localStorage.setItem('reorderRequests', JSON.stringify(updated));
+        setSentReorderRequests(updated);
+      }
+      alert(`Reorder request for ${request.product} deleted.`);
+    } catch (e) {
+      alert('Failed to delete reorder request');
+    }
+  };
+
+  const handleStartEdit = (request) => {
+    setEditingRequest(request);
+    setEditFields({
+      quantity: request.quantity,
+      requiredDate: request.requiredDate ? request.requiredDate.split('T')[0] : '',
+      notes: request.notes || ''
+    });
+  };
+
+  const handleSaveEdit = async () => {
+    if (!editingRequest) return;
+    const updates = {
+      quantity: Number(editFields.quantity),
+      requiredDate: editFields.requiredDate,
+      notes: editFields.notes
+    };
+    if (!updates.quantity || updates.quantity <= 0) {
+      alert('Quantity must be greater than 0');
+      return;
+    }
+    if (!updates.requiredDate) {
+      alert('Required date is required');
+      return;
+    }
+    try {
+      if (editingRequest._id) {
+        await reorderAPI.update(editingRequest._id, updates);
+        await fetchSentReorderRequests();
+      } else {
+        const existing = JSON.parse(localStorage.getItem('reorderRequests') || '[]');
+        const updated = existing.map(r => {
+          const keyA = r._id || r.id;
+          const keyB = editingRequest._id || editingRequest.id;
+          if (keyA === keyB) {
+            return { ...r, ...updates };
+          }
+          return r;
+        });
+        localStorage.setItem('reorderRequests', JSON.stringify(updated));
+        setSentReorderRequests(updated);
+      }
+      setEditingRequest(null);
+    } catch (e) {
+      alert('Failed to update request');
     }
   };
 
@@ -371,6 +448,13 @@ const Reorder = () => {
     }
     
     return true;
+  });
+
+  // Ensure newest requests appear first
+  const sortedRequests = [...filteredRequests].sort((a, b) => {
+    const aTime = new Date(a.createdAt).getTime();
+    const bTime = new Date(b.createdAt).getTime();
+    return bTime - aTime;
   });
 
   return (
@@ -467,9 +551,9 @@ const Reorder = () => {
                 </div>
               ) : (
                 <div className="p-6 space-y-4">
-                  {[...filteredRequests].reverse().map((request) => (
+                  {sortedRequests.map((request) => (
                     <div 
-                      key={request.id} 
+                      key={request._id || request.id} 
                       className={`p-4 rounded-lg border-l-4 shadow-sm ${
                         request.status === 'approved' 
                           ? 'border-l-green-500 bg-green-50' 
@@ -511,6 +595,22 @@ const Reorder = () => {
                             </div>
                           )}
                         </div>
+                        <div className="ml-4 flex items-start gap-2">
+                          {request.status === 'pending' && (
+                            <button
+                              onClick={() => handleStartEdit(request)}
+                              className="text-xs bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded"
+                            >
+                              Edit
+                            </button>
+                          )}
+                          <button
+                            onClick={() => handleDeleteRequest(request)}
+                            className="text-xs bg-gray-500 hover:bg-gray-600 text-white px-2 py-1 rounded"
+                          >
+                            Delete
+                          </button>
+                        </div>
                       </div>
                     </div>
                   ))}
@@ -518,12 +618,51 @@ const Reorder = () => {
               )}
             </div>
             <div className="px-6 py-4 border-t border-gray-200 bg-gray-50">
-              <button
-                onClick={() => setShowSentOrders(false)}
-                className="px-4 py-2 text-white bg-gray-600 rounded-md hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
-              >
-                Close
-              </button>
+              {editingRequest ? (
+                <div className="flex items-center gap-3">
+                  <input
+                    type="number"
+                    min="1"
+                    value={editFields.quantity}
+                    onChange={(e) => setEditFields({ ...editFields, quantity: e.target.value })}
+                    className="w-28 px-2 py-1 border border-gray-300 rounded"
+                    placeholder="Quantity"
+                  />
+                  <input
+                    type="date"
+                    value={editFields.requiredDate}
+                    min={today}
+                    onChange={(e) => setEditFields({ ...editFields, requiredDate: e.target.value })}
+                    className="px-2 py-1 border border-gray-300 rounded"
+                  />
+                  <input
+                    type="text"
+                    value={editFields.notes}
+                    onChange={(e) => setEditFields({ ...editFields, notes: e.target.value })}
+                    className="flex-1 px-2 py-1 border border-gray-300 rounded"
+                    placeholder="Notes (optional)"
+                  />
+                  <button
+                    onClick={handleSaveEdit}
+                    className="px-4 py-2 text-white bg-blue-600 rounded-md hover:bg-blue-700"
+                  >
+                    Save
+                  </button>
+                  <button
+                    onClick={() => setEditingRequest(null)}
+                    className="px-4 py-2 text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              ) : (
+                <button
+                  onClick={() => setShowSentOrders(false)}
+                  className="px-4 py-2 text-white bg-gray-600 rounded-md hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
+                >
+                  Close
+                </button>
+              )}
             </div>
           </div>
         </div>
