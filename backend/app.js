@@ -68,7 +68,7 @@ app.get('/', (req, res) => {
 // DB connect + start server
 const PORT = process.env.PORT || 5000;
 
-mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost:27017/ceylonmart', { autoIndex: true })
+mongoose.connect(process.env.MONGO_URI || 'mongodb+srv://kawya:12345@ceylonmart.evnlriy.mongodb.net/ceylonmart', { autoIndex: true })
   .then(async () => {
     console.log('Connected to MongoDB');
     // Ensure indexes (e.g., unique email) are built
