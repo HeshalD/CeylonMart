@@ -15,8 +15,15 @@ exports.createOrder = async (req, res) => {
   try {
     const payload = { ...req.body };
     payload.totalAmount = calculateTotalAmount(payload.items);
-    const order = await Order.create(payload); 
-    res.status(201).json(order);
+    const order = await Order.create(payload);
+    
+    // Populate the order with product details before sending response
+    const populatedOrder = await Order.findById(order._id).populate({
+      path: 'items.productId',
+      model: 'ProductModel'
+    });
+    
+    res.status(201).json(populatedOrder);
   } catch (e) {
     res.status(500).json({ message: "Server error", error: e.message });
   }
@@ -25,7 +32,10 @@ exports.createOrder = async (req, res) => {
 // Get all orders
 exports.getOrders = async (req, res) => {
   try {
-    const orders = await Order.find({ isDeleted: false });
+    const orders = await Order.find({ isDeleted: false }).populate({
+      path: 'items.productId',
+      model: 'ProductModel'
+    });
     res.json(orders);
   } catch (e) {
     res.status(500).json({ message: "Server error", error: e.message });
@@ -39,7 +49,10 @@ exports.getOrderById = async (req, res) => {
     return res.status(400).json({ message: "Invalid order ID" });
 
   try {
-    const order = await Order.findOne({ _id: id, isDeleted: false });
+    const order = await Order.findOne({ _id: id, isDeleted: false }).populate({
+      path: 'items.productId',
+      model: 'ProductModel'
+    });
     if (!order) return res.status(404).json({ message: "Order not found" });
     res.json(order);
   } catch (e) {
@@ -66,7 +79,13 @@ exports.updateOrderItem = async (req, res) => {
     order.totalAmount = calculateTotalAmount(order.items);
     await order.save();
 
-    res.json(order);
+    // Populate the order with product details before sending response
+    const populatedOrder = await Order.findById(order._id).populate({
+      path: 'items.productId',
+      model: 'ProductModel'
+    });
+    
+    res.json(populatedOrder);
   } catch (e) {
     res.status(500).json({ message: "Server error", error: e.message });
   }
@@ -93,7 +112,14 @@ exports.addItemToOrder = async (req, res) => {
 
     order.totalAmount = calculateTotalAmount(order.items);
     await order.save();
-    res.json(order);
+    
+    // Populate the order with product details before sending response
+    const populatedOrder = await Order.findById(order._id).populate({
+      path: 'items.productId',
+      model: 'ProductModel'
+    });
+    
+    res.json(populatedOrder);
   } catch (e) {
     res.status(500).json({ message: "Server error", error: e.message });
   }
@@ -114,7 +140,13 @@ exports.removeItemFromOrder = async (req, res) => {
     order.totalAmount = calculateTotalAmount(order.items);
     await order.save();
 
-    res.json({ message: "Item removed successfully", order });
+    // Populate the order with product details before sending response
+    const populatedOrder = await Order.findById(order._id).populate({
+      path: 'items.productId',
+      model: 'ProductModel'
+    });
+    
+    res.json({ message: "Item removed successfully", order: populatedOrder });
   } catch (e) {
     res.status(500).json({ message: "Server error", error: e.message });
   }
@@ -127,7 +159,10 @@ exports.getOrCreateCart = async (req, res) => {
     return res.status(400).json({ message: "Invalid customer ID" });
 
   try {
-    let order = await Order.findOne({ customerId, status: "pending", isDeleted: false });
+    let order = await Order.findOne({ customerId, status: "pending", isDeleted: false }).populate({
+      path: 'items.productId',
+      model: 'ProductModel'
+    });
     if (!order) {
       order = await Order.create({ customerId, items: [], totalAmount: 0, status: "pending" });
     }
@@ -160,7 +195,14 @@ exports.addItemToCartByCustomer = async (req, res) => {
 
     order.totalAmount = calculateTotalAmount(order.items);
     await order.save();
-    res.json(order);
+    
+    // Populate the order with product details before sending response
+    const populatedOrder = await Order.findById(order._id).populate({
+      path: 'items.productId',
+      model: 'ProductModel'
+    });
+    
+    res.json(populatedOrder);
   } catch (e) {
     res.status(500).json({ message: "Server error", error: e.message });
   }
@@ -177,7 +219,11 @@ exports.markOrderDelivered = async (req, res) => {
       { _id: id, isDeleted: false },
       { $set: { status: "delivered" } },
       { new: true }
-    );
+    ).populate({
+      path: 'items.productId',
+      model: 'ProductModel'
+    });
+    
     if (!order) return res.status(404).json({ message: "Order not found" });
     res.json({ message: "Order marked as delivered", order });
   } catch (e) {
@@ -196,7 +242,11 @@ exports.deleteOrder = async (req, res) => {
       { _id: id, isDeleted: false },
       { $set: { isDeleted: true, status: "cancelled" } },
       { new: true }
-    );
+    ).populate({
+      path: 'items.productId',
+      model: 'ProductModel'
+    });
+    
     if (!order) return res.status(404).json({ message: "Order not found" });
     res.json({ message: "Order deleted successfully", order });
   } catch (e) {
@@ -218,7 +268,13 @@ exports.clearOrderItems = async (req, res) => {
     order.totalAmount = 0;
     await order.save();
 
-    res.json({ message: "Cart cleared", order });
+    // Populate the order with product details before sending response
+    const populatedOrder = await Order.findById(order._id).populate({
+      path: 'items.productId',
+      model: 'ProductModel'
+    });
+    
+    res.json({ message: "Cart cleared", order: populatedOrder });
   } catch (e) {
     res.status(500).json({ message: "Server error", error: e.message });
   }
@@ -248,9 +304,32 @@ exports.assignDriverToOrder = async (req, res) => {
     order.driverId = driverId;
     order.status = "assigned";
     await order.save();
-
-    res.json({ message: "Driver assigned to order successfully", order });
+    
+    // Populate the order with product details before sending response
+    const populatedOrder = await Order.findById(order._id).populate({
+      path: 'items.productId',
+      model: 'ProductModel'
+    });
+    
+    res.json({ message: "Driver assigned to order successfully", order: populatedOrder });
   } catch (e) {
     res.status(500).json({ message: "Server error", error: e.message });
   }
 };
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

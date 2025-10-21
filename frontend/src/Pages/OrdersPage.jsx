@@ -25,12 +25,12 @@ export default function OrdersPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-blue-50">
       <Header />
-      <div className="max-w-5xl mx-auto px-4 py-8">
+      <div className="max-w-5xl px-4 py-8 mx-auto">
         {/* Back Button */}
         <div className="flex justify-start mb-6">
           <button
             onClick={() => navigate('/payment-success')}
-            className="flex items-center px-4 py-2 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 rounded-lg transition-colors duration-200"
+            className="flex items-center px-4 py-2 transition-colors duration-200 rounded-lg text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50"
           >
             <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -38,12 +38,12 @@ export default function OrdersPage() {
             Back
           </button>
         </div>
-        <h1 className="text-3xl font-bold text-emerald-700 mb-4">Your Orders</h1>
+        <h1 className="mb-4 text-3xl font-bold text-emerald-700">Your Orders</h1>
         {loading && <div className="text-gray-500">Loading...</div>}
         {error && <div className="text-red-600">{String(error)}</div>}
         <div className="grid gap-4">
           {orders.map(o => (
-            <div key={o._id} className="bg-white p-5 shadow rounded-2xl border border-emerald-100">
+            <div key={o._id} className="p-5 bg-white border shadow rounded-2xl border-emerald-100">
               <div className="flex justify-between">
                 <div>
                   <div className="font-semibold">Order #{o._id}</div>
@@ -51,15 +51,26 @@ export default function OrdersPage() {
                   <div className="text-sm text-gray-600">Payment Method: <span className="px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-100">{o.paymentMethod}</span></div>
                   <div className="text-sm text-gray-600">District: <span className="px-2 py-0.5 rounded-full bg-purple-50 text-purple-700 border border-purple-100">{o.district}</span></div>
                 </div>
-                <div className="text-right font-bold text-emerald-700">Rs. {Number(o.totalAmount).toFixed(2)}</div>
+                <div className="font-bold text-right text-emerald-700">Rs. {Number(o.totalAmount).toFixed(2)}</div>
               </div>
               <div className="mt-3 text-sm text-gray-700">
-                {o.items?.map(it => (
-                  <div key={it.productId} className="flex justify-between">
-                    <span>{it.productName} x {it.quantity}</span>
-                    <span>Rs. {(Number(it.price) * Number(it.quantity)).toFixed(2)}</span>
-                  </div>
-                ))}
+                {o.items?.map((it, index) => {
+                  // Handle both populated and non-populated product data
+                  const productName = it.productId && typeof it.productId === 'object' 
+                    ? it.productId.productName || it.productId.name 
+                    : it.productName || 'Unknown Product';
+                  
+                  const productPrice = it.productId && typeof it.productId === 'object' 
+                    ? it.productId.price || it.price 
+                    : it.price || 0;
+                  
+                  return (
+                    <div key={index} className="flex justify-between">
+                      <span>{productName} x {it.quantity}</span>
+                      <span>Rs. {(Number(productPrice) * Number(it.quantity)).toFixed(2)}</span>
+                    </div>
+                  );
+                })}
               </div>
             </div>
           ))}
