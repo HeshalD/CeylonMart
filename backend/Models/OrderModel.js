@@ -42,17 +42,17 @@ const OrderSchema = new mongoose.Schema({
   },
   paymentMethod: {
     type: String,
-    enum: ["credit_card", "debit_card", "cash_on_delivery"],
+    enum: ["credit_card", "debit_card", "paypal", "stripe", "cash_on_delivery"],
     required: true
   },
   district: {
     type: String,
-    required: true,
+    required: false,
     enum: ["Colombo", "Gampaha", "Kaluthara"]
   },
   email: {
     type: String,
-    required: true
+    required: false
   },
   driverId: {
     type: mongoose.Schema.Types.ObjectId,

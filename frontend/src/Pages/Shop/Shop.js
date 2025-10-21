@@ -163,10 +163,33 @@ const Shop = () => {
     return list;
   }, [products, categoryFilter, activeCategoryChip, searchText, sortBy]);
 
+  // Add the same expiration calculation function from Expiry.js
+  const calculateDaysLeft = (expiryDate) => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const exp = new Date(expiryDate);
+    exp.setHours(0, 0, 0, 0);
+    const diff = Math.floor((exp - today) / (1000 * 60 * 60 * 24));
+    return diff;
+  };
+
+  // Function to check if a product is expired
+  const isProductExpired = (product) => {
+    const daysLeft = calculateDaysLeft(product.expiryDate);
+    return daysLeft < 0 || daysLeft === 0;
+  };
+
   const addToCart = (product) => {
     // Check if user is authenticated
     if (!isAuthenticated) {
       setShowLoginModal(true);
+      return;
+    }
+
+    // Check if product is expired
+    if (isProductExpired(product)) {
+      setToast({ message: "Cannot add expired product to cart", type: "error" });
+      setTimeout(() => setToast(null), 3000);
       return;
     }
 
@@ -231,6 +254,8 @@ setCart(updatedCart);
   const getStatusLabel = (p) => {
     const current = Number(p.currentStock ?? 0);
     const min = Number(p.minimumStockLevel ?? p.minStock ?? 0);
+    
+    // Don't show expired label, but still check for out of stock
     if (current <= 0)
       return { label: "Out of Stock", color: "bg-red-100 text-red-800" };
     if (current <= min)
@@ -251,9 +276,193 @@ setCart(updatedCart);
     return `Rs. ${Number(v).toLocaleString()}`;
   };
   
+  // Chatbot state
+  const [showChatbot, setShowChatbot] = useState(false);
+  const [chatMessages, setChatMessages] = useState([]);
+
+  // Chatbot questions and answers
+  const chatbotQA = [
+    {
+      id: 1,
+      question: "How can I track my order?",
+      answer: "You can track your order by logging into your CeylonMart account and visiting the 'My Orders' section. You'll also receive email updates on your order status."
+    },
+    {
+      id: 2,
+      question: "What are your delivery charges?",
+      answer: "We offer free delivery on orders over Rs. 5000. For orders below Rs. 5000, a delivery charge of Rs. 300 applies. Delivery is currently available in Colombo, Gampaha, and Kalutara districts."
+    },
+    {
+      id: 3,
+      question: "How long does delivery take?",
+      answer: "Standard delivery takes 1-3 business days for Colombo, 2-4 business days for Gampaha, and 3-5 business days for Kalutara. Express delivery options are available at checkout."
+    },
+    {
+      id: 4,
+      question: "What is your return policy?",
+      answer: "We offer a 7-day return policy for unused, unopened products in their original packaging. Perishable items cannot be returned. Contact our customer service to initiate a return."
+    },
+    {
+      id: 5,
+      question: "How can I contact customer support?",
+      answer: "You can reach our customer support team by calling 011-2345678, emailing support@ceylonmart.lk, or using the live chat feature on our website during business hours (9 AM - 9 PM)."
+    },
+    {
+      id: 6,
+      question: "Do you offer international shipping?",
+      answer: "Currently, we only deliver within Sri Lanka. We're working on expanding our services to international customers in the near future. Stay tuned for updates!"
+    },
+    {
+      id: 7,
+      question: "How do I know if a product is in stock?",
+      answer: "Product availability is displayed on each product page. 'In Stock' means the item is available for immediate purchase. 'Low Stock' indicates limited quantities, and 'Out of Stock' means the item is unavailable."
+    },
+    {
+      id: 8,
+      question: "Can I modify or cancel my order?",
+      answer: "You can modify or cancel your order within 1 hour of placing it. After that, please contact customer support. If your order has already been processed for shipping, modifications may not be possible."
+    },
+    {
+      id: 9,
+      question: "What payment methods do you accept?",
+      answer: "We accept all major credit/debit cards (Visa, Mastercard), PayPal, and cash on delivery. All transactions are secured with SSL encryption for your safety."
+    },
+    {
+      id: 10,
+      question: "How do I create an account?",
+      answer: "Click on the 'Login' button at the top right corner of any page, then select 'Create Account'. Fill in your details and verify your email address. You can also create an account during checkout."
+    }
+  ];
+
+  // Initialize chatbot with greeting
+  useEffect(() => {
+    if (showChatbot && chatMessages.length === 0) {
+      const greetingMessage = {
+        sender: "bot",
+        text: `Hello! 👋 Welcome to CeylonMart's Customer Support. How can I help you today?`,
+        timestamp: new Date()
+      };
+      setChatMessages([greetingMessage]);
+    }
+  }, [showChatbot, chatMessages.length]);
+
+  // Handle question selection
+  const handleQuestionSelect = (qa) => {
+    // Add user question
+    const userMessage = {
+      sender: "user",
+      text: qa.question,
+      timestamp: new Date()
+    };
+    
+    // Add bot answer
+    const botMessage = {
+      sender: "bot",
+      text: qa.answer,
+      timestamp: new Date()
+    };
+    
+    setChatMessages(prev => [...prev, userMessage, botMessage]);
+  };
+
+  // Reset chat
+  const resetChat = () => {
+    setChatMessages([]);
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       <Header />
+
+      {/* Chatbot Button */}
+      <button
+        onClick={() => setShowChatbot(true)}
+        className="fixed z-40 p-4 text-white transition-all transform rounded-full shadow-lg bottom-6 right-6 bg-emerald-600 hover:bg-emerald-700 hover:scale-110"
+      >
+        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+        </svg>
+      </button>
+
+      {/* Chatbot Modal */}
+      {showChatbot && (
+        <div className="fixed z-50 flex flex-col w-full max-w-md bg-white border border-gray-200 rounded-lg shadow-xl bottom-24 right-6">
+          {/* Chatbot Header */}
+          <div className="flex items-center justify-between p-4 text-white rounded-t-lg bg-emerald-600">
+            <div className="flex items-center">
+              <svg className="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+              </svg>
+              <h3 className="font-semibold">CeylonMart Support</h3>
+            </div>
+            <button 
+              onClick={() => setShowChatbot(false)}
+              className="text-white hover:text-gray-200"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+          
+          {/* Chat Messages - Now scrollable */}
+          <div className="flex-1 p-4 overflow-y-auto bg-gray-50" style={{ maxHeight: '300px' }}>
+            {chatMessages.map((message, index) => (
+              <div 
+                key={index} 
+                className={`mb-3 ${message.sender === 'user' ? 'text-right' : 'text-left'}`}
+              >
+                <div 
+                  className={`inline-block p-3 rounded-lg max-w-xs ${
+                    message.sender === 'user' 
+                      ? 'bg-emerald-500 text-white rounded-br-none' 
+                      : 'bg-white border border-gray-200 rounded-bl-none'
+                  }`}
+                >
+                  {message.text}
+                </div>
+                <div className={`text-xs mt-1 text-gray-500 ${message.sender === 'user' ? 'text-right' : 'text-left'}`}>
+                  {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                </div>
+              </div>
+            ))}
+          </div>
+          
+          {/* Question Selection - Scrollable */}
+          <div className="p-4 border-t border-gray-200 bg-gray-50" style={{ maxHeight: '200px', overflowY: 'auto' }}>
+            <p className="mb-2 text-sm text-gray-600">Select a question:</p>
+            <div className="space-y-2">
+              {chatbotQA.map((qa) => (
+                <button
+                  key={qa.id}
+                  onClick={() => handleQuestionSelect(qa)}
+                  className="w-full p-2 text-sm text-left transition-colors bg-white border border-gray-200 rounded hover:bg-emerald-50 hover:border-emerald-300"
+                >
+                  {qa.question}
+                </button>
+              ))}
+            </div>
+          </div>
+          
+          {/* Chatbot Footer */}
+          <div className="p-3 bg-gray-100 border-t border-gray-200 rounded-b-lg">
+            <div className="flex justify-between">
+              <button
+                onClick={resetChat}
+                className="text-sm text-emerald-600 hover:text-emerald-800"
+              >
+                Reset Chat
+              </button>
+              <button
+                onClick={() => setShowChatbot(false)}
+                className="text-sm text-gray-600 hover:text-gray-800"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Rotating Product Descriptions */}
       <div 
@@ -439,10 +648,11 @@ setCart(updatedCart);
             ) : (
               displayedProducts.map((p) => {
                 const { label, color } = getStatusLabel(p);
+                const productExpired = isProductExpired(p);
                 return (
                   <div
                     key={p._id}
-                    className="flex flex-col overflow-hidden transition bg-white border rounded-lg shadow-sm hover:shadow-md"
+                    className={`flex flex-col overflow-hidden transition bg-white border rounded-lg shadow-sm hover:shadow-md ${productExpired ? 'opacity-70' : ''}`}
                   >
                     <div className="flex items-center justify-center overflow-hidden h-44 bg-gray-50">
                       {p.productImage ? (
@@ -489,15 +699,19 @@ setCart(updatedCart);
                       </div>
                       <div className="flex items-center gap-2 mt-4">
                         <button
-                          disabled={Number(p.currentStock ?? 0) <= 0}
+                          disabled={Number(p.currentStock ?? 0) <= 0 || productExpired}
                           onClick={() => addToCart(p)}
                           className={`flex-1 px-3 py-2 text-sm rounded border-2 font-semibold transition ${
-                            Number(p.currentStock ?? 0) <= 0
+                            Number(p.currentStock ?? 0) <= 0 || productExpired
                               ? "bg-gray-300 text-gray-600 cursor-not-allowed border-gray-400"
                               : "bg-teal-600 text-white hover:bg-teal-700 border-teal-700"
                           }`}
                         >
-                          Add to cart
+                          {productExpired 
+                            ? "Add to cart" 
+                            : Number(p.currentStock ?? 0) <= 0 
+                              ? "Out of Stock" 
+                              : "Add to cart"}
                         </button>
                         <button
                           onClick={() => {
@@ -520,11 +734,21 @@ setCart(updatedCart);
       
       <Footer />
       {toast && (
-        <div className="fixed z-50 p-4 text-white transition-all duration-300 ease-in-out transform border rounded-lg shadow-lg bottom-6 right-6 bg-emerald-500 border-emerald-600 animate-pulse">
+        <div className={`fixed z-50 p-4 text-white transition-all duration-300 ease-in-out transform border rounded-lg shadow-lg bottom-6 right-6 animate-pulse ${
+          toast.type === 'error' 
+            ? 'bg-red-500 border-red-600' 
+            : 'bg-emerald-500 border-emerald-600'
+        }`}>
           <div className="flex items-center gap-3">
-            <svg className="w-5 h-5 text-emerald-100" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-            </svg>
+            {toast.type === 'error' ? (
+              <svg className="w-5 h-5 text-red-100" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            ) : (
+              <svg className="w-5 h-5 text-emerald-100" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
+            )}
             <div className="text-sm font-medium">{toast.message}</div>
           </div>
         </div>
@@ -620,18 +844,22 @@ setCart(updatedCart);
             
             <div className="flex flex-col gap-3 mt-6 sm:flex-row">
               <button
-                disabled={Number(selectedProduct.currentStock ?? 0) <= 0}
+                disabled={Number(selectedProduct.currentStock ?? 0) <= 0 || isProductExpired(selectedProduct)}
                 onClick={() => {
                   setShowDetailsModal(false);
                   addToCart(selectedProduct);
                 }}
                 className={`flex-1 px-4 py-3 text-base font-semibold rounded-lg transition ${
-                  Number(selectedProduct.currentStock ?? 0) <= 0
+                  Number(selectedProduct.currentStock ?? 0) <= 0 || isProductExpired(selectedProduct)
                     ? "bg-gray-300 text-gray-600 cursor-not-allowed"
                     : "bg-emerald-600 text-white hover:bg-emerald-700 shadow-md hover:shadow-lg"
                 }`}
               >
-                {Number(selectedProduct.currentStock ?? 0) <= 0 ? "Out of Stock" : "Add to Cart"}
+                {isProductExpired(selectedProduct) 
+                  ? "Cannot Add to Cart" 
+                  : Number(selectedProduct.currentStock ?? 0) <= 0 
+                    ? "Out of Stock" 
+                    : "Add to Cart"}
               </button>
               <button
                 onClick={() => setShowDetailsModal(false)}

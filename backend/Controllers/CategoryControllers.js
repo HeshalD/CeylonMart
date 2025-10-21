@@ -1,4 +1,5 @@
 const Category = require("../Models/CategoryModel");
+const Product = require("../Models/ProductModel"); // Add Product model
 
 // Get all categories (including inactive ones) for validation purposes
 const getAllCategoriesIncludingInactive = async (req, res, next) => {
@@ -150,24 +151,37 @@ const updateCategory = async (req, res, next) => {
   return res.status(200).json({ category });
 };
 
-// Delete category (soft delete)
+// Delete category (hard delete when no products exist, soft delete otherwise)
 const deleteCategory = async (req, res, next) => {
   const id = req.params.id;
 
-  let category;
-
   try {
-    category = await Category.findByIdAndUpdate(id, { isActive: false }, { new: true });
+    // First, check if there are any products in this category
+    const category = await Category.findById(id);
+    if (!category) {
+      return res.status(404).json({ message: "Category not found" });
+    }
+
+    // Check if there are products associated with this category
+    const productCount = await Product.countDocuments({ category: category.categoryName });
+    if (productCount > 0) {
+      return res.status(400).json({ 
+        message: "Cannot delete this category because it still has products. Please delete products first." 
+      });
+    }
+
+    // If no products, proceed with hard delete
+    const deletedCategory = await Category.findByIdAndDelete(id);
+    
+    if (!deletedCategory) {
+      return res.status(404).json({ message: "Unable to delete category" });
+    }
+
+    return res.status(200).json({ message: "Category deleted successfully", category: deletedCategory });
   } catch (err) {
     console.log(err);
     return res.status(500).json({ message: "Unable to delete category", error: err.message });
   }
-
-  if (!category) {
-    return res.status(404).json({ message: "Unable to delete category" });
-  }
-
-  return res.status(200).json({ message: "Category deleted successfully", category });
 };
 
 exports.getAllCategories = getAllCategories;

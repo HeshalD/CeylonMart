@@ -21,11 +21,13 @@ exports.createPayment = async (req, res) => {
   }
 
   try {
+    console.log('[createPayment] Creating payment with data:', JSON.stringify(req.body, null, 2));
     const payment = await Payment.create(req.body);
     console.log('[createPayment] Payment created:', JSON.stringify(payment, null, 2));
 
     // For all payment methods, update the order status to pending
     // Use runValidators: false to avoid triggering validation that requires email, district, and paymentMethod
+    console.log('[createPayment] Updating order with ID:', payment.orderId);
     const updatedOrder = await Order.findOneAndUpdate(
       { _id: payment.orderId, isDeleted: false },
       { $set: { status: "pending" } }, // All payments should start with pending status
@@ -36,28 +38,47 @@ exports.createPayment = async (req, res) => {
     });
     
     console.log('[createPayment] Order updated:', JSON.stringify(updatedOrder, null, 2));
+    console.log('[createPayment] Order items:', JSON.stringify(updatedOrder?.items, null, 2));
+    if (!updatedOrder) {
+      console.log('[createPayment] Failed to find order with ID:', payment.orderId);
+      throw new Error('Order not found');
+    }
     
-    // If payment is successful (for credit/debit cards) or COD, decrease product quantities
-    if (payment.status === "successful" || payment.paymentMethod === "cash_on_delivery") {
-      // For successful payments, decrease product quantities and ensure the customer's next cart is a fresh empty pending order
-      if (payment.status === "successful" && updatedOrder) {
-        console.log('[createPayment] Payment successful, decreasing product quantities for items:', JSON.stringify(updatedOrder.items, null, 2));
-        // Decrease product quantities for all payment methods when payment is successful
+    // For successful payments, decrease product quantities immediately
+    if (payment.status === "successful") {
+      console.log('[createPayment] Payment successful, decreasing product quantities');
+      console.log('[createPayment] Updated order:', JSON.stringify(updatedOrder, null, 2));
+      if (updatedOrder && updatedOrder.items) {
+        console.log('[createPayment] Decreasing product quantities for items:', JSON.stringify(updatedOrder.items, null, 2));
+        // Decrease product quantities for successful payments
+        console.log('[createPayment] Calling decreaseProductQuantities function');
         await decreaseProductQuantities(updatedOrder.items);
-        
-        const cleared = await Order.findOneAndUpdate(
-          { customerId: payment.customerId, status: "pending", isDeleted: false },
-          { $set: { items: [], totalAmount: 0 } },
-          { new: true }
-        );
-        console.log('[createPayment] Customer cart cleared:', JSON.stringify(cleared, null, 2));
-        if (!cleared) {
-          await Order.create({ customerId: payment.customerId, items: [], totalAmount: 0, status: "pending" });
-        }
+        console.log('[createPayment] Finished calling decreaseProductQuantities function');
+      } else {
+        console.log('[createPayment] No items found in updated order');
       }
+      
+      const cleared = await Order.findOneAndUpdate(
+        { customerId: payment.customerId, status: "pending", isDeleted: false },
+        { $set: { items: [], totalAmount: 0 } },
+        { new: true }
+      );
+      console.log('[createPayment] Customer cart cleared:', JSON.stringify(cleared, null, 2));
+      if (!cleared) {
+        await Order.create({ customerId: payment.customerId, items: [], totalAmount: 0, status: "pending" });
+      }
+    } else {
+      console.log('[createPayment] Payment not successful, skipping quantity decrease. Status:', payment.status);
+    }
+    
+    // Send email receipt for successful payments or COD
+    if (payment.status === "successful" || payment.paymentMethod === "cash_on_delivery") {
+      console.log('[createPayment] Sending email receipt for payment:', payment._id);
       // fetch customer for email
       const customer = await Customer.findById(payment.customerId);
+      console.log('[createPayment] Customer found:', customer?._id);
       const toEmail = req.body.email || customer?.email;
+      console.log('[createPayment] Email address:', toEmail);
       if (toEmail) {
         try {
           await sendPaymentReceipt({
@@ -68,14 +89,22 @@ exports.createPayment = async (req, res) => {
             transactionId: payment.transactionId,
             orderId: payment.orderId
           });
+          console.log('[createPayment] Email receipt sent successfully');
         } catch (mailErr) {
           console.error("[createPayment] Receipt email failed:", mailErr);
         }
       }
     }
+    
+    console.log('[createPayment] Sending response with payment:', payment._id);
     res.status(201).json(payment);
+    console.log('[createPayment] Response sent successfully');
   } catch (e) {
     console.error("[createPayment] Error:", e);
+    console.error("[createPayment] Error stack:", e.stack);
+    console.error("[createPayment] Error name:", e.name);
+    console.error("[createPayment] Error message:", e.message);
+    console.error("[createPayment] Error code:", e.code);
     
     // Handle specific MongoDB errors
     if (e.name === 'ValidationError') {
@@ -104,12 +133,23 @@ exports.createPayment = async (req, res) => {
 
 // Helper function to decrease product quantities
 async function decreaseProductQuantities(items) {
+  console.log('[decreaseProductQuantities] Function called');
   try {
     console.log('[decreaseProductQuantities] Processing items:', JSON.stringify(items, null, 2));
+    if (!items || !Array.isArray(items)) {
+      console.log('[decreaseProductQuantities] No valid items array provided');
+      return;
+    }
+    
+    console.log('[decreaseProductQuantities] Items array length:', items.length);
+    
+    // Keep track of processed items to prevent double processing
+    const processedItems = new Set();
     
     // Process each item in the order
     for (const [index, item] of items.entries()) {
       console.log(`[decreaseProductQuantities] Processing item ${index}:`, JSON.stringify(item, null, 2));
+      console.log(`[decreaseProductQuantities] Item keys:`, Object.keys(item));
       
       // Extract product ID and quantity (handle different possible property names)
       let productId = null;
@@ -142,6 +182,13 @@ async function decreaseProductQuantities(items) {
         continue;
       }
       
+      // Create a unique identifier for this item
+      const itemKey = `${productId}-${purchasedQuantity}`;
+      if (processedItems.has(itemKey)) {
+        console.log(`[decreaseProductQuantities] Skipping item ${index} - Already processed: ${itemKey}`);
+        continue;
+      }
+      
       if (isNaN(purchasedQuantity) || purchasedQuantity <= 0) {
         console.log(`[decreaseProductQuantities] Skipping item ${index} - Invalid quantity: ${purchasedQuantity}`);
         continue;
@@ -155,8 +202,13 @@ async function decreaseProductQuantities(items) {
       
       console.log(`[decreaseProductQuantities] Valid data found, updating product stock...`);
       
+      // Mark this item as processed
+      processedItems.add(itemKey);
+      
       // Get the current product before updating
+      console.log(`[decreaseProductQuantities] Looking up product with ID: ${productId}`);
       const currentProduct = await Product.findById(productId);
+      console.log(`[decreaseProductQuantities] Product lookup result:`, currentProduct ? 'Found' : 'Not found');
       if (!currentProduct) {
         console.log(`[decreaseProductQuantities] Product not found with ID: ${productId}`);
         continue;
@@ -166,11 +218,13 @@ async function decreaseProductQuantities(items) {
       const newQuantity = previousQuantity - purchasedQuantity;
       
       // Decrease the product's current stock by the purchased quantity
+      console.log(`[decreaseProductQuantities] Updating product ${productId} stock by ${-Math.abs(purchasedQuantity)}`);
       const updatedProduct = await Product.findByIdAndUpdate(
         productId,
         { $inc: { currentStock: -Math.abs(purchasedQuantity) } }, // Ensure positive quantity
         { new: true }
       );
+      console.log(`[decreaseProductQuantities] Product update result:`, updatedProduct ? 'Success' : 'Failed');
       
       if (updatedProduct) {
         console.log(`[decreaseProductQuantities] Product stock updated successfully:`);
@@ -182,6 +236,7 @@ async function decreaseProductQuantities(items) {
         
         // Add entry to stock history
         try {
+          console.log(`[decreaseProductQuantities] Creating stock history entry for ${updatedProduct.productName}`);
           const historyEntry = new StockHistory({
             productName: updatedProduct.productName,
             productCode: updatedProduct.productCode,
@@ -207,8 +262,10 @@ async function decreaseProductQuantities(items) {
     console.log('[decreaseProductQuantities] Finished processing all items');
   } catch (error) {
     console.error("[decreaseProductQuantities] Error:", error);
+    console.error("[decreaseProductQuantities] Error stack:", error.stack);
     // Not throwing error to prevent payment failure due to stock update issues
   }
+  console.log('[decreaseProductQuantities] Function completed');
 }
 
 // Get all payments
@@ -252,6 +309,18 @@ exports.updatePaymentStatus = async (req, res) => {
     return res.status(400).json({ message: "Invalid payment ID" });
 
   try {
+    // Get the current payment status before updating
+    const currentPayment = await Payment.findOne({ _id: id, isDeleted: false });
+    if (!currentPayment) return res.status(404).json({ message: "Payment not found" });
+    
+    console.log('[updatePaymentStatus] Current payment status:', currentPayment.status, 'New status:', status);
+    
+    // If the status is already the same, no need to update
+    if (currentPayment.status === status) {
+      console.log('[updatePaymentStatus] Status unchanged, returning current payment');
+      return res.json({ message: "Payment status unchanged", payment: currentPayment });
+    }
+    
     const payment = await Payment.findOneAndUpdate(
       { _id: id, isDeleted: false },
       { $set: { status } },
@@ -261,8 +330,9 @@ exports.updatePaymentStatus = async (req, res) => {
     if (!payment) return res.status(404).json({ message: "Payment not found" });
     console.log('[updatePaymentStatus] Payment status updated:', JSON.stringify(payment, null, 2));
     
-    // If payment status is updated to successful, decrease product quantities
-    if (status === "successful") {
+    // If payment status is updated to successful from a non-successful status, decrease product quantities
+    if (status === "successful" && currentPayment.status !== "successful") {
+      console.log('[updatePaymentStatus] Decreasing product quantities for successful payment');
       // Populate the order with item details including product references
       const order = await Order.findOne({ _id: payment.orderId, isDeleted: false }).populate({
         path: 'items.productId',
@@ -272,6 +342,8 @@ exports.updatePaymentStatus = async (req, res) => {
       if (order) {
         await decreaseProductQuantities(order.items);
       }
+    } else if (status === "successful" && currentPayment.status === "successful") {
+      console.log('[updatePaymentStatus] Payment was already successful, skipping quantity decrease');
     }
     
     res.json({ message: "Payment status updated", payment });
@@ -302,6 +374,10 @@ exports.deletePayment = async (req, res) => {
     res.status(500).json({ message: "Server error", error: e.message });
   }
 };
+
+
+
+
 
 
 

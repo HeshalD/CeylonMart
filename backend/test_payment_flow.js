@@ -5,9 +5,8 @@ const Order = require('./Models/OrderModel');
 const Product = require('./Models/ProductModel');
 
 // MongoDB connection - use the same connection string as the app
-mongoose.connect(process.env.MONGO_URI, { 
-  useNewUrlParser: true, 
-  useUnifiedTopology: true,
+mongoose.connect(process.env.MONGO_URI, {
+  // useNewUrlParser and useUnifiedTopology are deprecated in newer versions
   autoIndex: true 
 });
 

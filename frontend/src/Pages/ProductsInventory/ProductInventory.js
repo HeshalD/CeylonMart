@@ -33,7 +33,7 @@ const ProductInventory = () => {
     if (!window.confirm('Are you sure you want to delete this category?')) return;
 
     try {
-      // ✅ Step 1: Fetch all products for this category
+      // ✅ Step 1: Fetch all products to check if any belong to this category
       const res = await axios.get("http://localhost:5000/products");
       const products = res.data.products || [];
       const hasProducts = products.some(p => p.category === categoryName);
@@ -44,16 +44,27 @@ const ProductInventory = () => {
       }
 
       // ✅ Step 2: Proceed with category deletion
-      await deleteCategory(id);
-      setCategories(categories.filter((cat) => cat._id !== id));
-
-      // Emit dashboard update
-      emitDashboardUpdate();
-
-      alert(`Category "${categoryName}" deleted successfully!`);
+      const response = await deleteCategory(id);
+      
+      // Check if the backend actually allowed the deletion
+      if (response.data && response.data.message && response.data.message.includes("successfully")) {
+        setCategories(categories.filter((cat) => cat._id !== id));
+        // Emit dashboard update
+        emitDashboardUpdate();
+        alert(`Category "${categoryName}" deleted successfully!`);
+      } else if (response.data && response.data.message) {
+        // If there's an error message from the backend, show it
+        alert(response.data.message);
+        return;
+      }
     } catch (err) {
       console.error('Error deleting category:', err);
-      alert('Failed to delete category!');
+      // Handle different types of errors
+      if (err.response && err.response.data && err.response.data.message) {
+        alert(err.response.data.message);
+      } else {
+        alert('Failed to delete category!');
+      }
     }
   };
 
@@ -64,7 +75,6 @@ const ProductInventory = () => {
  const handleView = (category) => {
   navigate('/inventory/products', { state: { categoryName: category.categoryName } });
 };
-
 
   if (loading) {
     return (

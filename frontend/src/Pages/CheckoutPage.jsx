@@ -61,7 +61,10 @@ export default function CheckoutPage({ customerId }) {
 
   const emailValid = useMemo(() => /.+@.+\..+/.test(email), [email]);
   const customerNameValid = useMemo(() => customerName.trim().length > 0, [customerName]);
-  const customerPhoneValid = useMemo(() => customerPhone.trim().length > 0, [customerPhone]);
+  const customerPhoneValid = useMemo(() => {
+    const phoneDigits = customerPhone.replace(/\D/g, ''); // Remove non-digits
+    return phoneDigits.length === 10;
+  }, [customerPhone]);
   const customerAddressValid = useMemo(() => customerAddress.trim().length > 0, [customerAddress]);
   const districtValid = useMemo(() => district !== "", [district]);
 
@@ -175,13 +178,18 @@ export default function CheckoutPage({ customerId }) {
       });
       console.log('Order created:', order);
 
+      // Determine payment status based on payment method
+      const paymentStatus = (paymentMethod === "credit_card" || paymentMethod === "debit_card" || paymentMethod === "paypal") 
+        ? "successful" 
+        : "pending";
+      
       // Create payment with the order ID and all required fields
       console.log('Creating payment with data:', {
         orderId: order._id,
         customerId: customer._id,
         amount: total,
         paymentMethod,
-        status: "pending", // All payments should start with pending status
+        status: paymentStatus,
         transactionId: `TXN_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
       });
       const payment = await PaymentsAPI.createPayment({
@@ -189,7 +197,7 @@ export default function CheckoutPage({ customerId }) {
         customerId: customer._id,
         amount: total,
         paymentMethod,
-        status: "pending", // All payments should start with pending status
+        status: paymentStatus,
         transactionId: `TXN_${Date.now()}_${Math.random().toString(36).substr(2, 9)}` // Generate unique transaction ID
       });
       console.log('Payment created:', payment);
@@ -210,13 +218,14 @@ export default function CheckoutPage({ customerId }) {
       
       // Pass order and payment data to success page
       const paymentInfo = {
+        _id: payment._id, // Include the payment ID
         orderId: order._id,
         customerId: customer._id,
         amount: total,
         paymentMethod,
         email,
         district,
-        status: "pending" // All payments should start with pending status
+        status: paymentStatus
       };
       
       navigate('/payment-success', { 
@@ -385,16 +394,23 @@ export default function CheckoutPage({ customerId }) {
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">Phone Number *</label>
                   <input 
+                    type="tel"
                     className={`w-full border-2 rounded-xl px-4 py-3 transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-500 ${customerPhone && !customerPhoneValid ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:border-emerald-500'}`} 
                     placeholder="Enter your phone number" 
                     value={customerPhone} 
-                    onChange={e=>setCustomerPhone(e.target.value)} 
+                    onChange={e => {
+                      const value = e.target.value.replace(/\D/g, ''); // Only allow digits
+                      if (value.length <= 10) { // Limit to 10 digits
+                        setCustomerPhone(value);
+                      }
+                    }}
+                    maxLength={10}
                   />
                   {!customerPhoneValid && customerPhone && <div className="text-red-600 text-sm mt-2 flex items-center">
                     <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
                       <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
                     </svg>
-                    Please enter your phone number
+                    Phone number must be valid
                   </div>}
                 </div>
                 

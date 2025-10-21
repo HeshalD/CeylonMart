@@ -41,6 +41,9 @@ export const PaymentsAPI = {
   },
   getPayments() {
     return api.get(`/payments`).then(r => r.data);
+  },
+  updatePaymentStatus(paymentId, status) {
+    return api.put(`/payments/${paymentId}/status`, { status }).then(r => r.data);
   }
 };
 

@@ -13,9 +13,9 @@ router.post(
   body("items.*.productName").notEmpty(),
   body("items.*.quantity").isFloat({ min: 0.1 }),
   body("items.*.price").isFloat({ min: 0 }),
-  body("paymentMethod").isIn(["credit_card", "debit_card", "cash_on_delivery"]),
-  body("district").isIn(["Colombo", "Gampaha", "Kaluthara"]),
-  body("email").isEmail(),
+  body("paymentMethod").isIn(["credit_card", "debit_card", "paypal", "stripe", "cash_on_delivery"]),
+  body("district").isIn(["Colombo", "Gampaha", "Kaluthara"]).optional({ nullable: true }),
+  body("email").isEmail().optional({ nullable: true }),
   ctrl.createOrder
 );
 
