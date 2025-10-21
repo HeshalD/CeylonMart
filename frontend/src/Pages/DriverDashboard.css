@@ -2,7 +2,22 @@
 
 .driver-dashboard-page {
   min-height: 100vh;
-  background: #f8f9fa;
+  background: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)), 
+              url('../grocerypic.jpg') center/cover no-repeat fixed;
+  background-attachment: fixed;
+  position: relative;
+}
+
+.driver-dashboard-page::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: inherit;
+  filter: blur(3px);
+  z-index: -1;
 }
 
 .container {
@@ -10,28 +25,50 @@
   margin: 0 auto;
   padding: 20px;
   padding-top: 100px; /* Account for fixed header */
+  position: relative;
+  z-index: 1;
 }
 
 .alerts-container {
-  background: #f8f9fa;
+  background: rgba(248, 249, 250, 0.9);
   padding: 20px;
   margin: 0;
   border-bottom: 1px solid #e5e7eb;
+  backdrop-filter: blur(10px);
+  position: relative;
+  z-index: 1;
 }
 
 /* Login Container */
 .login-container {
   min-height: calc(100vh - 200px); /* Account for header and footer */
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  background: transparent;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 20px;
+  position: relative;
+  z-index: 1;
 }
 
 /* Login Page Layout */
 .login-page {
-  background: #f8f9fa;
+  background: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)), 
+              url('../grocerypic.jpg') center/cover no-repeat fixed;
+  background-attachment: fixed;
+  position: relative;
+}
+
+.login-page::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: inherit;
+  filter: blur(3px);
+  z-index: -1;
 }
 
 .login-page .main-content {
@@ -41,14 +78,16 @@
 }
 
 .login-card {
-  background: white;
+  background: rgba(255, 255, 255, 0.95);
   border-radius: 20px;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
   padding: 40px;
   width: 100%;
   max-width: 450px;
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(15px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  position: relative;
+  z-index: 2;
 }
 
 .login-header {
@@ -195,11 +234,14 @@ select.input option:checked {
 
 /* Driver Profile Header */
 .driver-profile-header {
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  background: rgba(16, 185, 129, 0.9);
   color: white;
   padding: 40px 20px;
   margin-bottom: 30px;
   border-radius: 0 0 30px 30px;
+  backdrop-filter: blur(10px);
+  position: relative;
+  z-index: 1;
 }
 
 .driver-info-section {
@@ -329,6 +371,8 @@ select.input option:checked {
 /* Orders Section */
 .orders-section {
   padding: 20px 0;
+  position: relative;
+  z-index: 1;
 }
 
 .section-header {
@@ -359,9 +403,12 @@ select.input option:checked {
 .empty-state {
   text-align: center;
   padding: 60px 20px;
-  background: #f9fafb;
+  background: rgba(249, 250, 251, 0.9);
   border-radius: 20px;
-  border: 2px dashed #d1d5db;
+  border: 2px dashed rgba(209, 213, 219, 0.7);
+  backdrop-filter: blur(10px);
+  position: relative;
+  z-index: 1;
 }
 
 .empty-icon {
@@ -387,12 +434,15 @@ select.input option:checked {
 }
 
 .order-card {
-  background: white;
+  background: rgba(255, 255, 255, 0.95);
   border-radius: 16px;
   padding: 25px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-  border: 1px solid #e5e7eb;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.15);
+  border: 1px solid rgba(229, 231, 235, 0.5);
   transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+  position: relative;
+  z-index: 1;
 }
 
 .order-card:hover {
@@ -593,15 +643,19 @@ select.input option:checked {
 
 /* Enhanced Driver Profile Styles */
 .driver-profile-header {
-  background: white;
+  background: rgba(255, 255, 255, 0.95);
   border-radius: 20px;
   padding: 40px;
   margin-bottom: 30px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
   display: grid;
   grid-template-columns: 2fr 1fr;
   gap: 40px;
   align-items: start;
+  backdrop-filter: blur(15px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  position: relative;
+  z-index: 1;
 }
 
 .driver-info-section {

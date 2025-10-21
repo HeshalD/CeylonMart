@@ -67,22 +67,22 @@ const NotificationBell = ({ supplierId, adminMode = false }) => {
       </button>
       {open && (
         <div className="absolute right-0 mt-2 w-80 bg-white border rounded shadow z-10 max-h-96 overflow-auto">
-          <div className="p-2 border-b font-semibold">{adminMode ? 'Inbox' : 'Notifications'}</div>
+          <div className={`p-2 border-b font-semibold ${!adminMode ? 'text-black' : ''}`}>{adminMode ? 'Inbox' : 'Notifications'}</div>
           {items.length === 0 ? (
-            <div className="p-4 text-gray-500 text-sm">No {adminMode ? 'messages' : 'notifications'}</div>
+            <div className={`p-4 text-sm ${!adminMode ? 'text-black' : 'text-gray-500'}`}>No {adminMode ? 'messages' : 'notifications'}</div>
           ) : (
             items.map((n) => (
               <div key={n._id} className={`p-3 border-b ${n.isRead ? 'bg-white' : 'bg-gray-50'}`}>
                 <div className="flex justify-between items-start">
                   <div className="pr-2">
-                    <div className="font-medium text-sm">
+                    <div className={`font-medium text-sm ${!adminMode ? 'text-black' : ''}`}>
                       {adminMode && n.supplierId?.companyName ? (
                         <span className="text-gray-700">{n.supplierId.companyName} • </span>
                       ) : null}
                       {n.title}
                     </div>
                     <div className="text-sm text-black">{adminMode ? n.content : n.message}</div>
-                    <div className="text-xs text-gray-500 mt-1">{new Date(n.createdAt).toLocaleString()}</div>
+                    <div className={`text-xs mt-1 ${!adminMode ? 'text-black' : 'text-gray-500'}`}>{new Date(n.createdAt).toLocaleString()}</div>
                   </div>
                   <div className="flex flex-col items-end gap-1">
                     {!n.isRead && (

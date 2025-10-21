@@ -159,7 +159,13 @@ export default function CheckoutPage({ customerId }) {
       console.log('Order items:', orderItems);
 
       // Create order first
-      console.log('Creating order...');
+      console.log('Creating order with data:', {
+        customerId: customer._id,
+        items: orderItems,
+        paymentMethod,
+        district,
+        email
+      });
       const order = await OrdersAPI.createOrder({
         customerId: customer._id,
         items: orderItems,
@@ -169,15 +175,21 @@ export default function CheckoutPage({ customerId }) {
       });
       console.log('Order created:', order);
 
-      // Create payment with the order ID
+      // Create payment with the order ID and all required fields
+      console.log('Creating payment with data:', {
+        orderId: order._id,
+        customerId: customer._id,
+        amount: total,
+        paymentMethod,
+        status: "pending", // All payments should start with pending status
+        transactionId: `TXN_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+      });
       const payment = await PaymentsAPI.createPayment({
         orderId: order._id,
         customerId: customer._id,
         amount: total,
         paymentMethod,
-        email,
-        district,
-        status: "successful", // Always set to successful to immediately decrease stock
+        status: "pending", // All payments should start with pending status
         transactionId: `TXN_${Date.now()}_${Math.random().toString(36).substr(2, 9)}` // Generate unique transaction ID
       });
       console.log('Payment created:', payment);
@@ -204,7 +216,7 @@ export default function CheckoutPage({ customerId }) {
         paymentMethod,
         email,
         district,
-        status: paymentMethod === "cash_on_delivery" ? "pending" : "successful"
+        status: "pending" // All payments should start with pending status
       };
       
       navigate('/payment-success', { 
@@ -420,7 +432,7 @@ export default function CheckoutPage({ customerId }) {
                 </div>
                 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Delivery District</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Delivery District *</label>
                   <select 
                     className={`w-full border-2 rounded-xl px-4 py-3 transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-500 ${district && !districtValid ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:border-emerald-500'}`}
                     value={district}
@@ -631,5 +643,3 @@ export default function CheckoutPage({ customerId }) {
     </div>
   );
 }
-
-
