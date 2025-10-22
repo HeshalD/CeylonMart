@@ -22,27 +22,30 @@ const ReceiptPDF = ({ orderData, paymentData, isVisible = false }) => {
     // Order details
     doc.setFontSize(12);
     const orderId = orderData?._id || paymentData?.orderId || 'N/A';
-    const orderDate = orderData?.createdAt ? new Date(orderData.createdAt).toLocaleDateString() : new Date().toLocaleDateString();
+    const createdAt = orderData?.createdAt || paymentData?.createdAt || new Date().toISOString();
+    const orderDate = new Date(createdAt).toLocaleDateString();
+    const orderTime = new Date(createdAt).toLocaleTimeString();
     const totalAmount = orderData?.totalAmount || paymentData?.amount || 0;
     
     doc.text(`Order ID: ${orderId}`, 20, 70);
     doc.text(`Date: ${orderDate}`, 20, 80);
-    doc.text(`Payment Method: ${paymentData?.paymentMethod || 'N/A'}`, 20, 90);
-    doc.text(`Delivery District: ${paymentData?.district || 'N/A'}`, 20, 100);
-    doc.text(`Status: ${paymentData?.status || 'N/A'}`, 20, 110);
+    doc.text(`Time: ${orderTime}`, 20, 90);
+    doc.text(`Payment Method: ${paymentData?.paymentMethod || 'N/A'}`, 20, 100);
+    doc.text(`Delivery District: ${paymentData?.district || 'N/A'}`, 20, 110);
+    doc.text(`Status: ${paymentData?.status || 'N/A'}`, 20, 120);
     
     // Items table header
-    doc.text('Items:', 20, 130);
-    doc.text('Product', 20, 140);
-    doc.text('Qty', 100, 140);
-    doc.text('Price', 130, 140);
-    doc.text('Total', 160, 140);
+    doc.text('Items:', 20, 140);
+    doc.text('Product', 20, 150);
+    doc.text('Qty', 100, 150);
+    doc.text('Price', 130, 150);
+    doc.text('Total', 160, 150);
     
     // Draw line under header
-    doc.line(20, 145, 190, 145);
+    doc.line(20, 155, 190, 155);
     
     // Items
-    let yPosition = 155;
+    let yPosition = 165;
     const items = orderData?.items || [];
     
     if (items.length === 0) {
